@@ -5,6 +5,8 @@ import { GroceryItem } from '@/types/grocery'
 import { Plus, Check, Trash2, Edit2, Archive, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
+const backgroundGradient = 'linear-gradient(to bottom, #3e8c2f, #a2e386)'
+
 export function GroceryList() {
   const [items, setItems] = useState<GroceryItem[]>([])
   const [newItem, setNewItem] = useState('')
@@ -73,7 +75,7 @@ export function GroceryList() {
   return (
     <div className="relative h-[100dvh] flex flex-col">
       {/* Checkout Button */}
-      <div className="p-4">
+      <header className="p-4" style={{ background: backgroundGradient }}>
         <button
           onClick={archiveChecked}
           className={`w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 transition-all ${
@@ -85,11 +87,11 @@ export function GroceryList() {
           <Archive className="w-5 h-5" />
           Check Out
         </button>
-      </div>
+      </header>
 
       {/* List Items */}
-      <div className="flex-1 overflow-y-auto px-4 pb-24">
-        <div className="space-y-2">
+      <div className="flex-1 overflow-y-auto px-4 pb-24" style={{ background: backgroundGradient }}>
+        <div className="space-y-2 pt-4">
           <AnimatePresence mode="popLayout">
             {items.map(item => (
               <motion.div
@@ -152,10 +154,10 @@ export function GroceryList() {
       </div>
 
       {/* Floating Add Button */}
-      <div className="fixed bottom-4 left-0 right-0 flex justify-center">
+      <div className="bg-white fixed bottom-0 left-0 pb-4 right-0 flex justify-center">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="w-14 h-14 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center"
+          className="w-14 h-14 bg-blue-500 -mt-4 text-white rounded-full shadow-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center"
         >
           <Plus className="w-6 h-6" />
         </button>
