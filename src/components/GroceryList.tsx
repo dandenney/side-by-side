@@ -2,10 +2,10 @@
 
 import { useState, useMemo } from 'react'
 import { GroceryItem } from '@/types/grocery'
-import { Plus, Check, Trash2, Edit2, Archive, X } from 'lucide-react'
+import { Plus, Check, Trash2, Edit2, X, BadgeDollarSign, ShoppingBasket } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const backgroundGradient = 'linear-gradient(to bottom, #3e8c2f, #a2e386)'
+const backgroundGradient = 'linear-gradient(to bottom, #3e8c2f, #70bf61)'
 
 export function GroceryList() {
   const [items, setItems] = useState<GroceryItem[]>([])
@@ -73,25 +73,11 @@ export function GroceryList() {
   }
 
   return (
-    <div className="relative h-[100dvh] flex flex-col">
-      {/* Checkout Button */}
-      <header className="p-4" style={{ background: backgroundGradient }}>
-        <button
-          onClick={archiveChecked}
-          className={`w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 transition-all ${
-            hasCheckedItems
-              ? 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 cursor-pointer'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-          }`}
-        >
-          <Archive className="w-5 h-5" />
-          Check Out
-        </button>
-      </header>
-
+    <div className="bg-gradient-to-b from-green-600 to-green-500 relative h-[100dvh] flex flex-col">
       {/* List Items */}
-      <div className="flex-1 overflow-y-auto px-4 pb-24" style={{ background: backgroundGradient }}>
+      <div className="flex-1 overflow-y-auto px-4 pb-24">
         <div className="space-y-2 pt-4">
+          <h1 className='opacity-40 text-center text-green-900 uppercase font-bold'>Groceries</h1>
           <AnimatePresence mode="popLayout">
             {items.map(item => (
               <motion.div
@@ -102,15 +88,13 @@ export function GroceryList() {
                 transition={{ duration: 0.2 }}
                 layout
                 onClick={() => toggleCheck(item.id)}
-                className="flex items-center gap-2 p-3 bg-white rounded-lg border hover:bg-gray-50 cursor-pointer group"
+                className="flex items-center gap-2 p-3 bg-white rounded-lg shadow-xl border hover:bg-gray-50 cursor-pointer group"
               >
                 <motion.div 
-                  className={`p-1 rounded-full ${
-                    item.checked ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
-                  }`}
+                  className={`p-1 rounded-full`}
                   layout
                 >
-                  <Check className="w-4 h-4" />
+                  <ShoppingBasket className={`w-5 h-5 transition-all ${item.checked ? 'text-green-600' : 'text-gray-400'}`} />
                 </motion.div>
 
                 {editingItem?.id === item.id ? (
@@ -127,7 +111,7 @@ export function GroceryList() {
                 ) : (
                   <motion.span 
                     layout
-                    className={`flex-1 ${item.checked ? 'line-through text-gray-500' : ''}`}
+                      className={`flex-1 text-green-800 ${item.checked ? 'line-through text-gray-500' : ''}`}
                   >
                     {item.name}
                   </motion.span>
@@ -154,13 +138,37 @@ export function GroceryList() {
       </div>
 
       {/* Floating Add Button */}
-      <div className="bg-white fixed bottom-0 left-0 pb-4 right-0 flex justify-center">
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="w-14 h-14 bg-blue-500 -mt-4 text-white rounded-full shadow-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center"
-        >
-          <Plus className="w-6 h-6" />
-        </button>
+      <div className="bg-white fixed bottom-0 left-0 py-1 right-0 rounded-t-full">
+        <div className="grid grid-cols-3 gap-8 px-4 items-center justify-items-center">
+          <div></div>
+          <div>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="w-20 h-20 bg-gradient-to-b from-green-600 to-green-700 border-8 border-white -mt-8 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-700 flex items-center justify-center"
+            >
+              <Plus className="w-8 h-8" />
+            </button>
+          </div>
+          <div className='justify-self-start'>
+            <motion.button
+              onClick={archiveChecked}
+              animate={{
+                scale: hasCheckedItems ? [0.75, 1.2, 1] : 0.75
+              }}
+              transition={{
+                duration: 0.3,
+                times: [0, 0.6, 1],
+                ease: "easeOut"
+              }}
+              className={`bg-gradient-to-b ease-out h-10 rounded-full flex items-center justify-center gap-2 relative rounded-full shadow-2xl shadow-inner shadow-black/10 transition-all w-10 ${hasCheckedItems
+                ? 'from-green-600 to-green-700 opacity-80 focus:ring-2 focus:ring-blue-500 cursor-pointer'
+                : 'from-gray-100 to-gray-300 opacity-100 text-gray-400 cursor-not-allowed'
+                }`}
+            >
+              <BadgeDollarSign className="ease-out h-6 text-white transition-all w-6" />
+            </motion.button>
+          </div>
+        </div>
       </div>
 
       {/* Add Item Modal */}
