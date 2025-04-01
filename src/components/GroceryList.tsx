@@ -2,10 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import { GroceryItem } from '@/types/grocery'
-import { Plus, Check, Trash2, Edit2, X, BadgeDollarSign, ShoppingBasket } from 'lucide-react'
+import { Plus, Trash2, Edit2, X, BadgeDollarSign, ShoppingBasket } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-
-const backgroundGradient = 'linear-gradient(to bottom, #3e8c2f, #70bf61)'
 
 export function GroceryList() {
   const [items, setItems] = useState<GroceryItem[]>([])
@@ -73,9 +71,9 @@ export function GroceryList() {
   }
 
   return (
-    <div className="bg-gradient-to-b from-green-700 to-green-600 relative h-[100dvh] flex flex-col">
+    <div className="bg-gradient-to-b from-green-700 to-green-600 relative min-h-[100dvh] h-full flex flex-col overflow-hidden">
       {/* List Items */}
-      <div className="flex-1 overflow-y-auto px-4 pb-24">
+      <div className="flex-1 overflow-y-auto overscroll-none px-4 pb-24">
         <div className="space-y-2 pt-4">
           <h1 className='opacity-40 text-center text-green-900 uppercase font-bold'>Groceries</h1>
           <AnimatePresence mode="popLayout">
@@ -210,7 +208,7 @@ export function GroceryList() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 focus:outline-none"
+                  className="px-2 py-2 text-gray-600 hover:text-gray-800 focus:outline-none"
                 >
                   <X className="w-5 h-5" />
                 </button>
