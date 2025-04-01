@@ -9,6 +9,7 @@ export function CostcoList() {
       gradientFrom="from-blue-700"
       gradientTo="to-blue-600"
       textColor="text-blue-800"
+      titleColor="text-white"
       accentColor="text-blue-600"
       iconColor="text-blue-600"
       buttonGradientFrom="from-red-600"

@@ -9,6 +9,7 @@ export function GroceryList() {
       gradientFrom="from-green-700"
       gradientTo="to-green-600"
       textColor="text-green-800"
+      titleColor="text-white"
       accentColor="text-green-600"
       iconColor="text-green-600"
       buttonGradientFrom="from-green-600"

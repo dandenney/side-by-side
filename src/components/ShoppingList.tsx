@@ -10,6 +10,7 @@ type ShoppingListProps = {
   gradientFrom: string
   gradientTo: string
   textColor: string
+  titleColor: string
   accentColor: string
   iconColor: string
   buttonGradientFrom: string
@@ -22,6 +23,7 @@ export function ShoppingList({
   gradientFrom,
   gradientTo,
   textColor,
+  titleColor,
   accentColor,
   iconColor,
   buttonGradientFrom,
@@ -140,8 +142,8 @@ export function ShoppingList({
     <div className={`bg-gradient-to-b ${gradientFrom} ${gradientTo} h-full flex flex-col`}>
       {/* List Items */}
       <div className="flex-1 overflow-y-auto px-4 pb-24">
-        <div className="space-y-2 pt-4">
-          <h1 className={`opacity-40 text-center ${textColor} uppercase font-bold`}>{title}</h1>
+        <div className="max-w-lg mx-auto space-y-2 pt-4">
+          <h1 className={`opacity-40 text-center ${titleColor} uppercase font-bold`}>{title}</h1>
           <AnimatePresence mode="popLayout">
             {items.map(item => (
               <motion.div
@@ -250,14 +252,14 @@ export function ShoppingList({
       </div>
 
       {/* Floating Add Button */}
-      <div className="bg-white fixed bottom-0 left-0 py-1 right-0 rounded-t-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)]">
+      <div className="bg-white fixed bottom-0 left-0 mx-auto max-w-md py-1 right-0 rounded-t-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)]">
         <div className="grid grid-cols-3 gap-8 px-4 items-center justify-items-center">
           <div></div>
           <div>
             <motion.button
               onClick={() => setIsModalOpen(true)}
               whileTap={{ y: 4 }}
-              className={`w-20 h-20 bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} border-8 border-white -mt-12 text-white rounded-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)] active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} flex items-center justify-center`}
+              className={`w-20 h-20 bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} border-8 border-white -mt-12 text-white rounded-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)] active:${buttonGradientTo} active:${buttonGradientFrom} active:-translate-y-2 focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} flex items-center justify-center`}
             >
               <Plus className="w-8 h-8" />
             </motion.button>
