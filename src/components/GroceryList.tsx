@@ -73,7 +73,7 @@ export function GroceryList() {
   }
 
   return (
-    <div className="bg-gradient-to-b from-green-600 to-green-500 relative h-[100dvh] flex flex-col">
+    <div className="bg-gradient-to-b from-green-700 to-green-600 relative h-[100dvh] flex flex-col">
       {/* List Items */}
       <div className="flex-1 overflow-y-auto px-4 pb-24">
         <div className="space-y-2 pt-4">
@@ -104,7 +104,7 @@ export function GroceryList() {
                     onChange={(e) => setEditText(e.target.value)}
                     onBlur={saveEdit}
                     onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                    className="flex-1 px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-green-600"
                     autoFocus
                     onClick={(e) => e.stopPropagation()}
                   />
@@ -120,7 +120,7 @@ export function GroceryList() {
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={(e) => startEdit(e, item)}
-                    className="p-1 text-gray-600 hover:text-blue-500 rounded-full hover:bg-gray-100"
+                    className="p-1 text-gray-600 hover:text-green-600 rounded-full hover:bg-gray-100"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
@@ -138,16 +138,17 @@ export function GroceryList() {
       </div>
 
       {/* Floating Add Button */}
-      <div className="bg-white fixed bottom-0 left-0 py-1 right-0 rounded-t-full">
+      <div className="bg-white fixed bottom-0 left-0 py-1 right-0 rounded-t-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)]">
         <div className="grid grid-cols-3 gap-8 px-4 items-center justify-items-center">
           <div></div>
           <div>
-            <button
+            <motion.button
               onClick={() => setIsModalOpen(true)}
-              className="w-20 h-20 bg-gradient-to-b from-green-600 to-green-700 border-8 border-white -mt-8 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-700 flex items-center justify-center"
+              whileTap={{ y: 4 }}
+              className="w-20 h-20 bg-gradient-to-b from-green-600 to-green-700 border-8 border-white -mt-12 text-white rounded-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)] active:from-green-700 active:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-800 flex items-center justify-center"
             >
               <Plus className="w-8 h-8" />
-            </button>
+            </motion.button>
           </div>
           <div className='justify-self-start'>
             <motion.button
@@ -161,7 +162,7 @@ export function GroceryList() {
                 ease: "easeOut"
               }}
               className={`bg-gradient-to-b ease-out h-10 rounded-full flex items-center justify-center gap-2 relative rounded-full shadow-2xl shadow-inner shadow-black/10 transition-all w-10 ${hasCheckedItems
-                ? 'from-green-600 to-green-700 opacity-80 focus:ring-2 focus:ring-blue-500 cursor-pointer'
+                ? 'from-green-600 to-green-700 opacity-80 focus:ring-2 focus:ring-green-600 cursor-pointer'
                 : 'from-gray-100 to-gray-300 opacity-100 text-gray-400 cursor-not-allowed'
                 }`}
             >
@@ -197,12 +198,12 @@ export function GroceryList() {
                   value={newItem}
                   onChange={(e) => setNewItem(e.target.value)}
                   placeholder="Add a new item..."
-                  className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
                   autoFocus
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="bg-gradient-to-b from-green-600 to-green-700 px-4 py-2 text-white rounded-lg active:from-green-700 active:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-600"
                 >
                   Add
                 </button>
