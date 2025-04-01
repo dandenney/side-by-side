@@ -86,6 +86,35 @@ export function CostcoList() {
                 transition={{ duration: 0.2 }}
                 layout
                 onClick={() => toggleCheck(item.id)}
+                onTouchStart={(e) => {
+                  const touch = e.touches[0]
+                  const target = e.currentTarget
+                  const rect = target.getBoundingClientRect()
+                  const isRightSide = touch.clientX > rect.right - 100 // 100px from right edge
+                  
+                  if (!isRightSide) {
+                    // Start long press timer for non-right side touches
+                    const timer = setTimeout(() => {
+                      // Create a synthetic mouse event for startEdit
+                      const mouseEvent = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                      })
+                      startEdit(mouseEvent as unknown as React.MouseEvent, item)
+                    }, 500)
+                    target.setAttribute('data-timer', timer.toString())
+                  }
+                }}
+                onTouchEnd={(e) => {
+                  const target = e.currentTarget
+                  const timer = target.getAttribute('data-timer')
+                  if (timer) {
+                    clearTimeout(parseInt(timer))
+                    target.removeAttribute('data-timer')
+                  }
+                }}
                 className="flex items-center gap-2 p-3 bg-white rounded-lg shadow-xl border hover:bg-gray-50 cursor-pointer group"
               >
                 <motion.div 
