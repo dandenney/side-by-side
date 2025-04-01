@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { GroceryItem } from '@/types/grocery'
 import { Plus, Trash2, Edit2, X, BadgeDollarSign, ShoppingBasket } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useTapInfo } from 'framer-motion'
 
 type ShoppingListProps = {
   title: string
@@ -34,18 +34,70 @@ export function ShoppingList({
   const [editText, setEditText] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [longPressTimeout, setLongPressTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [showEditControls, setShowEditControls] = useState<string | null>(null)
+  const lastTapRef = useRef<{ time: number; id: string | null }>({ time: 0, id: null })
 
   const hasCheckedItems = useMemo(() => items.some(item => item.checked), [items])
+
+  const itemVariants = {
+    initial: { opacity: 0, y: 20, scale: 0.95 },
+    animate: { opacity: 1, y: 0, scale: 1 },
+    exit: { opacity: 0, x: -100, scale: 0.95 },
+    tap: { 
+      scale: 0.98,
+      transition: { 
+        type: "spring",
+        stiffness: 400,
+        damping: 17
+      }
+    }
+  }
+
+  const editControlsVariants = {
+    hidden: { 
+      opacity: 0,
+      scale: 0.8,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 30
+      }
+    },
+    visible: { 
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 30
+      }
+    }
+  }
+
+  const handleTap = (item: GroceryItem) => {
+    const now = Date.now()
+    const DOUBLE_TAP_DELAY = 300 // ms
+
+    // If it's the same item and within the double tap delay
+    if (lastTapRef.current.id === item.id && now - lastTapRef.current.time < DOUBLE_TAP_DELAY) {
+      // Double tap detected
+      setShowEditControls(showEditControls === item.id ? null : item.id)
+      lastTapRef.current = { time: 0, id: null } // Reset
+    } else {
+      // Single tap - toggle checked state
+      toggleCheck(item.id)
+      lastTapRef.current = { time: now, id: item.id }
+    }
+  }
 
   const handleTouchStart = (e: React.TouchEvent, item: GroceryItem) => {
     const target = e.currentTarget
     const rect = target.getBoundingClientRect()
     const touch = e.touches[0]
-    const isRightSide = touch.clientX > rect.right - 100 // 100px from right edge
+    const isRightSide = touch.clientX > rect.right - 100
 
     if (isRightSide) {
       const timeout = setTimeout(() => {
-        // Create a synthetic mouse event for the edit function
         const syntheticEvent = new MouseEvent('click', {
           bubbles: true,
           cancelable: true,
@@ -53,7 +105,7 @@ export function ShoppingList({
           clientY: touch.clientY,
         })
         startEdit(syntheticEvent as unknown as React.MouseEvent, item)
-      }, 500) // 500ms for long press
+      }, 500)
       setLongPressTimeout(timeout)
     }
   }
@@ -62,23 +114,6 @@ export function ShoppingList({
     if (longPressTimeout) {
       clearTimeout(longPressTimeout)
       setLongPressTimeout(null)
-      
-      // If touch duration was short, treat as tap
-      const target = e.currentTarget
-      const rect = target.getBoundingClientRect()
-      const touch = e.changedTouches[0]
-      const isRightSide = touch.clientX > rect.right - 100
-
-      if (isRightSide) {
-        // Create a synthetic mouse event for the delete function
-        const syntheticEvent = new MouseEvent('click', {
-          bubbles: true,
-          cancelable: true,
-          clientX: touch.clientX,
-          clientY: touch.clientY,
-        })
-        deleteItem(syntheticEvent as unknown as React.MouseEvent, item.id)
-      }
     }
   }
 
@@ -155,27 +190,20 @@ export function ShoppingList({
             {items.map(item => (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, x: -100, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
+                variants={itemVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                whileTap="tap"
                 layout
                 onTouchStart={(e) => handleTouchStart(e, item)}
                 onTouchEnd={(e) => handleTouchEnd(e, item)}
                 onTouchMove={handleTouchMove}
-                onClick={(e) => {
-                  const target = e.currentTarget
-                  const rect = target.getBoundingClientRect()
-                  const isRightSide = e.clientX > rect.right - 100
-                  
-                  if (!isRightSide) {
-                    toggleCheck(item.id)
-                  }
-                }}
-                className="flex items-center gap-2 p-3 bg-white rounded-lg shadow-xl border hover:bg-gray-50 cursor-pointer group"
+                onClick={() => handleTap(item)}
+                className="flex items-center gap-2 p-3 bg-white rounded-lg shadow-xl border hover:bg-gray-50 cursor-pointer"
               >
                 <motion.div 
-                  className={`p-1 rounded-full`}
+                  className="p-1 rounded-full"
                   layout
                 >
                   <ShoppingBasket className={`w-5 h-5 transition-all ${item.checked ? iconColor : 'text-gray-400'}`} />
@@ -201,20 +229,33 @@ export function ShoppingList({
                   </motion.span>
                 )}
 
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity w-[100px] justify-end">
-                  <button
-                    onClick={(e) => startEdit(e, item)}
-                    className={`p-1 text-gray-600 hover:${accentColor} rounded-full hover:bg-gray-100`}
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={(e) => deleteItem(e, item.id)}
-                    className="p-1 text-gray-600 hover:text-red-500 rounded-full hover:bg-gray-100"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                <AnimatePresence>
+                  {(showEditControls === item.id || editingItem?.id === item.id) && (
+                    <motion.div 
+                      variants={editControlsVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="hidden"
+                      className="flex gap-1 w-[100px] justify-end"
+                      layout
+                    >
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => startEdit(e, item)}
+                        className={`p-1 text-gray-600 hover:${accentColor} rounded-full hover:bg-gray-100`}
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => deleteItem(e, item.id)}
+                        className="p-1 text-gray-600 hover:text-red-500 rounded-full hover:bg-gray-100"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </motion.button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             ))}
           </AnimatePresence>
