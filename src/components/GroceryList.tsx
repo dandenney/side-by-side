@@ -85,7 +85,12 @@ export function GroceryList() {
                 exit={{ opacity: 0, x: -100, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
                 layout
-                onClick={() => toggleCheck(item.id)}
+                onClick={(e) => {
+                  // Only handle click if it's not from a touch event
+                  if (!e.nativeEvent.isTrusted || e.nativeEvent.type !== 'click') {
+                    toggleCheck(item.id)
+                  }
+                }}
                 onTouchStart={(e) => {
                   const touch = e.touches[0]
                   const target = e.currentTarget
@@ -113,6 +118,9 @@ export function GroceryList() {
                   if (timer) {
                     clearTimeout(parseInt(timer))
                     target.removeAttribute('data-timer')
+                  } else {
+                    // If no timer (meaning it wasn't a long press), toggle check
+                    toggleCheck(item.id)
                   }
                 }}
                 className="flex items-center gap-2 p-3 bg-white rounded-lg shadow-xl border hover:bg-gray-50 cursor-pointer group"
