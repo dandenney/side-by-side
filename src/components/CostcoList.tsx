@@ -71,9 +71,9 @@ export function CostcoList() {
   }
 
   return (
-    <div className="bg-gradient-to-b from-blue-700 to-blue-600 relative min-h-[100dvh] h-full flex flex-col overflow-hidden">
+    <div className="bg-gradient-to-b from-blue-700 to-blue-600 h-full flex flex-col">
       {/* List Items */}
-      <div className="flex-1 overflow-y-auto overscroll-none px-4 pb-24">
+      <div className="flex-1 overflow-y-auto px-4 pb-24">
         <div className="space-y-2 pt-4">
           <h1 className='opacity-60 text-center text-blue-900 uppercase font-bold'>Costco</h1>
           <AnimatePresence mode="popLayout">
