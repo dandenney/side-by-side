@@ -33,8 +33,61 @@ export function ShoppingList({
   const [editingItem, setEditingItem] = useState<GroceryItem | null>(null)
   const [editText, setEditText] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [longPressTimeout, setLongPressTimeout] = useState<NodeJS.Timeout | null>(null)
 
   const hasCheckedItems = useMemo(() => items.some(item => item.checked), [items])
+
+  const handleTouchStart = (e: React.TouchEvent, item: GroceryItem) => {
+    const target = e.currentTarget
+    const rect = target.getBoundingClientRect()
+    const touch = e.touches[0]
+    const isRightSide = touch.clientX > rect.right - 100 // 100px from right edge
+
+    if (isRightSide) {
+      const timeout = setTimeout(() => {
+        // Create a synthetic mouse event for the edit function
+        const syntheticEvent = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+        })
+        startEdit(syntheticEvent as unknown as React.MouseEvent, item)
+      }, 500) // 500ms for long press
+      setLongPressTimeout(timeout)
+    }
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent, item: GroceryItem) => {
+    if (longPressTimeout) {
+      clearTimeout(longPressTimeout)
+      setLongPressTimeout(null)
+      
+      // If touch duration was short, treat as tap
+      const target = e.currentTarget
+      const rect = target.getBoundingClientRect()
+      const touch = e.changedTouches[0]
+      const isRightSide = touch.clientX > rect.right - 100
+
+      if (isRightSide) {
+        // Create a synthetic mouse event for the delete function
+        const syntheticEvent = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+        })
+        deleteItem(syntheticEvent as unknown as React.MouseEvent, item.id)
+      }
+    }
+  }
+
+  const handleTouchMove = () => {
+    if (longPressTimeout) {
+      clearTimeout(longPressTimeout)
+      setLongPressTimeout(null)
+    }
+  }
 
   const addItem = (e: React.FormEvent) => {
     e.preventDefault()
@@ -107,23 +160,16 @@ export function ShoppingList({
                 exit={{ opacity: 0, x: -100, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
                 layout
+                onTouchStart={(e) => handleTouchStart(e, item)}
+                onTouchEnd={(e) => handleTouchEnd(e, item)}
+                onTouchMove={handleTouchMove}
                 onClick={(e) => {
                   const target = e.currentTarget
                   const rect = target.getBoundingClientRect()
-                  const isRightSide = e.clientX > rect.right - 100 // 100px from right edge
+                  const isRightSide = e.clientX > rect.right - 100
                   
                   if (!isRightSide) {
                     toggleCheck(item.id)
-                  }
-                }}
-                onContextMenu={(e) => {
-                  e.preventDefault()
-                  const target = e.currentTarget
-                  const rect = target.getBoundingClientRect()
-                  const isRightSide = e.clientX > rect.right - 100 // 100px from right edge
-                  
-                  if (!isRightSide) {
-                    startEdit(e, item)
                   }
                 }}
                 className="flex items-center gap-2 p-3 bg-white rounded-lg shadow-xl border hover:bg-gray-50 cursor-pointer group"
@@ -149,13 +195,13 @@ export function ShoppingList({
                 ) : (
                   <motion.span 
                     layout
-                      className={`flex-1 ${textColor} ${item.checked ? 'line-through text-gray-500' : ''}`}
+                    className={`flex-1 ${textColor} ${item.checked ? 'line-through text-gray-500' : ''}`}
                   >
                     {item.name}
                   </motion.span>
                 )}
 
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity w-[100px] justify-end">
                   <button
                     onClick={(e) => startEdit(e, item)}
                     className={`p-1 text-gray-600 hover:${accentColor} rounded-full hover:bg-gray-100`}
