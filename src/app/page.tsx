@@ -19,6 +19,11 @@ export default function Home() {
             description="Local services and information"
             href="/local"
           />
+          <LinkCard
+            title="Reading List"
+            description="Save and organize articles to read"
+            href="/reading"
+          />
         </div>
       </div>
     </main>
