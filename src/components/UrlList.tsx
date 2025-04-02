@@ -6,6 +6,7 @@ import { Plus, Trash2, Edit2, X, Link, Tag, StickyNote, Archive, Search } from '
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import AppDrawer from './AppDrawer'
+import TagInput from './TagInput'
 
 type UrlListProps = {
   title: string
@@ -34,10 +35,11 @@ export function UrlList({
 }: UrlListProps) {
   const [items, setItems] = useState<UrlListItem[]>([])
   const [newUrl, setNewUrl] = useState('')
-  const [editingItem, setEditingItem] = useState<UrlListItem | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<UrlListItem | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [editingItem, setEditingItem] = useState<UrlListItem | null>(null)
+  const [editForm, setEditForm] = useState<Partial<UrlListItem>>({})
 
   const hasArchivedItems = useMemo(() => items.some(item => item.archived), [items])
 
@@ -106,25 +108,6 @@ export function UrlList({
     setIsModalOpen(false)
   }
 
-  const startEdit = (e: React.MouseEvent, item: UrlListItem) => {
-    e.stopPropagation()
-    setEditingItem(item)
-  }
-
-  const saveEdit = (updatedItem: UrlListItem) => {
-    setItems(items.map(item =>
-      item.id === updatedItem.id
-        ? { ...updatedItem, updatedAt: new Date() }
-        : item
-    ))
-    setEditingItem(null)
-  }
-
-  const deleteItem = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
-    setItems(items.filter(item => item.id !== id))
-  }
-
   const handleCardClick = (item: UrlListItem) => {
     setSelectedItem(item)
   }
@@ -132,6 +115,24 @@ export function UrlList({
   const handleCloseModal = () => {
     setSelectedItem(null)
     setEditingItem(null)
+  }
+
+  const startEdit = (e: React.MouseEvent, item: UrlListItem) => {
+    e.stopPropagation()
+    setEditingItem(item)
+  }
+
+  const handleSaveEdit = () => {
+    if (editingItem) {
+      const updatedItem = { ...editingItem, ...editForm, updatedAt: new Date() }
+      saveEdit(updatedItem)
+      setEditingItem(null)
+    }
+  }
+
+  const deleteItem = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation()
+    setItems(items.filter(item => item.id !== id))
   }
 
   const archiveItem = (e: React.MouseEvent, id: string) => {
@@ -149,6 +150,14 @@ export function UrlList({
     setItems(items.filter(item => !item.archived))
     // In a real app, we would save these to an archived list
     console.log('Archived items:', archivedItems)
+  }
+
+  const saveEdit = (updatedItem: UrlListItem) => {
+    setItems(items.map(item =>
+      item.id === updatedItem.id
+        ? { ...updatedItem, updatedAt: new Date() }
+        : item
+    ))
   }
 
   return (
@@ -381,7 +390,7 @@ export function UrlList({
                         </motion.div>
                       )}
                       <motion.div 
-                        className="flex justify-end gap-2 pt-4"
+                        className="flex justify-end gap-2"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.5 }}
