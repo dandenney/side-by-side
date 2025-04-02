@@ -230,26 +230,6 @@ export function UrlList({
               <Plus className="w-8 h-8" />
             </motion.button>
           </div>
-          <div className='justify-self-start'>
-            <motion.button
-              onClick={archiveAll}
-              animate={{
-                scale: hasArchivedItems ? [0.75, 1.2, 1] : 0.75
-              }}
-              transition={{
-                duration: 0.3,
-                times: [0, 0.6, 1],
-                ease: "easeOut"
-              }}
-              className={`bg-gradient-to-b ease-out h-10 rounded-full flex items-center justify-center gap-2 relative rounded-full shadow-2xl shadow-inner shadow-black/10 transition-all w-10 ${
-                hasArchivedItems
-                  ? `${buttonGradientFrom} ${buttonGradientTo} opacity-80 focus:ring-2 focus:ring-${buttonAccentColor} cursor-pointer`
-                  : 'from-gray-100 to-gray-300 opacity-100 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              <Archive className="ease-out h-6 text-white transition-all w-6" />
-            </motion.button>
-          </div>
         </div>
       </div>
 
