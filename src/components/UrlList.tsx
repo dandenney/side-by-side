@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState} from 'react'
 import { UrlListItem } from '@/types/url-list'
-import { Plus, Trash2, Edit2, X, Link, Tag, Calendar, StickyNote } from 'lucide-react'
+import { Plus, Trash2, Edit2, X, Link, Tag, StickyNote } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 
@@ -147,12 +147,12 @@ export function UrlList({
                 exit="exit"
                 whileTap="tap"
                 layout
-                className="flex items-center bg-white rounded-lg shadow-xl border hover:bg-gray-50 overflow-hidden h-12"
+                className="flex items-center bg-white rounded-lg shadow-xl border hover:bg-gray-50 overflow-hidden"
                 layoutId={`card-${item.id}`}
               >
                 {item.imageUrl && (
                   <motion.div 
-                    className="relative w-20 h-full flex-shrink-0"
+                    className="bg-gray-100 relative w-20 aspect-[1200/630] flex-shrink-0 ml-2"
                     layoutId={`image-${item.id}`}
                   >
                     <Image
@@ -164,13 +164,13 @@ export function UrlList({
                     />
                   </motion.div>
                 )}
-                <div className="flex-1 min-w-0 px-3">
+                <div className="flex-1 min-w-0 px-3 py-4">
                   <div 
                     className="cursor-pointer"
                     onClick={() => handleCardClick(item)}
                   >
                     <motion.h3 
-                      className={`font-semibold ${textColor} truncate`}
+                      className={`font-semibold ${textColor} line-clamp-2`}
                       layoutId={`title-${item.id}`}
                     >
                       {item.title}
@@ -193,15 +193,19 @@ export function UrlList({
       </div>
 
       {/* Add Item Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white to-transparent">
-        <div className="max-w-lg mx-auto">
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className={`w-full py-3 rounded-lg ${buttonGradientFrom} ${buttonGradientTo} text-white flex items-center justify-center gap-2`}
-          >
-            <Plus className="w-5 h-5" />
-            Add URL
-          </button>
+      <div className="bg-white fixed bottom-0 left-0 mx-auto max-w-md py-1 right-0 rounded-t-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)]">
+        <div className="grid grid-cols-3 gap-8 px-4 items-center justify-items-center">
+          <div></div>
+          <div>
+            <motion.button
+              onClick={() => setIsModalOpen(true)}
+              whileTap={{ y: 4 }}
+              className={`w-20 h-20 bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} border-8 border-white -mt-12 text-white rounded-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)] active:${buttonGradientTo} active:${buttonGradientFrom} active:-translate-y-2 focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} flex items-center justify-center`}
+            >
+              <Plus className="w-8 h-8" />
+            </motion.button>
+          </div>
+          <div></div>
         </div>
       </div>
 
@@ -224,6 +228,13 @@ export function UrlList({
             >
               {editingItem?.id === selectedItem.id ? (
                 <div className="p-6 space-y-2">
+                  <input
+                    type="url"
+                    value={editingItem.imageUrl}
+                    onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
+                    className="w-full px-2 py-1 border rounded"
+                    placeholder="Image URL"
+                  />
                   <input
                     type="text"
                     value={editingItem.title}
@@ -380,72 +391,54 @@ export function UrlList({
       {/* Add Item Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
-          >
+          <>
+            {/* Backdrop */}
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-lg"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsModalOpen(false)}
+              className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            />
+            
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              className="fixed left-4 right-4 top-1/4 bg-white rounded-lg shadow-xl p-4 z-50 max-w-md mx-auto"
             >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Add URL</h2>
+              <form onSubmit={addItem} className="flex gap-2">
+                <input
+                  type="url"
+                  value={newUrl}
+                  onChange={(e) => setNewUrl(e.target.value)}
+                  placeholder="Add a URL..."
+                  className={`flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
+                  autoFocus
+                  disabled={isLoading}
+                />
                 <button
+                  type="submit"
+                  disabled={isLoading}
+                  className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-lg active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor}`}
+                >
+                  {isLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    'Add'
+                  )}
+                </button>
+                <button
+                  type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="p-1 hover:bg-gray-100 rounded-full"
+                  className="px-2 py-2 text-gray-600 hover:text-gray-800 focus:outline-none"
                 >
                   <X className="w-5 h-5" />
                 </button>
-              </div>
-              <form onSubmit={addItem} className="space-y-4">
-                <div>
-                  <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-1">
-                    URL
-                  </label>
-                  <input
-                    type="url"
-                    id="url"
-                    value={newUrl}
-                    onChange={(e) => setNewUrl(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="https://example.com"
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className={`px-4 py-2 ${buttonGradientFrom} ${buttonGradientTo} text-white rounded-lg flex items-center gap-2`}
-                  >
-                    {isLoading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Loading...
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="w-4 h-4" />
-                        Add
-                      </>
-                    )}
-                  </button>
-                </div>
               </form>
             </motion.div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>

@@ -4,7 +4,7 @@ import { UrlList } from '@/components/UrlList'
 
 export default function ReadingList() {
   return (
-    <main className="h-screen">
+    <main className="h-[100dvh]">
       <UrlList
         title="Reading List"
         gradientFrom="from-purple-50"
