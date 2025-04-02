@@ -43,6 +43,15 @@ export function UrlList({
 
   const hasArchivedItems = useMemo(() => items.some(item => item.archived), [items])
 
+  // Get unique tags from all items
+  const existingTags = useMemo(() => {
+    const tags = new Set<string>()
+    items.forEach(item => {
+      if (item.tag) tags.add(item.tag)
+    })
+    return Array.from(tags)
+  }, [items])
+
   const itemVariants = {
     initial: { opacity: 0, y: 20, scale: 0.95 },
     animate: { opacity: 1, y: 0, scale: 1 },
@@ -124,7 +133,7 @@ export function UrlList({
 
   const handleSaveEdit = () => {
     if (editingItem) {
-      const updatedItem = { ...editingItem, ...editForm, updatedAt: new Date() }
+      const updatedItem = { ...editingItem, updatedAt: new Date() }
       saveEdit(updatedItem)
       setEditingItem(null)
     }
@@ -166,6 +175,22 @@ export function UrlList({
       <div className="flex-1 overflow-y-auto px-4 pb-24">
         <div className="max-w-lg mx-auto space-y-2 pt-4">
           <h1 className={`opacity-40 text-center ${titleColor} uppercase font-bold`}>{title}</h1>
+          
+          {/* Tag Display */}
+          {existingTags.length > 0 && (
+            <div className="flex flex-wrap gap-2 px-4 justify-center">
+              {existingTags.map(tag => (
+                <div 
+                  key={tag}
+                  className="flex items-center gap-1 px-2 py-1 bg-white/50 rounded-full text-sm text-gray-600"
+                >
+                  <Tag className="w-3 h-3" />
+                  <span>{tag}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           <AnimatePresence mode="popLayout">
             {items.filter(item => !item.archived).map(item => (
               <motion.div
@@ -263,53 +288,83 @@ export function UrlList({
               layoutId={`card-${selectedItem.id}`}
             >
               {editingItem?.id === selectedItem.id ? (
-                <div className="p-6 space-y-2">
-                  <input
-                    type="url"
-                    value={editingItem.imageUrl}
-                    onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
-                    className="w-full px-2 py-1 border rounded"
-                    placeholder="Image URL"
-                  />
-                  <input
-                    type="text"
-                    value={editingItem.title}
-                    onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
-                    className="w-full px-2 py-1 border rounded"
-                    placeholder="Title"
-                  />
-                  <input
-                    type="text"
-                    value={editingItem.description}
-                    onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
-                    className="w-full px-2 py-1 border rounded"
-                    placeholder="Description"
-                  />
-                  <input
-                    type="text"
-                    value={editingItem.tag || ''}
-                    onChange={(e) => setEditingItem({ ...editingItem, tag: e.target.value })}
-                    className="w-full px-2 py-1 border rounded"
-                    placeholder="Tag (optional)"
-                  />
-                  <textarea
-                    value={editingItem.notes || ''}
-                    onChange={(e) => setEditingItem({ ...editingItem, notes: e.target.value })}
-                    className="w-full px-2 py-1 border rounded"
-                    placeholder="Notes (optional)"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => saveEdit(editingItem)}
-                      className={`px-4 py-2 rounded ${buttonGradientFrom} ${buttonGradientTo} text-white`}
-                    >
-                      Save
-                    </button>
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Image URL
+                    </label>
+                    <input
+                      type="url"
+                      value={editingItem.imageUrl}
+                      onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Image URL"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Title
+                    </label>
+                    <input
+                      type="text"
+                      value={editingItem.title}
+                      onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Title"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <input
+                      type="text"
+                      value={editingItem.description}
+                      onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Description"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tag
+                    </label>
+                    <TagInput
+                      value={editingItem.tag || ''}
+                      onChange={(value) => setEditingItem({ ...editingItem, tag: value })}
+                      existingTags={existingTags}
+                      placeholder="Add tag..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Notes
+                    </label>
+                    <textarea
+                      value={editingItem.notes || ''}
+                      onChange={(e) => setEditingItem({ ...editingItem, notes: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      rows={3}
+                      placeholder="Notes (optional)"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2">
                     <button
                       onClick={() => setEditingItem(null)}
-                      className="px-4 py-2 rounded bg-gray-200"
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800"
                     >
                       Cancel
+                    </button>
+                    <button
+                      onClick={() => handleSaveEdit()}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    >
+                      Save
                     </button>
                   </div>
                 </div>

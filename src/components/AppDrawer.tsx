@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, ShoppingBasket, Store, Link as LinkIcon } from 'lucide-react'
+import { MapPin, Menu, X, ShoppingBasket, Store, Link as LinkIcon } from 'lucide-react'
 import Link from 'next/link'
 
 export default function AppDrawer() {
@@ -10,6 +10,7 @@ export default function AppDrawer() {
     { icon: ShoppingBasket, label: 'Groceries', href: '/groceries' },
     { icon: Store, label: 'Costco', href: '/costco' },
     { icon: LinkIcon, label: 'Shares', href: '/shares' },
+    { icon: MapPin, label: 'Local', href: '/local' },
   ]
 
   return (
