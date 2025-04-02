@@ -2,9 +2,10 @@
 
 import { useState, useMemo } from 'react'
 import { UrlListItem } from '@/types/url-list'
-import { Plus, Trash2, Edit2, X, Link, Tag, StickyNote, Archive } from 'lucide-react'
+import { Plus, Trash2, Edit2, X, Link, Tag, StickyNote, Archive, Search } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
+import AppDrawer from './AppDrawer'
 
 type UrlListProps = {
   title: string
@@ -220,7 +221,9 @@ export function UrlList({
       {/* Add Item Button */}
       <div className="bg-white fixed bottom-0 left-0 mx-auto max-w-md py-1 right-0 rounded-t-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)]">
         <div className="grid grid-cols-3 gap-8 px-4 items-center justify-items-center">
-          <div></div>
+          <div className="justify-self-end">
+            <AppDrawer />
+          </div>
           <div>
             <motion.button
               onClick={() => setIsModalOpen(true)}
@@ -467,4 +470,4 @@ export function UrlList({
       </AnimatePresence>
     </div>
   )
-} 
+}

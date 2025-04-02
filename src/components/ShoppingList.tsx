@@ -2,8 +2,9 @@
 
 import { useState, useMemo, useRef } from 'react'
 import { GroceryItem } from '@/types/grocery'
-import { Plus, Trash2, Edit2, X, BadgeDollarSign, ShoppingBasket, MoreVertical } from 'lucide-react'
+import { Plus, Trash2, Edit2, X, BadgeDollarSign, ShoppingBasket, MoreVertical, Search, ShoppingCart, Archive } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import AppDrawer from './AppDrawer'
 
 type ShoppingListProps = {
   title: string
@@ -254,7 +255,9 @@ export function ShoppingList({
       {/* Floating Add Button */}
       <div className="bg-white fixed bottom-0 left-0 mx-auto max-w-md py-1 right-0 rounded-t-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)]">
         <div className="grid grid-cols-3 gap-8 px-4 items-center justify-items-center">
-          <div></div>
+          <div className="justify-self-end">
+            <AppDrawer />
+          </div>
           <div>
             <motion.button
               onClick={() => setIsModalOpen(true)}
