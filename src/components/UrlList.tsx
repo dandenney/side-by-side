@@ -43,7 +43,13 @@ export function UrlList({
   const itemVariants = {
     initial: { opacity: 0, y: 20, scale: 0.95 },
     animate: { opacity: 1, y: 0, scale: 1 },
-    exit: { opacity: 0, scale: 0.95 },
+    exit: { 
+      opacity: 0, 
+      y: -10, 
+      scale: 0.95, 
+      filter: "blur(2px)",
+      transition: { duration: 0 }
+    },
     tap: { 
       scale: 0.98,
       transition: { 
@@ -56,8 +62,8 @@ export function UrlList({
 
   const modalContentVariants = {
     initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    exit: { opacity: 0 },
+    animate: { opacity: 1, transition: { duration: 0.2 } },
+    exit: { opacity: 0, transition: { duration: 0.4 } },
   }
 
   const fetchMetaData = async (url: string) => {
@@ -129,15 +135,11 @@ export function UrlList({
 
   const archiveItem = (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
-    handleCloseModal()
-    // Small delay to let modal fade out first
-    setTimeout(() => {
-      setItems(items.map(item =>
-        item.id === id
-          ? { ...item, archived: true, updatedAt: new Date() }
-          : item
-      ))
-    }, 200)
+    setItems(items.map(item =>
+      item.id === id
+        ? { ...item, archived: true, updatedAt: new Date() }
+        : item
+    ))
   }
 
   const archiveAll = () => {
@@ -164,7 +166,7 @@ export function UrlList({
                 exit="exit"
                 whileTap="tap"
                 layout
-                className="flex items-center bg-white rounded-lg shadow-xl border hover:bg-gray-50 overflow-hidden"
+                className={`flex items-center bg-white rounded-lg shadow-xl border hover:bg-gray-50 overflow-hidden ${selectedItem?.id === item.id ? 'opacity-0' : ''}`}
                 layoutId={`card-${item.id}`}
               >
                 {item.imageUrl && (
@@ -194,6 +196,12 @@ export function UrlList({
                     </motion.h3>
                   </div>
                 </div>
+                <button
+                  onClick={(e) => archiveItem(e, item.id)}
+                  className="p-1 hover:bg-gray-100 rounded-full mr-3"
+                >
+                  <Archive className="w-5 h-5 text-gray-400" />
+                </button>
                 <a 
                   href={item.url} 
                   target="_blank" 
@@ -408,20 +416,11 @@ export function UrlList({
                           onClick={(e) => {
                             e.stopPropagation()
                             archiveItem(e, selectedItem.id)
+                            handleCloseModal()
                           }}
                           className="px-4 py-2 text-gray-600 hover:text-yellow-500 rounded-lg hover:bg-gray-100"
                         >
                           <Archive className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            deleteItem(e, selectedItem.id)
-                            handleCloseModal()
-                          }}
-                          className="px-4 py-2 text-gray-600 hover:text-red-500 rounded-lg hover:bg-gray-100"
-                        >
-                          <Trash2 className="w-4 h-4" />
                         </button>
                       </motion.div>
                     </div>

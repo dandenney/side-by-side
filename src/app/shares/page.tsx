@@ -6,7 +6,7 @@ export default function ReadingList() {
   return (
     <main className="h-[100dvh]">
       <UrlList
-        title="Reading List"
+        title="Shares"
         gradientFrom="from-purple-50"
         gradientTo="to-purple-100"
         textColor="text-purple-900"
