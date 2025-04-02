@@ -1,8 +1,8 @@
 'use client'
 
-import { useState} from 'react'
+import { useState, useMemo } from 'react'
 import { UrlListItem } from '@/types/url-list'
-import { Plus, Trash2, Edit2, X, Link, Tag, StickyNote } from 'lucide-react'
+import { Plus, Trash2, Edit2, X, Link, Tag, StickyNote, Archive } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 
@@ -38,10 +38,12 @@ export function UrlList({
   const [selectedItem, setSelectedItem] = useState<UrlListItem | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
+  const hasArchivedItems = useMemo(() => items.some(item => item.archived), [items])
+
   const itemVariants = {
     initial: { opacity: 0, y: 20, scale: 0.95 },
     animate: { opacity: 1, y: 0, scale: 1 },
-    exit: { opacity: 0, x: -100, scale: 0.95 },
+    exit: { opacity: 0, scale: 0.95 },
     tap: { 
       scale: 0.98,
       transition: { 
@@ -52,16 +54,10 @@ export function UrlList({
     }
   }
 
-  const modalVariants = {
+  const modalContentVariants = {
     initial: { opacity: 0 },
     animate: { opacity: 1 },
     exit: { opacity: 0 },
-  }
-
-  const modalContentVariants = {
-    initial: { scale: 0.95 },
-    animate: { scale: 1 },
-    exit: { scale: 0.95 },
   }
 
   const fetchMetaData = async (url: string) => {
@@ -131,6 +127,27 @@ export function UrlList({
     setEditingItem(null)
   }
 
+  const archiveItem = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation()
+    handleCloseModal()
+    // Small delay to let modal fade out first
+    setTimeout(() => {
+      setItems(items.map(item =>
+        item.id === id
+          ? { ...item, archived: true, updatedAt: new Date() }
+          : item
+      ))
+    }, 200)
+  }
+
+  const archiveAll = () => {
+    if (!hasArchivedItems) return
+    const archivedItems = items.filter(item => item.archived)
+    setItems(items.filter(item => !item.archived))
+    // In a real app, we would save these to an archived list
+    console.log('Archived items:', archivedItems)
+  }
+
   return (
     <div className={`bg-gradient-to-b ${gradientFrom} ${gradientTo} h-full flex flex-col`}>
       {/* List Items */}
@@ -138,7 +155,7 @@ export function UrlList({
         <div className="max-w-lg mx-auto space-y-2 pt-4">
           <h1 className={`opacity-40 text-center ${titleColor} uppercase font-bold`}>{title}</h1>
           <AnimatePresence mode="popLayout">
-            {items.map(item => (
+            {items.filter(item => !item.archived).map(item => (
               <motion.div
                 key={item.id}
                 variants={itemVariants}
@@ -205,7 +222,26 @@ export function UrlList({
               <Plus className="w-8 h-8" />
             </motion.button>
           </div>
-          <div></div>
+          <div className='justify-self-start'>
+            <motion.button
+              onClick={archiveAll}
+              animate={{
+                scale: hasArchivedItems ? [0.75, 1.2, 1] : 0.75
+              }}
+              transition={{
+                duration: 0.3,
+                times: [0, 0.6, 1],
+                ease: "easeOut"
+              }}
+              className={`bg-gradient-to-b ease-out h-10 rounded-full flex items-center justify-center gap-2 relative rounded-full shadow-2xl shadow-inner shadow-black/10 transition-all w-10 ${
+                hasArchivedItems
+                  ? `${buttonGradientFrom} ${buttonGradientTo} opacity-80 focus:ring-2 focus:ring-${buttonAccentColor} cursor-pointer`
+                  : 'from-gray-100 to-gray-300 opacity-100 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              <Archive className="ease-out h-6 text-white transition-all w-6" />
+            </motion.button>
+          </div>
         </div>
       </div>
 
@@ -367,6 +403,15 @@ export function UrlList({
                           className="px-4 py-2 text-gray-600 hover:text-blue-500 rounded-lg hover:bg-gray-100"
                         >
                           <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            archiveItem(e, selectedItem.id)
+                          }}
+                          className="px-4 py-2 text-gray-600 hover:text-yellow-500 rounded-lg hover:bg-gray-100"
+                        >
+                          <Archive className="w-4 h-4" />
                         </button>
                         <button
                           onClick={(e) => {

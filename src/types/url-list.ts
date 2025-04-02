@@ -1,9 +1,9 @@
 export interface UrlListItem {
   id: string
   url: string
-  imageUrl: string
+  imageUrl?: string
   title: string
-  description: string
+  description?: string
   tag?: string
   notes?: string
   dateRange?: {
@@ -12,6 +12,7 @@ export interface UrlListItem {
   }
   createdAt: Date
   updatedAt: Date
+  archived?: boolean
 }
 
 export interface UrlList {
