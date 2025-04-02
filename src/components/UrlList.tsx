@@ -147,38 +147,41 @@ export function UrlList({
                 exit="exit"
                 whileTap="tap"
                 layout
-                className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-xl border hover:bg-gray-50"
+                className="flex items-center bg-white rounded-lg shadow-xl border hover:bg-gray-50 overflow-hidden h-12"
                 layoutId={`card-${item.id}`}
               >
                 {item.imageUrl && (
                   <motion.div 
-                    className="relative w-12 h-12 flex-shrink-0"
+                    className="relative w-20 h-full flex-shrink-0"
                     layoutId={`image-${item.id}`}
                   >
                     <Image
                       src={item.imageUrl}
                       alt={item.title}
                       fill
-                      className="object-cover rounded"
+                      className="object-cover"
+                      sizes="80px"
                     />
                   </motion.div>
                 )}
-                <div 
-                  className="flex-1 min-w-0 cursor-pointer"
-                  onClick={() => handleCardClick(item)}
-                >
-                  <motion.h3 
-                    className={`font-semibold ${textColor} truncate`}
-                    layoutId={`title-${item.id}`}
+                <div className="flex-1 min-w-0 px-3">
+                  <div 
+                    className="cursor-pointer"
+                    onClick={() => handleCardClick(item)}
                   >
-                    {item.title}
-                  </motion.h3>
+                    <motion.h3 
+                      className={`font-semibold ${textColor} truncate`}
+                      layoutId={`title-${item.id}`}
+                    >
+                      {item.title}
+                    </motion.h3>
+                  </div>
                 </div>
                 <a 
                   href={item.url} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="p-1 hover:bg-gray-100 rounded-full"
+                  className="p-1 hover:bg-gray-100 rounded-full mr-3"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Link className="w-5 h-5 text-gray-400" />
