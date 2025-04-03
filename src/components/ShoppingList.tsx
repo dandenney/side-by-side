@@ -45,7 +45,7 @@ export function ShoppingList({
   const storeOptions = [
     { value: 'Publix', color: 'green' },
     { value: 'Costco', color: 'blue' },
-    { value: 'Aldi', color: 'yellow' }
+    { value: 'Aldi', color: 'orange' }
   ] as const
 
   const StoreSelector = ({ 
@@ -191,7 +191,6 @@ export function ShoppingList({
                 className="flex items-center gap-2 p-3 bg-white rounded-lg shadow-xl border hover:bg-gray-50 cursor-pointer"
                 style={{ touchAction: 'manipulation' }}
               >
-                {/* Main Area - Check Toggle */}
                 <motion.div 
                   className="flex-1 flex items-center gap-2"
                   onClick={() => handleMainAreaTap(item)}
@@ -220,7 +219,6 @@ export function ShoppingList({
                         <StoreSelector
                           value={editStore}
                           onChange={setEditStore}
-                          size="small"
                         />
                       </div>
                     </div>
@@ -229,9 +227,9 @@ export function ShoppingList({
                       layout
                       className="flex-1 flex items-center gap-2"
                     >
-                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${item.store === 'Publix' ? 'bg-green-100 text-green-800' :
-                          item.store === 'Costco' ? 'bg-blue-100 text-blue-800' :
-                            'bg-yellow-100 text-yellow-800'
+                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${item.store === 'Publix' ? 'bg-green-200 text-green-800' :
+                          item.store === 'Costco' ? 'bg-blue-200 text-blue-800' :
+                            'bg-violet-200 text-violet-800'
                         }`}>
                         {item.store}
                       </span>
