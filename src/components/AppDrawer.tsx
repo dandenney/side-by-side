@@ -8,7 +8,6 @@ export default function AppDrawer() {
 
   const menuItems = [
     { icon: ShoppingBasket, label: 'Groceries', href: '/groceries' },
-    { icon: Store, label: 'Costco', href: '/costco' },
     { icon: LinkIcon, label: 'Shares', href: '/shares' },
     { icon: MapPin, label: 'Local', href: '/local' },
   ]

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo } from 'react'
 import { GroceryItem } from '@/types/grocery'
-import { Plus, Trash2, Edit2, X, BadgeDollarSign, ShoppingBasket, MoreVertical, Search, ShoppingCart, Archive } from 'lucide-react'
+import { Plus, Trash2, Edit2, X, BadgeDollarSign, ShoppingBasket, MoreVertical} from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import AppDrawer from './AppDrawer'
 
@@ -35,10 +35,45 @@ export function ShoppingList({
   const [newItem, setNewItem] = useState('')
   const [editingItem, setEditingItem] = useState<GroceryItem | null>(null)
   const [editText, setEditText] = useState('')
+  const [editStore, setEditStore] = useState<'Publix' | 'Costco' | 'Aldi'>('Publix')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [showEditControls, setShowEditControls] = useState<string | null>(null)
+  const [selectedStore, setSelectedStore] = useState<'Publix' | 'Costco' | 'Aldi'>('Publix')
 
   const hasCheckedItems = useMemo(() => items.some(item => item.checked), [items])
+
+  const storeOptions = [
+    { value: 'Publix', color: 'green' },
+    { value: 'Costco', color: 'blue' },
+    { value: 'Aldi', color: 'yellow' }
+  ] as const
+
+  const StoreSelector = ({ 
+    value, 
+    onChange, 
+    size = 'normal' 
+  }: { 
+    value: 'Publix' | 'Costco' | 'Aldi', 
+    onChange: (value: 'Publix' | 'Costco' | 'Aldi') => void,
+    size?: 'normal' | 'small'
+  }) => {
+    const isSmall = size === 'small'
+    return (
+      <div className={`relative flex ${isSmall ? 'text-xs' : 'text-sm'} font-medium rounded-lg bg-gray-100 p-1`}>
+        {storeOptions.map((option) => (
+          <button
+            key={option.value}
+            onClick={() => onChange(option.value)}
+            className={`relative z-10 flex-1 px-3 py-1.5 rounded-md transition-all ease-in-out ${
+              value === option.value ? 'bg-green-700 text-white' : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            {option.value}
+          </button>
+        ))}
+      </div>
+    )
+  }
 
   const itemVariants = {
     initial: { opacity: 0, y: 20, scale: 0.95 },
@@ -79,10 +114,6 @@ export function ShoppingList({
     toggleCheck(item.id)
   }
 
-  const handleActionAreaTap = (item: GroceryItem) => {
-    setShowEditControls(showEditControls === item.id ? null : item.id)
-  }
-
   const addItem = (e: React.FormEvent) => {
     e.preventDefault()
     if (!newItem.trim()) return
@@ -91,12 +122,14 @@ export function ShoppingList({
       id: crypto.randomUUID(),
       name: newItem.trim(),
       checked: false,
+      store: selectedStore,
       createdAt: new Date(),
       updatedAt: new Date(),
     }
 
     setItems([...items, item])
     setNewItem('')
+    setSelectedStore('Publix')
     setIsModalOpen(false)
   }
 
@@ -112,6 +145,7 @@ export function ShoppingList({
     e.stopPropagation()
     setEditingItem(item)
     setEditText(item.name)
+    setEditStore(item.store)
   }
 
   const saveEdit = () => {
@@ -119,7 +153,7 @@ export function ShoppingList({
 
     setItems(items.map(item =>
       item.id === editingItem.id
-        ? { ...item, name: editText.trim(), updatedAt: new Date() }
+        ? { ...item, name: editText.trim(), store: editStore, updatedAt: new Date() }
         : item
     ))
     setEditingItem(null)
@@ -172,23 +206,40 @@ export function ShoppingList({
                   </motion.div>
 
                   {editingItem?.id === item.id ? (
-                    <input
-                      type="text"
-                      value={editText}
-                      onChange={(e) => setEditText(e.target.value)}
-                      onBlur={saveEdit}
-                      onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                      className={`flex-1 px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
-                      autoFocus
-                      onClick={(e) => e.stopPropagation()}
-                    />
+                    <div className="flex-1 flex flex-col gap-2">
+                      <input
+                        type="text"
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        onBlur={saveEdit}
+                        onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
+                        className={`px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                        <StoreSelector
+                          value={editStore}
+                          onChange={setEditStore}
+                          size="small"
+                        />
+                      </div>
+                    </div>
                   ) : (
-                    <motion.span 
+                    <motion.div 
                       layout
-                      className={`flex-1 ${textColor} ${item.checked ? 'line-through text-gray-500' : ''}`}
+                      className="flex-1 flex items-center gap-2"
                     >
-                      {item.name}
-                    </motion.span>
+                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${item.store === 'Publix' ? 'bg-green-100 text-green-800' :
+                          item.store === 'Costco' ? 'bg-blue-100 text-blue-800' :
+                            'bg-yellow-100 text-yellow-800'
+                        }`}>
+                        {item.store}
+                      </span>
+                      <span className={`${textColor} ${item.checked ? 'line-through text-gray-500' : ''}`}>
+                        {item.name}
+                      </span>
+                    </motion.div>
                   )}
                 </motion.div>
 
@@ -310,28 +361,33 @@ export function ShoppingList({
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
               className="fixed left-4 right-4 top-1/4 bg-white rounded-lg shadow-xl p-4 z-50 max-w-md mx-auto"
             >
-              <form onSubmit={addItem} className="flex gap-2">
-                <input
-                  type="text"
-                  value={newItem}
-                  onChange={(e) => setNewItem(e.target.value)}
-                  placeholder="Add a new item..."
-                  className={`flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
-                  autoFocus
-                />
-                <button
-                  type="submit"
-                  className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-lg active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor}`}
-                >
-                  Add
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-2 py-2 text-gray-600 hover:text-gray-800 focus:outline-none"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+              <form onSubmit={addItem} className="flex flex-col gap-4">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newItem}
+                    onChange={(e) => setNewItem(e.target.value)}
+                    placeholder="Add a new item..."
+                    className={`flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
+                    autoFocus
+                  />
+                  <button
+                    type="submit"
+                    className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-lg active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor}`}
+                  >
+                    Add
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-2 py-2 text-gray-600 hover:text-gray-800 focus:outline-none"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="flex gap-4">
+                  <StoreSelector value={selectedStore} onChange={setSelectedStore} />
+                </div>
               </form>
             </motion.div>
           </>
