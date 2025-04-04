@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MapPin, Menu, X, ShoppingBasket, Store, Link as LinkIcon } from 'lucide-react'
