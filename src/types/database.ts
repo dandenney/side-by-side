@@ -29,6 +29,84 @@ export interface Database {
           updated_at?: string
         }
       }
+      grocery_lists: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      grocery_items: {
+        Row: {
+          id: string
+          name: string
+          checked: boolean
+          store: 'publix' | 'costco' | 'aldi'
+          user_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          checked?: boolean
+          store: 'publix' | 'costco' | 'aldi'
+          user_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          checked?: boolean
+          store?: 'publix' | 'costco' | 'aldi'
+          user_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      archived_items: {
+        Row: {
+          id: string
+          list_id: string
+          name: string
+          store: 'publix' | 'costco' | 'aldi'
+          created_at: string
+          archived_at: string
+        }
+        Insert: {
+          id?: string
+          list_id: string
+          name: string
+          store: 'publix' | 'costco' | 'aldi'
+          created_at?: string
+          archived_at?: string
+        }
+        Update: {
+          id?: string
+          list_id?: string
+          name?: string
+          store?: 'publix' | 'costco' | 'aldi'
+          created_at?: string
+          archived_at?: string
+        }
+      }
       categories: {
         Row: {
           id: string

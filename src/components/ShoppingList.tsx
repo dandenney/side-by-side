@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { GroceryItem } from '@/types/grocery'
 import { Plus, Trash2, Edit2, X, BadgeDollarSign, ShoppingBasket, MoreVertical} from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import AppDrawer from './AppDrawer'
+import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/contexts/AuthContext'
 
 type ShoppingListProps = {
   title: string
@@ -32,6 +34,7 @@ export function ShoppingList({
   buttonAccentColor,
 }: ShoppingListProps) {
   const [items, setItems] = useState<GroceryItem[]>([])
+  const [archivedItems, setArchivedItems] = useState<GroceryItem[]>([])
   const [newItem, setNewItem] = useState('')
   const [editingItem, setEditingItem] = useState<GroceryItem | null>(null)
   const [editText, setEditText] = useState('')
@@ -39,6 +42,10 @@ export function ShoppingList({
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [showEditControls, setShowEditControls] = useState<string | null>(null)
   const [selectedStore, setSelectedStore] = useState<'Publix' | 'Costco' | 'Aldi'>('Publix')
+  const [loading, setLoading] = useState(true)
+
+  const { user } = useAuth()
+  const supabase = createClient()
 
   const hasCheckedItems = useMemo(() => items.some(item => item.checked), [items])
 
@@ -47,6 +54,214 @@ export function ShoppingList({
     { value: 'Costco', color: 'blue' },
     { value: 'Aldi', color: 'orange' }
   ] as const
+
+  useEffect(() => {
+    if (!user) return
+
+    const initializeList = async () => {
+      try {
+        const { data: items, error: itemsError } = await supabase
+          .from('grocery_items')
+          .select('*')
+          .eq('user_id', user.id)
+
+        if (itemsError) {
+          console.error('Error fetching items:', itemsError)
+          throw itemsError
+        }
+
+        setItems(items?.map(item => ({
+          ...item,
+          checked: item.checked,
+          createdAt: new Date(item.created_at),
+          updatedAt: new Date(item.updated_at)
+        })) || [])
+
+        const { data: archived, error: archivedError } = await supabase
+          .from('archived_items')
+          .select('*')
+          .eq('user_id', user.id)
+
+        if (archivedError) {
+          console.error('Error fetching archived items:', archivedError)
+          throw archivedError
+        }
+
+        setArchivedItems(archived?.map(item => ({
+          ...item,
+          checked: false,
+          createdAt: new Date(item.created_at),
+          updatedAt: new Date(item.archived_at)
+        })) || [])
+      } catch (error) {
+        console.error('Error initializing list:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    initializeList()
+  }, [user])
+
+  const addItem = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newItem.trim() || !user) return
+
+    try {
+      const itemToAdd = {
+        user_id: user.id,
+        name: newItem.trim(),
+        store: selectedStore,
+        checked: false
+      } as const
+      
+      const { data, error } = await supabase
+        .from('grocery_items')
+        .insert(itemToAdd)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error adding item to database:', error)
+        throw error
+      }
+
+      const newItemObj: GroceryItem = {
+        ...data,
+        checked: data.checked,
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at)
+      }
+
+      setItems(prev => [...prev, newItemObj])
+      setNewItem('')
+      setIsModalOpen(false)
+    } catch (error) {
+      console.error('Error in addItem:', error)
+    }
+  }
+
+  const toggleCheck = async (id: string) => {
+    if (!user) return
+
+    try {
+      const item = items.find(i => i.id === id)
+      if (!item) return
+
+      const { error } = await supabase
+        .from('grocery_items')
+        .update({ checked: !item.checked })
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+      if (error) {
+        console.error('Error toggling check in database:', error)
+        throw error
+      }
+
+      setItems(prev => prev.map(item =>
+        item.id === id ? { ...item, checked: !item.checked } : item
+      ))
+    } catch (error) {
+      console.error('Error in toggleCheck:', error)
+    }
+  }
+
+  const saveEdit = async () => {
+    if (!editingItem || !editText.trim() || !user) return
+
+    try {
+      const updates = {
+        name: editText.trim(),
+        store: editStore
+      }
+      
+      const { error } = await supabase
+        .from('grocery_items')
+        .update(updates)
+        .eq('id', editingItem.id)
+        .eq('user_id', user.id)
+
+      if (error) {
+        console.error('Error saving edit to database:', error)
+        throw error
+      }
+
+      setItems(prev => prev.map(item =>
+        item.id === editingItem.id
+          ? { ...item, name: editText.trim(), store: editStore }
+          : item
+      ))
+      setEditingItem(null)
+      setEditText('')
+    } catch (error) {
+      console.error('Error in saveEdit:', error)
+    }
+  }
+
+  const deleteItem = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation()
+    if (!user) return
+
+    try {
+      const { error } = await supabase
+        .from('grocery_items')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+      if (error) {
+        console.error('Error deleting item from database:', error)
+        throw error
+      }
+
+      setItems(prev => prev.filter(item => item.id !== id))
+    } catch (error) {
+      console.error('Error in deleteItem:', error)
+    }
+  }
+
+  const archiveChecked = async () => {
+    if (!user) return
+
+    const checkedItems = items.filter(item => item.checked)
+    if (checkedItems.length === 0) return
+
+    try {
+      const itemsToArchive = checkedItems.map(item => ({
+        user_id: user.id,
+        name: item.name,
+        store: item.store,
+        created_at: item.createdAt.toISOString()
+      }))
+      
+      const { error: archiveError } = await supabase
+        .from('archived_items')
+        .insert(itemsToArchive)
+
+      if (archiveError) {
+        console.error('Error archiving items:', archiveError)
+        throw archiveError
+      }
+
+      const itemIds = checkedItems.map(item => item.id)
+      const { error: deleteError } = await supabase
+        .from('grocery_items')
+        .delete()
+        .in('id', itemIds)
+        .eq('user_id', user.id)
+
+      if (deleteError) {
+        console.error('Error deleting archived items:', deleteError)
+        throw deleteError
+      }
+
+      setItems(prev => prev.filter(item => !item.checked))
+      setArchivedItems(prev => [...prev, ...checkedItems])
+    } catch (error) {
+      console.error('Error in archiveChecked:', error)
+    }
+  }
 
   const StoreSelector = ({ 
     value, 
@@ -113,63 +328,11 @@ export function ShoppingList({
     toggleCheck(item.id)
   }
 
-  const addItem = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newItem.trim()) return
-
-    const item: GroceryItem = {
-      id: crypto.randomUUID(),
-      name: newItem.trim(),
-      checked: false,
-      store: selectedStore,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-
-    setItems([...items, item])
-    setNewItem('')
-    setSelectedStore('Publix')
-    setIsModalOpen(false)
-  }
-
-  const toggleCheck = (id: string) => {
-    setItems(items.map(item =>
-      item.id === id
-        ? { ...item, checked: !item.checked, updatedAt: new Date() }
-        : item
-    ))
-  }
-
   const startEdit = (e: React.MouseEvent, item: GroceryItem) => {
     e.stopPropagation()
     setEditingItem(item)
     setEditText(item.name)
     setEditStore(item.store)
-  }
-
-  const saveEdit = () => {
-    if (!editingItem || !editText.trim()) return
-
-    setItems(items.map(item =>
-      item.id === editingItem.id
-        ? { ...item, name: editText.trim(), store: editStore, updatedAt: new Date() }
-        : item
-    ))
-    setEditingItem(null)
-    setEditText('')
-  }
-
-  const deleteItem = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
-    setItems(items.filter(item => item.id !== id))
-  }
-
-  const archiveChecked = () => {
-    if (!hasCheckedItems) return
-    const checkedItems = items.filter(item => item.checked)
-    setItems(items.filter(item => !item.checked))
-    // In a real app, we would save these to an archived list
-    console.log('Archived items:', checkedItems)
   }
 
   return (
