@@ -4,6 +4,7 @@ import { UrlList } from '@/components/UrlList'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import { SHARED_LIST_ID } from '@/lib/constants'
 
 export default function LocalList() {
   const { user, loading } = useAuth()
@@ -33,7 +34,7 @@ export default function LocalList() {
         buttonGradientTo="to-purple-600"
         buttonAccentColor="text-purple-500"
         listType="local"
-        listId={user.id}
+        listId={SHARED_LIST_ID}
       />
     </main>
   )

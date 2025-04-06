@@ -17,7 +17,6 @@ export async function getTags(listType: 'local' | 'shared', listId: string) {
   const { data, error } = await supabase
     .from('tags')
     .select('*')
-    .eq('list_type', listType)
     .eq('list_id', listId)
     .order('created_at', { ascending: false })
 

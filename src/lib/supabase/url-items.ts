@@ -1,5 +1,6 @@
 import { supabase } from '../supabase'
 import { UrlListItem, Tag } from '@/types/url-list'
+import { SHARED_LIST_ID } from '@/lib/constants'
 
 interface SupabaseUrlItem {
   id: string
@@ -25,7 +26,7 @@ interface SupabaseItemTag {
   }
 }
 
-export async function getUrlItems(listType: 'local' | 'shared', listId: string) {
+export async function getUrlItems(listType: 'local' | 'shared', listId: string): Promise<UrlListItem[]> {
   const { data, error } = await supabase
     .from('url_items')
     .select(`
@@ -40,7 +41,6 @@ export async function getUrlItems(listType: 'local' | 'shared', listId: string) 
         )
       )
     `)
-    .eq('list_type', listType)
     .eq('list_id', listId)
     .order('created_at', { ascending: false })
 
@@ -61,14 +61,14 @@ export async function getUrlItems(listType: 'local' | 'shared', listId: string) 
     createdAt: new Date(item.created_at),
     updatedAt: new Date(item.updated_at),
     archived: item.archived,
-    tags: (item.item_tags as SupabaseItemTag[]).map(t => ({
-      id: t.tag.id,
-      name: t.tag.name,
-      listId: t.tag.list_id,
-      listType: t.tag.list_type,
-      createdAt: new Date(t.tag.created_at)
+    tags: (item.item_tags as SupabaseItemTag[]).map(({ tag }) => ({
+      id: tag.id,
+      name: tag.name,
+      listId: tag.list_id,
+      listType: tag.list_type,
+      createdAt: new Date(tag.created_at)
     }))
-  })) as UrlListItem[]
+  }))
 }
 
 export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' | 'updatedAt'>) {
@@ -81,7 +81,7 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
       description: item.description,
       notes: item.notes,
       list_type: item.listType,
-      list_id: item.listId,
+      list_id: item.listId || SHARED_LIST_ID,
       archived: item.archived || false
     })
     .select()
