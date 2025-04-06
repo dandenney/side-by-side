@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { UrlListTest } from '@/components/UrlListTest'
 
 export default function TestPage() {
   const [status, setStatus] = useState<'loading' | 'connected' | 'error'>('loading')
@@ -50,13 +51,13 @@ export default function TestPage() {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Supabase Connection Test</h1>
-      <div className="space-y-4">
-        <div className="space-y-2">
+      <div className="space-y-8">
+        <div className="space-y-4">
           <h2 className="text-lg font-semibold">Environment Configuration:</h2>
           <p>Supabase URL: {config.url ? '✅ Present' : '❌ Missing'}</p>
           <p>Anon Key: {config.hasAnonKey ? '✅ Present' : '❌ Missing'}</p>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-4">
           <h2 className="text-lg font-semibold">Connection Status:</h2>
           <p>Status: {status}</p>
           {error && (
@@ -66,6 +67,12 @@ export default function TestPage() {
             </div>
           )}
         </div>
+        {status === 'connected' && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold">URL Items Test:</h2>
+            <UrlListTest />
+          </div>
+        )}
       </div>
     </div>
   )

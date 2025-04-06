@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { UrlListItem } from '@/types/url-list'
-import { Plus, Trash2, Edit2, X, Link, Tag, StickyNote, Archive, Search } from 'lucide-react'
+import { useState, useMemo, useEffect } from 'react'
+import { UrlListItem, Tag } from '@/types/url-list'
+import { Plus, Trash2, Edit2, X, Link, Tag as TagIcon, StickyNote, Archive, Search } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import AppDrawer from './AppDrawer'
 import TagInput from './TagInput'
+import { createUrlItem, getUrlItems, updateUrlItem, deleteUrlItem, archiveUrlItem } from '@/lib/supabase/url-items'
+import { getTags, createTag, deleteTag, addTagToItem, removeTagFromItem, getItemTags } from '@/lib/supabase/tags'
 
 type UrlListProps = {
   title: string
@@ -19,6 +21,8 @@ type UrlListProps = {
   buttonGradientFrom: string
   buttonGradientTo: string
   buttonAccentColor: string
+  listType: 'local' | 'shared'
+  listId: string
 }
 
 export function UrlList({
@@ -32,8 +36,11 @@ export function UrlList({
   buttonGradientFrom,
   buttonGradientTo,
   buttonAccentColor,
+  listType,
+  listId,
 }: UrlListProps) {
   const [items, setItems] = useState<UrlListItem[]>([])
+  const [tags, setTags] = useState<Tag[]>([])
   const [newUrl, setNewUrl] = useState('')
   const [selectedItem, setSelectedItem] = useState<UrlListItem | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -47,7 +54,7 @@ export function UrlList({
   const existingTags = useMemo(() => {
     const tags = new Set<string>()
     items.forEach(item => {
-      if (item.tag) tags.add(item.tag)
+      if (item.tags) item.tags.forEach(tag => tags.add(tag.name))
     })
     return Array.from(tags)
   }, [items])
@@ -89,32 +96,54 @@ export function UrlList({
     }
   }
 
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [itemsData, tagsData] = await Promise.all([
+          getUrlItems(listType, listId),
+          getTags(listType, listId)
+        ])
+        setItems(itemsData)
+        setTags(tagsData)
+      } catch (error) {
+        console.error('Error loading data:', error)
+      }
+    }
+    loadData()
+  }, [listType, listId])
+
   const addItem = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newUrl.trim()) return
 
     setIsLoading(true)
-    const metaData = await fetchMetaData(newUrl)
-    setIsLoading(false)
+    try {
+      const metaData = await fetchMetaData(newUrl)
+      if (!metaData) {
+        alert('Failed to fetch meta data for the URL')
+        return
+      }
 
-    if (!metaData) {
-      alert('Failed to fetch meta data for the URL')
-      return
+      const newItem = {
+        url: newUrl.trim(),
+        imageUrl: metaData.image || '',
+        title: metaData.title || 'Untitled',
+        description: metaData.description || '',
+        listType,
+        listId,
+        archived: false
+      }
+
+      const createdItem = await createUrlItem(newItem)
+      setItems([...items, createdItem])
+      setNewUrl('')
+      setIsModalOpen(false)
+    } catch (error) {
+      console.error('Error adding item:', error)
+      alert('Failed to add item. Please try again.')
+    } finally {
+      setIsLoading(false)
     }
-
-    const item: UrlListItem = {
-      id: crypto.randomUUID(),
-      url: newUrl.trim(),
-      imageUrl: metaData.image || '',
-      title: metaData.title || 'Untitled',
-      description: metaData.description || '',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-
-    setItems([...items, item])
-    setNewUrl('')
-    setIsModalOpen(false)
   }
 
   const handleCardClick = (item: UrlListItem) => {
@@ -126,31 +155,61 @@ export function UrlList({
     setEditingItem(null)
   }
 
-  const startEdit = (e: React.MouseEvent, item: UrlListItem) => {
+  const startEdit = async (e: React.MouseEvent, item: UrlListItem) => {
     e.stopPropagation()
-    setEditingItem(item)
-  }
-
-  const handleSaveEdit = () => {
-    if (editingItem) {
-      const updatedItem = { ...editingItem, updatedAt: new Date() }
-      saveEdit(updatedItem)
-      setEditingItem(null)
+    try {
+      // Get the latest item data with tags
+      const updatedItems = await getUrlItems(listType, listId)
+      const latestItem = updatedItems.find(i => i.id === item.id)
+      if (latestItem) {
+        setEditingItem(latestItem)
+      }
+    } catch (error) {
+      console.error('Error loading item for edit:', error)
+      // Fallback to the current item data if there's an error
+      setEditingItem(item)
     }
   }
 
-  const deleteItem = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
-    setItems(items.filter(item => item.id !== id))
+  const handleSaveEdit = async () => {
+    if (editingItem) {
+      try {
+        const updatedItem = await updateUrlItem(editingItem)
+        setItems(items.map(item => 
+          item.id === updatedItem.id ? updatedItem : item
+        ))
+        setEditingItem(null)
+      } catch (error) {
+        console.error('Error updating item:', error)
+        alert('Failed to update item. Please try again.')
+      }
+    }
   }
 
-  const archiveItem = (e: React.MouseEvent, id: string) => {
+  const deleteItem = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
-    setItems(items.map(item =>
-      item.id === id
-        ? { ...item, archived: true, updatedAt: new Date() }
-        : item
-    ))
+    try {
+      await deleteUrlItem(id)
+      setItems(items.filter(item => item.id !== id))
+    } catch (error) {
+      console.error('Error deleting item:', error)
+      alert('Failed to delete item. Please try again.')
+    }
+  }
+
+  const archiveItem = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation()
+    try {
+      await archiveUrlItem(id)
+      setItems(items.map(item =>
+        item.id === id
+          ? { ...item, archived: true, updatedAt: new Date() }
+          : item
+      ))
+    } catch (error) {
+      console.error('Error archiving item:', error)
+      alert('Failed to archive item. Please try again.')
+    }
   }
 
   const archiveAll = () => {
@@ -161,12 +220,51 @@ export function UrlList({
     console.log('Archived items:', archivedItems)
   }
 
-  const saveEdit = (updatedItem: UrlListItem) => {
-    setItems(items.map(item =>
-      item.id === updatedItem.id
-        ? { ...updatedItem, updatedAt: new Date() }
-        : item
-    ))
+  const handleTagSelect = async (tag: Tag) => {
+    if (!editingItem) return;
+    try {
+      await addTagToItem(editingItem.id, tag.id);
+      const updatedItems = await getUrlItems(listType, listId);
+      setItems(updatedItems);
+      const updatedItem = updatedItems.find(item => item.id === editingItem.id);
+      if (updatedItem) {
+        setEditingItem(updatedItem);
+        if (selectedItem?.id === updatedItem.id) {
+          setSelectedItem(updatedItem);
+        }
+      }
+    } catch (error) {
+      console.error('Error adding tag:', error);
+    }
+  };
+
+  const handleTagRemove = async (tagId: string) => {
+    if (!editingItem) return;
+    try {
+      await removeTagFromItem(editingItem.id, tagId);
+      const updatedItems = await getUrlItems(listType, listId);
+      setItems(updatedItems);
+      const updatedItem = updatedItems.find(item => item.id === editingItem.id);
+      if (updatedItem) {
+        setEditingItem(updatedItem);
+        if (selectedItem?.id === updatedItem.id) {
+          setSelectedItem(updatedItem);
+        }
+      }
+    } catch (error) {
+      console.error('Error removing tag:', error);
+    }
+  };
+
+  const handleCreateTag = async (name: string) => {
+    try {
+      const newTag = await createTag({ name, listId, listType })
+      setTags([...tags, newTag])
+      return newTag
+    } catch (error) {
+      console.error('Error creating tag:', error)
+      throw error
+    }
   }
 
   return (
@@ -184,7 +282,7 @@ export function UrlList({
                   key={tag}
                   className="flex items-center gap-1 px-2 py-1 bg-white/50 rounded-full text-sm text-gray-600"
                 >
-                  <Tag className="w-3 h-3" />
+                  <TagIcon className="w-3 h-3" />
                   <span>{tag}</span>
                 </div>
               ))}
@@ -329,14 +427,15 @@ export function UrlList({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tag
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700">Tags</label>
                     <TagInput
-                      value={editingItem.tag || ''}
-                      onChange={(value) => setEditingItem({ ...editingItem, tag: value })}
-                      existingTags={existingTags}
-                      placeholder="Add tag..."
+                      existingTags={tags}
+                      selectedTags={editingItem.tags}
+                      onTagSelect={handleTagSelect}
+                      onTagRemove={handleTagRemove}
+                      onCreateTag={handleCreateTag}
+                      listType={listType}
+                      listId={listId}
                     />
                   </div>
 
@@ -423,19 +522,19 @@ export function UrlList({
                           <span>Open Article</span>
                         </a>
                       </motion.div>
-                      {(selectedItem.tag || selectedItem.notes) && (
+                      {(selectedItem.tags && selectedItem.tags.length > 0 || selectedItem.notes) && (
                         <motion.div
                           className="flex flex-col gap-2 text-sm text-gray-500"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.4 }}
                         >
-                          {selectedItem.tag && (
-                            <div className="flex items-center gap-1">
-                              <Tag className="w-4 h-4" />
-                              <span>{selectedItem.tag}</span>
+                          {selectedItem.tags?.map(tag => (
+                            <div key={tag.id} className="flex items-center gap-1">
+                              <TagIcon className="w-4 h-4" />
+                              <span>{tag.name}</span>
                             </div>
-                          )}
+                          ))}
                           {selectedItem.notes && (
                             <div className="flex items-start gap-1">
                               <StickyNote className="w-4 h-4 mt-1" />

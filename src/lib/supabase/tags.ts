@@ -1,4 +1,4 @@
-import { createClient } from './server'
+import { supabase } from '../supabase'
 import { Tag } from '@/types/url-list'
 
 interface SupabaseTag {
@@ -13,33 +13,66 @@ interface SupabaseItemTag {
   tag: SupabaseTag
 }
 
-export async function getTagsByList(listId: string, listType: 'local' | 'shared'): Promise<Tag[]> {
-  const supabase = createClient()
+export async function getTags(listType: 'local' | 'shared', listId: string) {
   const { data, error } = await supabase
     .from('tags')
     .select('*')
-    .eq('list_id', listId)
     .eq('list_type', listType)
-    .order('name')
-  
-  if (error) throw error
-  return data as Tag[]
+    .eq('list_id', listId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching tags:', error)
+    throw error
+  }
+
+  return data.map(tag => ({
+    id: tag.id,
+    name: tag.name,
+    listId: tag.list_id,
+    listType: tag.list_type,
+    createdAt: new Date(tag.created_at)
+  })) as Tag[]
 }
 
-export async function createTag(name: string, listId: string, listType: 'local' | 'shared'): Promise<Tag> {
-  const supabase = createClient()
+export async function createTag(tag: Omit<Tag, 'id' | 'createdAt'>) {
   const { data, error } = await supabase
     .from('tags')
-    .insert({ name, list_id: listId, list_type: listType })
+    .insert({
+      name: tag.name,
+      list_id: tag.listId,
+      list_type: tag.listType
+    })
     .select()
     .single()
-  
-  if (error) throw error
-  return data as Tag
+
+  if (error) {
+    console.error('Error creating tag:', error)
+    throw error
+  }
+
+  return {
+    id: data.id,
+    name: data.name,
+    listId: data.list_id,
+    listType: data.list_type,
+    createdAt: new Date(data.created_at)
+  } as Tag
+}
+
+export async function deleteTag(id: string) {
+  const { error } = await supabase
+    .from('tags')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error('Error deleting tag:', error)
+    throw error
+  }
 }
 
 export async function addTagToItem(itemId: string, tagId: string): Promise<void> {
-  const supabase = createClient()
   const { error } = await supabase
     .from('item_tags')
     .insert({ item_id: itemId, tag_id: tagId })
@@ -48,7 +81,6 @@ export async function addTagToItem(itemId: string, tagId: string): Promise<void>
 }
 
 export async function removeTagFromItem(itemId: string, tagId: string): Promise<void> {
-  const supabase = createClient()
   const { error } = await supabase
     .from('item_tags')
     .delete()
@@ -59,7 +91,6 @@ export async function removeTagFromItem(itemId: string, tagId: string): Promise<
 }
 
 export async function getItemTags(itemId: string): Promise<Tag[]> {
-  const supabase = createClient()
   const { data, error } = await supabase
     .from('item_tags')
     .select(`
