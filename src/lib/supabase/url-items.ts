@@ -59,6 +59,7 @@ export async function getUrlItems(listType: 'local' | 'shared', listId: string):
     `)
     .eq('list_id', listId)
     .eq('list_type', listType)
+    .order('date_range_start', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -136,7 +137,6 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
 }
 
 export async function updateUrlItem(item: UrlListItem) {
-  console.log('Original item dateRange:', item.dateRange)
   
   const updateData = {
     url: item.url,
@@ -150,8 +150,6 @@ export async function updateUrlItem(item: UrlListItem) {
     updated_at: new Date().toISOString()
   }
   
-  console.log('Data being sent to Supabase:', JSON.stringify(updateData, null, 2))
-
   const { data, error } = await supabase
     .from('url_items')
     .update(updateData)
@@ -163,8 +161,6 @@ export async function updateUrlItem(item: UrlListItem) {
     console.error('Error updating url item:', error)
     throw error
   }
-
-  console.log('Raw data received from Supabase:', JSON.stringify(data, null, 2))
 
   const result = {
     id: data.id,
@@ -185,7 +181,6 @@ export async function updateUrlItem(item: UrlListItem) {
     tags: item.tags || [] // Will be populated separately
   } as UrlListItem
 
-  console.log('Final processed result:', JSON.stringify(result, null, 2))
   return result
 }
 
