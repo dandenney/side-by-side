@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { UrlListItem, Tag } from '@/types/url-list'
-import { Plus, Trash2, Edit2, X, Link, Tag as TagIcon, StickyNote, Archive, Search } from 'lucide-react'
+import { Plus, Trash2, Edit2, X, Link, Tag as TagIcon, StickyNote, Archive, Search, Calendar } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import AppDrawer from './AppDrawer'
@@ -607,9 +607,12 @@ export function UrlList({
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.3 }}
                         >
-                          <span>Date Range:</span>
+                          <Calendar className="w-4 h-4" />
                           <span>
-                            {formatDate(selectedItem.dateRange.start)} - {formatDate(selectedItem.dateRange.end)}
+                            {formatDate(selectedItem.dateRange.start)}
+                            {selectedItem.dateRange.end !== selectedItem.dateRange.start && (
+                              <> - {formatDate(selectedItem.dateRange.end)}</>
+                            )}
                           </span>
                         </motion.div>
                       )}
