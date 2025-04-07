@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import AppDrawer from './AppDrawer'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
+import { SHARED_LIST_ID } from '@/lib/constants'
 
 type ShoppingListProps = {
   title: string
@@ -63,7 +64,7 @@ export function ShoppingList({
         const { data: items, error: itemsError } = await supabase
           .from('grocery_items')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('list_id', SHARED_LIST_ID)
 
         if (itemsError) {
           console.error('Error fetching items:', itemsError)
@@ -80,7 +81,7 @@ export function ShoppingList({
         const { data: archived, error: archivedError } = await supabase
           .from('archived_items')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('list_id', SHARED_LIST_ID)
 
         if (archivedError) {
           console.error('Error fetching archived items:', archivedError)
@@ -109,10 +110,10 @@ export function ShoppingList({
 
     try {
       const itemToAdd = {
-        user_id: user.id,
         name: newItem.trim(),
         store: selectedStore,
-        checked: false
+        checked: false,
+        list_id: SHARED_LIST_ID
       } as const
       
       const { data, error } = await supabase
@@ -152,7 +153,7 @@ export function ShoppingList({
         .from('grocery_items')
         .update({ checked: !item.checked })
         .eq('id', id)
-        .eq('user_id', user.id)
+        .eq('list_id', SHARED_LIST_ID)
 
       if (error) {
         console.error('Error toggling check in database:', error)
@@ -180,7 +181,7 @@ export function ShoppingList({
         .from('grocery_items')
         .update(updates)
         .eq('id', editingItem.id)
-        .eq('user_id', user.id)
+        .eq('list_id', SHARED_LIST_ID)
 
       if (error) {
         console.error('Error saving edit to database:', error)
@@ -208,7 +209,7 @@ export function ShoppingList({
         .from('grocery_items')
         .delete()
         .eq('id', id)
-        .eq('user_id', user.id)
+        .eq('list_id', SHARED_LIST_ID)
 
       if (error) {
         console.error('Error deleting item from database:', error)
@@ -229,9 +230,9 @@ export function ShoppingList({
 
     try {
       const itemsToArchive = checkedItems.map(item => ({
-        user_id: user.id,
         name: item.name,
         store: item.store,
+        list_id: SHARED_LIST_ID,
         created_at: item.createdAt.toISOString()
       }))
       
@@ -249,7 +250,7 @@ export function ShoppingList({
         .from('grocery_items')
         .delete()
         .in('id', itemIds)
-        .eq('user_id', user.id)
+        .eq('list_id', SHARED_LIST_ID)
 
       if (deleteError) {
         console.error('Error deleting archived items:', deleteError)
