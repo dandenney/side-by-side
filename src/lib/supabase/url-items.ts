@@ -26,6 +26,22 @@ interface SupabaseItemTag {
   }
 }
 
+// Helper function to convert UTC date to local date string
+const utcToLocalDate = (utcDate: string) => {
+  console.log('Converting UTC to local:', utcDate)
+  const result = utcDate.split('T')[0]
+  console.log('Result:', result)
+  return result
+}
+
+// Helper function to convert local date to UTC date string
+const localToUtcDate = (localDate: string) => {
+  console.log('Converting local to UTC:', localDate)
+  const result = `${localDate}T00:00:00Z`
+  console.log('Result:', result)
+  return result
+}
+
 export async function getUrlItems(listType: 'local' | 'shared', listId: string): Promise<UrlListItem[]> {
   const { data, error } = await supabase
     .from('url_items')
@@ -58,8 +74,8 @@ export async function getUrlItems(listType: 'local' | 'shared', listId: string):
     description: item.description,
     notes: item.notes,
     dateRange: item.date_range_start && item.date_range_end ? {
-      start: new Date(item.date_range_start),
-      end: new Date(item.date_range_end)
+      start: utcToLocalDate(item.date_range_start),
+      end: utcToLocalDate(item.date_range_end)
     } : undefined,
     listType: item.list_type,
     listId: item.list_id,
@@ -85,8 +101,8 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
       title: item.title,
       description: item.description,
       notes: item.notes,
-      date_range_start: item.dateRange?.start.toISOString().split('T')[0],
-      date_range_end: item.dateRange?.end.toISOString().split('T')[0],
+      date_range_start: item.dateRange?.start ? localToUtcDate(item.dateRange.start) : null,
+      date_range_end: item.dateRange?.end ? localToUtcDate(item.dateRange.end) : null,
       list_type: item.listType,
       list_id: item.listId,
       archived: item.archived || false
@@ -107,8 +123,8 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
     description: data.description,
     notes: data.notes,
     dateRange: data.date_range_start && data.date_range_end ? {
-      start: new Date(data.date_range_start),
-      end: new Date(data.date_range_end)
+      start: utcToLocalDate(data.date_range_start),
+      end: utcToLocalDate(data.date_range_end)
     } : undefined,
     listType: data.list_type,
     listId: data.list_id,
@@ -120,19 +136,25 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
 }
 
 export async function updateUrlItem(item: UrlListItem) {
+  console.log('Original item dateRange:', item.dateRange)
+  
+  const updateData = {
+    url: item.url,
+    image_url: item.imageUrl,
+    title: item.title,
+    description: item.description,
+    notes: item.notes,
+    date_range_start: item.dateRange?.start ? localToUtcDate(item.dateRange.start) : null,
+    date_range_end: item.dateRange?.end ? localToUtcDate(item.dateRange.end) : null,
+    archived: item.archived,
+    updated_at: new Date().toISOString()
+  }
+  
+  console.log('Data being sent to Supabase:', JSON.stringify(updateData, null, 2))
+
   const { data, error } = await supabase
     .from('url_items')
-    .update({
-      url: item.url,
-      image_url: item.imageUrl,
-      title: item.title,
-      description: item.description,
-      notes: item.notes,
-      date_range_start: item.dateRange?.start.toISOString().split('T')[0],
-      date_range_end: item.dateRange?.end.toISOString().split('T')[0],
-      archived: item.archived,
-      updated_at: new Date().toISOString()
-    })
+    .update(updateData)
     .eq('id', item.id)
     .select()
     .single()
@@ -142,7 +164,9 @@ export async function updateUrlItem(item: UrlListItem) {
     throw error
   }
 
-  return {
+  console.log('Raw data received from Supabase:', JSON.stringify(data, null, 2))
+
+  const result = {
     id: data.id,
     url: data.url,
     imageUrl: data.image_url,
@@ -150,8 +174,8 @@ export async function updateUrlItem(item: UrlListItem) {
     description: data.description,
     notes: data.notes,
     dateRange: data.date_range_start && data.date_range_end ? {
-      start: new Date(data.date_range_start),
-      end: new Date(data.date_range_end)
+      start: utcToLocalDate(data.date_range_start),
+      end: utcToLocalDate(data.date_range_end)
     } : undefined,
     listType: data.list_type,
     listId: data.list_id,
@@ -160,6 +184,9 @@ export async function updateUrlItem(item: UrlListItem) {
     archived: data.archived,
     tags: item.tags || [] // Will be populated separately
   } as UrlListItem
+
+  console.log('Final processed result:', JSON.stringify(result, null, 2))
+  return result
 }
 
 export async function deleteUrlItem(id: string) {

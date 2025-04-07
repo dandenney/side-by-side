@@ -279,6 +279,12 @@ export function UrlList({
     }
   }
 
+  const formatDate = (dateStr: string) => {
+    const [year, month, day] = dateStr.split('-')
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  }
+
   return (
     <div className={`bg-gradient-to-b ${gradientFrom} ${gradientTo} h-full flex flex-col`}>
       {/* List Items */}
@@ -479,9 +485,10 @@ export function UrlList({
                     </label>
                     <input
                       type="date"
-                      value={editingItem.dateRange?.start ? editingItem.dateRange.start.toISOString().split('T')[0] : ''}
+                      value={editingItem.dateRange?.start || ''}
                       onChange={(e) => {
                         const dateStr = e.target.value
+                        console.log('Start date input value:', dateStr)
                         if (!dateStr) {
                           setEditingItem({
                             ...editingItem,
@@ -489,14 +496,11 @@ export function UrlList({
                           })
                           return
                         }
-                        // Create date in UTC to avoid timezone issues
-                        const [year, month, day] = dateStr.split('-')
-                        const newStart = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)))
                         setEditingItem({
                           ...editingItem,
                           dateRange: {
-                            start: newStart,
-                            end: editingItem.dateRange?.end || newStart
+                            start: dateStr,
+                            end: editingItem.dateRange?.end || dateStr
                           }
                         })
                       }}
@@ -510,9 +514,10 @@ export function UrlList({
                     </label>
                     <input
                       type="date"
-                      value={editingItem.dateRange?.end ? editingItem.dateRange.end.toISOString().split('T')[0] : ''}
+                      value={editingItem.dateRange?.end || ''}
                       onChange={(e) => {
                         const dateStr = e.target.value
+                        console.log('End date input value:', dateStr)
                         if (!dateStr) {
                           setEditingItem({
                             ...editingItem,
@@ -520,14 +525,11 @@ export function UrlList({
                           })
                           return
                         }
-                        // Create date in UTC to avoid timezone issues
-                        const [year, month, day] = dateStr.split('-')
-                        const newEnd = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)))
                         setEditingItem({
                           ...editingItem,
                           dateRange: {
-                            start: editingItem.dateRange?.start || newEnd,
-                            end: newEnd
+                            start: editingItem.dateRange?.start || dateStr,
+                            end: dateStr
                           }
                         })
                       }}
@@ -607,7 +609,7 @@ export function UrlList({
                         >
                           <span>Date Range:</span>
                           <span>
-                            {selectedItem.dateRange.start.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} - {selectedItem.dateRange.end.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                            {formatDate(selectedItem.dateRange.start)} - {formatDate(selectedItem.dateRange.end)}
                           </span>
                         </motion.div>
                       )}

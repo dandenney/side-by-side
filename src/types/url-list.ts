@@ -1,3 +1,8 @@
+export interface DateRange {
+  start: string
+  end: string
+}
+
 export interface UrlListItem {
   id: string
   url: string
@@ -5,10 +10,7 @@ export interface UrlListItem {
   title: string
   description?: string
   notes?: string
-  dateRange?: {
-    start: Date
-    end: Date
-  }
+  dateRange?: DateRange
   listType: 'local' | 'shared'
   listId: string
   createdAt: Date
