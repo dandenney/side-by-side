@@ -18,6 +18,7 @@ export async function getTags(listType: 'local' | 'shared', listId: string) {
     .from('tags')
     .select('*')
     .eq('list_id', listId)
+    .eq('list_type', listType)
     .order('created_at', { ascending: false })
 
   if (error) {
