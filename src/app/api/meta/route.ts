@@ -3,9 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const runtime = 'edge'
 
 export async function GET(request: NextRequest) {
-  console.log('Meta API route hit')
   const url = request.nextUrl.searchParams.get('url')
-  console.log('URL received:', url)
 
   if (!url) {
     return NextResponse.json({ error: 'URL is required' }, { 
@@ -19,7 +17,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log('Fetching URL:', url)
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -35,11 +32,7 @@ export async function GET(request: NextRequest) {
       }
     })
     
-    console.log('Response status:', response.status)
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()))
-    
     if (!response.ok) {
-      console.error('Failed to fetch URL:', response.status, response.statusText)
       return NextResponse.json({ error: 'Failed to fetch URL' }, { 
         status: response.status,
         headers: {
@@ -51,26 +44,21 @@ export async function GET(request: NextRequest) {
     }
 
     const html = await response.text()
-    console.log('Received HTML, length:', html.length)
-    console.log('First 500 characters of HTML:', html.substring(0, 500))
 
     // Extract title
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
     const ogTitleMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]*)"[^>]*>/i)
-    const title = ogTitleMatch?.[1] || titleMatch?.[1] || 'Untitled'
-    console.log('Title matches:', { titleMatch: titleMatch?.[1], ogTitleMatch: ogTitleMatch?.[1], finalTitle: title })
+    const title = decodeEntities(ogTitleMatch?.[1] || titleMatch?.[1] || 'Untitled')
 
     // Extract description
     const ogDescMatch = html.match(/<meta[^>]*property="og:description"[^>]*content="([^"]*)"[^>]*>/i)
     const metaDescMatch = html.match(/<meta[^>]*name="description"[^>]*content="([^"]*)"[^>]*>/i)
-    const description = ogDescMatch?.[1] || metaDescMatch?.[1] || ''
-    console.log('Description matches:', { ogDescMatch: ogDescMatch?.[1], metaDescMatch: metaDescMatch?.[1], finalDescription: description })
+    const description = decodeEntities(ogDescMatch?.[1] || metaDescMatch?.[1] || '')
 
     // Extract image
     const ogImageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]*)"[^>]*>/i)
     const twitterImageMatch = html.match(/<meta[^>]*name="twitter:image"[^>]*content="([^"]*)"[^>]*>/i)
     const image = ogImageMatch?.[1] || twitterImageMatch?.[1] || ''
-    console.log('Image matches:', { ogImageMatch: ogImageMatch?.[1], twitterImageMatch: twitterImageMatch?.[1], finalImage: image })
 
     return NextResponse.json({
       title,
@@ -94,6 +82,114 @@ export async function GET(request: NextRequest) {
       }
     })
   }
+}
+
+// Helper function to decode HTML entities
+function decodeEntities(encodedString: string) {
+  if (!encodedString) return ''
+  
+  // Common HTML entities
+  const entities: { [key: string]: string } = {
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+    '&nbsp;': ' ',
+    '&copy;': '©',
+    '&reg;': '®',
+    '&trade;': '™',
+    '&euro;': '€',
+    '&pound;': '£',
+    '&yen;': '¥',
+    '&cent;': '¢',
+    '&sect;': '§',
+    '&deg;': '°',
+    '&plusmn;': '±',
+    '&times;': '×',
+    '&divide;': '÷',
+    '&micro;': 'µ',
+    '&para;': '¶',
+    '&middot;': '·',
+    '&ndash;': '–',
+    '&mdash;': '—',
+    '&lsquo;': '‘',
+    '&rsquo;': '’',
+    '&ldquo;': '“',
+    '&rdquo;': '”',
+    '&bull;': '•',
+    '&hellip;': '…',
+    '&prime;': '′',
+    '&Prime;': '″',
+    '&oline;': '‾',
+    '&frasl;': '⁄',
+    '&weierp;': '℘',
+    '&image;': 'ℑ',
+    '&real;': 'ℜ',
+    '&alefsym;': 'ℵ',
+    '&larr;': '←',
+    '&uarr;': '↑',
+    '&rarr;': '→',
+    '&darr;': '↓',
+    '&harr;': '↔',
+    '&crarr;': '↵',
+    '&lArr;': '⇐',
+    '&uArr;': '⇑',
+    '&rArr;': '⇒',
+    '&dArr;': '⇓',
+    '&hArr;': '⇔',
+    '&forall;': '∀',
+    '&part;': '∂',
+    '&exist;': '∃',
+    '&empty;': '∅',
+    '&nabla;': '∇',
+    '&isin;': '∈',
+    '&notin;': '∉',
+    '&ni;': '∋',
+    '&prod;': '∏',
+    '&sum;': '∑',
+    '&minus;': '−',
+    '&lowast;': '∗',
+    '&radic;': '√',
+    '&prop;': '∝',
+    '&infin;': '∞',
+    '&ang;': '∠',
+    '&and;': '∧',
+    '&or;': '∨',
+    '&cap;': '∩',
+    '&cup;': '∪',
+    '&int;': '∫',
+    '&there4;': '∴',
+    '&sim;': '∼',
+    '&cong;': '≅',
+    '&asymp;': '≈',
+    '&ne;': '≠',
+    '&equiv;': '≡',
+    '&le;': '≤',
+    '&ge;': '≥',
+    '&sub;': '⊂',
+    '&sup;': '⊃',
+    '&nsub;': '⊄',
+    '&sube;': '⊆',
+    '&supe;': '⊇',
+    '&oplus;': '⊕',
+    '&otimes;': '⊗',
+    '&perp;': '⊥',
+    '&sdot;': '⋅',
+    '&lceil;': '⌈',
+    '&rceil;': '⌉',
+    '&lfloor;': '⌊',
+    '&rfloor;': '⌋',
+    '&lang;': '〈',
+    '&rang;': '〉',
+    '&loz;': '◊',
+    '&spades;': '♠',
+    '&clubs;': '♣',
+    '&hearts;': '♥',
+    '&diams;': '♦'
+  }
+
+  return encodedString.replace(/&[^;]+;/g, match => entities[match] || match)
 }
 
 // Handle OPTIONS requests for CORS
