@@ -42,6 +42,7 @@ export async function getUrlItems(listType: 'local' | 'shared', listId: string):
       )
     `)
     .eq('list_id', listId)
+    .eq('list_type', listType)
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -56,6 +57,10 @@ export async function getUrlItems(listType: 'local' | 'shared', listId: string):
     title: item.title,
     description: item.description,
     notes: item.notes,
+    dateRange: item.date_range_start && item.date_range_end ? {
+      start: new Date(item.date_range_start + 'T00:00:00'),
+      end: new Date(item.date_range_end + 'T23:59:59')
+    } : undefined,
     listType: item.list_type,
     listId: item.list_id,
     createdAt: new Date(item.created_at),
@@ -80,8 +85,10 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
       title: item.title,
       description: item.description,
       notes: item.notes,
+      date_range_start: item.dateRange?.start.toISOString().split('T')[0],
+      date_range_end: item.dateRange?.end.toISOString().split('T')[0],
       list_type: item.listType,
-      list_id: item.listId || SHARED_LIST_ID,
+      list_id: item.listId,
       archived: item.archived || false
     })
     .select()
@@ -99,6 +106,10 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
     title: data.title,
     description: data.description,
     notes: data.notes,
+    dateRange: data.date_range_start && data.date_range_end ? {
+      start: new Date(data.date_range_start + 'T00:00:00'),
+      end: new Date(data.date_range_end + 'T23:59:59')
+    } : undefined,
     listType: data.list_type,
     listId: data.list_id,
     createdAt: new Date(data.created_at),
