@@ -9,6 +9,7 @@ import AppDrawer from './AppDrawer'
 import TagInput from './TagInput'
 import { createUrlItem, getUrlItems, updateUrlItem, deleteUrlItem, archiveUrlItem } from '@/lib/supabase/url-items'
 import { getTags, createTag, deleteTag, addTagToItem, removeTagFromItem, getItemTags } from '@/lib/supabase/tags'
+import { ImageIcon } from 'lucide-react'
 
 type UrlListProps = {
   title: string
@@ -47,6 +48,7 @@ export function UrlList({
   const [isLoading, setIsLoading] = useState(false)
   const [editingItem, setEditingItem] = useState<UrlListItem | null>(null)
   const [editForm, setEditForm] = useState<Partial<UrlListItem>>({})
+  const [error, setError] = useState<string | null>(null)
 
   const hasArchivedItems = useMemo(() => items.some(item => item.archived), [items])
 
@@ -87,11 +89,21 @@ export function UrlList({
 
   const fetchMetaData = async (url: string) => {
     try {
-      const response = await fetch(`/api/meta?url=${encodeURIComponent(url)}`)
+      const response = await fetch(`/api/meta?url=${encodeURIComponent(url)}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        return null
+      }
+      
       const data = await response.json()
       return data
     } catch (error) {
-      console.error('Error fetching meta data:', error)
       return null
     }
   }
@@ -117,10 +129,12 @@ export function UrlList({
     if (!newUrl.trim()) return
 
     setIsLoading(true)
+    setError(null)
     try {
       const metaData = await fetchMetaData(newUrl)
+      
       if (!metaData) {
-        alert('Failed to fetch meta data for the URL')
+        setError('Failed to retrieve URL information. Please try again or add manually.')
         return
       }
 
@@ -139,8 +153,7 @@ export function UrlList({
       setNewUrl('')
       setIsModalOpen(false)
     } catch (error) {
-      console.error('Error adding item:', error)
-      alert('Failed to add item. Please try again.')
+      setError('Failed to add item. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -165,7 +178,6 @@ export function UrlList({
         setEditingItem(latestItem)
       }
     } catch (error) {
-      console.error('Error loading item for edit:', error)
       // Fallback to the current item data if there's an error
       setEditingItem(item)
     }
@@ -175,12 +187,16 @@ export function UrlList({
     if (editingItem) {
       try {
         const updatedItem = await updateUrlItem(editingItem)
+        // Update the items list
         setItems(items.map(item => 
           item.id === updatedItem.id ? updatedItem : item
         ))
+        // Update the selected item if it's the one being edited
+        if (selectedItem?.id === updatedItem.id) {
+          setSelectedItem(updatedItem)
+        }
         setEditingItem(null)
       } catch (error) {
-        console.error('Error updating item:', error)
         alert('Failed to update item. Please try again.')
       }
     }
@@ -192,7 +208,6 @@ export function UrlList({
       await deleteUrlItem(id)
       setItems(items.filter(item => item.id !== id))
     } catch (error) {
-      console.error('Error deleting item:', error)
       alert('Failed to delete item. Please try again.')
     }
   }
@@ -207,7 +222,6 @@ export function UrlList({
           : item
       ))
     } catch (error) {
-      console.error('Error archiving item:', error)
       alert('Failed to archive item. Please try again.')
     }
   }
@@ -216,8 +230,6 @@ export function UrlList({
     if (!hasArchivedItems) return
     const archivedItems = items.filter(item => item.archived)
     setItems(items.filter(item => !item.archived))
-    // In a real app, we would save these to an archived list
-    console.log('Archived items:', archivedItems)
   }
 
   const handleTagSelect = async (tag: Tag) => {
@@ -302,7 +314,7 @@ export function UrlList({
                 className={`flex items-center bg-white rounded-lg shadow-xl border hover:bg-gray-50 overflow-hidden ${selectedItem?.id === item.id ? 'opacity-0' : ''}`}
                 layoutId={`card-${item.id}`}
               >
-                {item.imageUrl && (
+                {item.imageUrl ? (
                   <motion.div
                     className="bg-gray-100 relative w-20 aspect-[1200/630] flex-shrink-0 ml-2"
                     layoutId={`image-${item.id}`}
@@ -314,6 +326,15 @@ export function UrlList({
                       className="object-cover"
                       sizes="80px"
                     />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    className="bg-gray-100 relative w-20 aspect-[1200/630] flex-shrink-0 ml-2"
+                    layoutId={`image-${item.id}`}
+                  >
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                      <ImageIcon className="w-6 h-6" />
+                    </div>
                   </motion.div>
                 )}
                 <div className="flex-1 min-w-0 px-3 py-4">
@@ -452,6 +473,68 @@ export function UrlList({
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={editingItem.dateRange?.start ? editingItem.dateRange.start.toISOString().split('T')[0] : ''}
+                      onChange={(e) => {
+                        const dateStr = e.target.value
+                        if (!dateStr) {
+                          setEditingItem({
+                            ...editingItem,
+                            dateRange: undefined
+                          })
+                          return
+                        }
+                        // Create date in UTC to avoid timezone issues
+                        const [year, month, day] = dateStr.split('-')
+                        const newStart = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)))
+                        setEditingItem({
+                          ...editingItem,
+                          dateRange: {
+                            start: newStart,
+                            end: editingItem.dateRange?.end || newStart
+                          }
+                        })
+                      }}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      value={editingItem.dateRange?.end ? editingItem.dateRange.end.toISOString().split('T')[0] : ''}
+                      onChange={(e) => {
+                        const dateStr = e.target.value
+                        if (!dateStr) {
+                          setEditingItem({
+                            ...editingItem,
+                            dateRange: undefined
+                          })
+                          return
+                        }
+                        // Create date in UTC to avoid timezone issues
+                        const [year, month, day] = dateStr.split('-')
+                        const newEnd = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)))
+                        setEditingItem({
+                          ...editingItem,
+                          dateRange: {
+                            start: editingItem.dateRange?.start || newEnd,
+                            end: newEnd
+                          }
+                        })
+                      }}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => setEditingItem(null)}
@@ -470,7 +553,7 @@ export function UrlList({
               ) : (
                 <>
                   <div className="flex flex-col">
-                    {selectedItem.imageUrl && (
+                    {selectedItem.imageUrl ? (
                       <motion.div
                         className="relative w-full aspect-[1200/630]"
                         layoutId={`image-${selectedItem.id}`}
@@ -481,6 +564,15 @@ export function UrlList({
                           fill
                           className="object-cover"
                         />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        className="relative w-full aspect-[1200/630] bg-gray-100"
+                        layoutId={`image-${selectedItem.id}`}
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                          <ImageIcon className="w-12 h-12" />
+                        </div>
                       </motion.div>
                     )}
                     <div className="p-6 space-y-4">
@@ -506,11 +598,24 @@ export function UrlList({
                       >
                         {selectedItem.description}
                       </motion.p>
+                      {selectedItem.dateRange && (
+                        <motion.div
+                          className="flex items-center gap-2 text-sm text-gray-500"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.3 }}
+                        >
+                          <span>Date Range:</span>
+                          <span>
+                            {selectedItem.dateRange.start.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} - {selectedItem.dateRange.end.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                          </span>
+                        </motion.div>
+                      )}
                       <motion.div
                         className="flex items-center gap-2 text-sm text-gray-500"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
+                        transition={{ delay: 0.4 }}
                       >
                         <a
                           href={selectedItem.url}
@@ -527,7 +632,7 @@ export function UrlList({
                           className="flex flex-col gap-2 text-sm text-gray-500"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          transition={{ delay: 0.4 }}
+                          transition={{ delay: 0.5 }}
                         >
                           {selectedItem.tags?.map(tag => (
                             <div key={tag.id} className="flex items-center gap-1">
@@ -547,7 +652,7 @@ export function UrlList({
                         className="flex justify-end gap-2"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.5 }}
+                        transition={{ delay: 0.6 }}
                       >
                         <button
                           onClick={(e) => {
@@ -598,34 +703,41 @@ export function UrlList({
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
               className="fixed left-4 right-4 top-1/4 bg-white rounded-lg shadow-xl p-4 z-50 max-w-md mx-auto"
             >
-              <form onSubmit={addItem} className="flex gap-2">
-                <input
-                  type="url"
-                  value={newUrl}
-                  onChange={(e) => setNewUrl(e.target.value)}
-                  placeholder="Add a URL..."
-                  className={`flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
-                  autoFocus
-                  disabled={isLoading}
-                />
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-lg active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor}`}
-                >
-                  {isLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    'Add'
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-2 py-2 text-gray-600 hover:text-gray-800 focus:outline-none"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+              <form onSubmit={addItem} className="flex flex-col gap-4">
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={newUrl}
+                    onChange={(e) => setNewUrl(e.target.value)}
+                    placeholder="Add a URL..."
+                    className={`flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
+                    autoFocus
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-lg active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor}`}
+                  >
+                    {isLoading ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      'Add'
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-2 py-2 text-gray-600 hover:text-gray-800 focus:outline-none"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                {error && (
+                  <div className="text-red-500 text-sm">
+                    {error}
+                  </div>
+                )}
               </form>
             </motion.div>
           </>

@@ -58,8 +58,8 @@ export async function getUrlItems(listType: 'local' | 'shared', listId: string):
     description: item.description,
     notes: item.notes,
     dateRange: item.date_range_start && item.date_range_end ? {
-      start: new Date(item.date_range_start + 'T00:00:00'),
-      end: new Date(item.date_range_end + 'T23:59:59')
+      start: new Date(item.date_range_start),
+      end: new Date(item.date_range_end)
     } : undefined,
     listType: item.list_type,
     listId: item.list_id,
@@ -107,8 +107,8 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
     description: data.description,
     notes: data.notes,
     dateRange: data.date_range_start && data.date_range_end ? {
-      start: new Date(data.date_range_start + 'T00:00:00'),
-      end: new Date(data.date_range_end + 'T23:59:59')
+      start: new Date(data.date_range_start),
+      end: new Date(data.date_range_end)
     } : undefined,
     listType: data.list_type,
     listId: data.list_id,
@@ -128,6 +128,8 @@ export async function updateUrlItem(item: UrlListItem) {
       title: item.title,
       description: item.description,
       notes: item.notes,
+      date_range_start: item.dateRange?.start.toISOString().split('T')[0],
+      date_range_end: item.dateRange?.end.toISOString().split('T')[0],
       archived: item.archived,
       updated_at: new Date().toISOString()
     })
@@ -147,12 +149,16 @@ export async function updateUrlItem(item: UrlListItem) {
     title: data.title,
     description: data.description,
     notes: data.notes,
+    dateRange: data.date_range_start && data.date_range_end ? {
+      start: new Date(data.date_range_start),
+      end: new Date(data.date_range_end)
+    } : undefined,
     listType: data.list_type,
     listId: data.list_id,
     createdAt: new Date(data.created_at),
     updatedAt: new Date(data.updated_at),
     archived: data.archived,
-    tags: [] // Will be populated separately
+    tags: item.tags || [] // Will be populated separately
   } as UrlListItem
 }
 
