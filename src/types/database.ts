@@ -170,6 +170,86 @@ export interface Database {
           created_at?: string
         }
       }
+      url_items: {
+        Row: {
+          id: string
+          url: string | null
+          place_id: string | null
+          place_name: string | null
+          place_address: string | null
+          place_lat: number | null
+          place_lng: number | null
+          place_types: string[] | null
+          place_rating: number | null
+          place_user_ratings_total: number | null
+          place_price_level: number | null
+          place_website: string | null
+          place_phone_number: string | null
+          place_opening_hours: Json | null
+          image_url: string | null
+          title: string
+          description: string | null
+          notes: string | null
+          date_range: Json | null
+          list_type: 'local' | 'shared'
+          list_id: string
+          created_at: string
+          updated_at: string
+          archived: boolean
+        }
+        Insert: {
+          id?: string
+          url?: string | null
+          place_id?: string | null
+          place_name?: string | null
+          place_address?: string | null
+          place_lat?: number | null
+          place_lng?: number | null
+          place_types?: string[] | null
+          place_rating?: number | null
+          place_user_ratings_total?: number | null
+          place_price_level?: number | null
+          place_website?: string | null
+          place_phone_number?: string | null
+          place_opening_hours?: Json | null
+          image_url?: string | null
+          title: string
+          description?: string | null
+          notes?: string | null
+          date_range?: Json | null
+          list_type: 'local' | 'shared'
+          list_id: string
+          created_at?: string
+          updated_at?: string
+          archived?: boolean
+        }
+        Update: {
+          id?: string
+          url?: string | null
+          place_id?: string | null
+          place_name?: string | null
+          place_address?: string | null
+          place_lat?: number | null
+          place_lng?: number | null
+          place_types?: string[] | null
+          place_rating?: number | null
+          place_user_ratings_total?: number | null
+          place_price_level?: number | null
+          place_website?: string | null
+          place_phone_number?: string | null
+          place_opening_hours?: Json | null
+          image_url?: string | null
+          title?: string
+          description?: string | null
+          notes?: string | null
+          date_range?: Json | null
+          list_type?: 'local' | 'shared'
+          list_id?: string
+          created_at?: string
+          updated_at?: string
+          archived?: boolean
+        }
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { UrlListItem, Tag } from '@/types/url-list'
-import { Plus, Trash2, Edit2, X, Link, Tag as TagIcon, StickyNote, Archive, Search, Calendar } from 'lucide-react'
+import { Plus, Trash2, Edit2, X, Link, Tag as TagIcon, StickyNote, Archive, Search, Calendar, MapPin } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import AppDrawer from './AppDrawer'
@@ -10,6 +10,8 @@ import TagInput from './TagInput'
 import { createUrlItem, getUrlItems, updateUrlItem, deleteUrlItem, archiveUrlItem } from '@/lib/supabase/url-items'
 import { getTags, createTag, deleteTag, addTagToItem, removeTagFromItem, getItemTags } from '@/lib/supabase/tags'
 import { ImageIcon } from 'lucide-react'
+import { PlaceSearchResult } from '@/lib/google/places'
+import debounce from 'lodash/debounce'
 
 type UrlListProps = {
   title: string
@@ -49,6 +51,44 @@ export function UrlList({
   const [editingItem, setEditingItem] = useState<UrlListItem | null>(null)
   const [editForm, setEditForm] = useState<Partial<UrlListItem>>({})
   const [error, setError] = useState<string | null>(null)
+  const [inputType, setInputType] = useState<'url' | 'place'>('url')
+  const [searchResults, setSearchResults] = useState<PlaceSearchResult[]>([])
+  const [selectedPlace, setSelectedPlace] = useState<PlaceSearchResult | null>(null)
+  const [isSearching, setIsSearching] = useState(false)
+
+  const inputTypeOptions = [
+    { value: 'url', icon: Link, label: 'URL' },
+    { value: 'place', icon: MapPin, label: 'Place' }
+  ] as const
+
+  const InputTypeSelector = ({ 
+    value, 
+    onChange, 
+    className,
+  }: { 
+    value: 'url' | 'place', 
+    onChange: (value: 'url' | 'place') => void,
+    className?: string
+  }) => {
+    return (
+      <div className={`relative flex justify-end font-medium rounded-lg bg-gray-100 ${className}`}>
+        {inputTypeOptions.map((option) => (
+          <button
+            key={option.value}
+            onClick={() => onChange(option.value)}
+            className={`relative z-10 flex-1 px-3 py-1.5 rounded-md text-gray-400 transition-all ease-in-out hover:text-gray-700 ${
+              value === option.value ? 'bg-gray-200 text-gray-700' : ''
+            }`}
+          >
+            <div className="flex items-center justify-center gap-1">
+              <option.icon className="w-4 h-4" />
+              <span>{option.label}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+    )
+  }
 
   const hasArchivedItems = useMemo(() => items.some(item => item.archived), [items])
 
@@ -131,28 +171,38 @@ export function UrlList({
     setIsLoading(true)
     setError(null)
     try {
-      const metaData = await fetchMetaData(newUrl)
-      
-      if (!metaData) {
-        setError('Failed to retrieve URL information. Please try again or add manually.')
+      if (inputType === 'url') {
+        const metaData = await fetchMetaData(newUrl)
+        
+        if (!metaData) {
+          setError('Failed to retrieve URL information. Please try again or add manually.')
+          return
+        }
+
+        const newItem = {
+          url: newUrl.trim(),
+          imageUrl: metaData.image || '',
+          title: metaData.title || 'Untitled',
+          description: metaData.description || '',
+          listType,
+          listId,
+          archived: false
+        }
+        console.log('Creating new URL item:', newItem)
+
+        const createdItem = await createUrlItem(newItem)
+        console.log('URL item created:', createdItem)
+        setItems([...items, createdItem])
+      } else {
+        // TODO: Implement place lookup and addition
+        setError('Place lookup not implemented yet')
         return
       }
-
-      const newItem = {
-        url: newUrl.trim(),
-        imageUrl: metaData.image || '',
-        title: metaData.title || 'Untitled',
-        description: metaData.description || '',
-        listType,
-        listId,
-        archived: false
-      }
-
-      const createdItem = await createUrlItem(newItem)
-      setItems([...items, createdItem])
+      
       setNewUrl('')
       setIsModalOpen(false)
     } catch (error) {
+      console.error('Error in addItem:', error)
       setError('Failed to add item. Please try again.')
     } finally {
       setIsLoading(false)
@@ -283,6 +333,124 @@ export function UrlList({
     const [year, month, day] = dateStr.split('-')
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  }
+
+  // Add debounced search function
+  const debouncedSearch = useMemo(
+    () =>
+      debounce(async (value: string) => {
+        if (value.length < 4) {
+          setSearchResults([])
+          setIsSearching(false)
+          return
+        }
+
+        setIsSearching(true)
+        try {
+          const response = await fetch(`/api/places?query=${encodeURIComponent(value)}`)
+          if (!response.ok) throw new Error('Failed to search places')
+          const results = await response.json()
+          setSearchResults(results)
+        } catch (error) {
+          console.error('Error searching places:', error)
+          setError('Failed to search places. Please try again.')
+        } finally {
+          setIsSearching(false)
+        }
+      }, 300),
+    []
+  )
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel()
+    }
+  }, [debouncedSearch])
+
+  // Update the search input handling
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setNewUrl(value)
+    
+    if (inputType === 'place') {
+      if (value.length < 4) {
+        setSearchResults([])
+        setIsSearching(false)
+      } else {
+        debouncedSearch(value)
+      }
+    }
+  }
+
+  const handlePlaceSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([])
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      const response = await fetch(`/api/places?query=${encodeURIComponent(query)}`)
+      if (!response.ok) throw new Error('Failed to search places')
+      const results = await response.json()
+      setSearchResults(results)
+    } catch (error) {
+      console.error('Error searching places:', error)
+      setError('Failed to search places. Please try again.')
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const handlePlaceSelect = async (place: PlaceSearchResult) => {
+    setIsSearching(true)
+    setError(null)
+    try {
+      const response = await fetch(`/api/places?placeId=${encodeURIComponent(place.placeId)}`)
+      if (!response.ok) throw new Error('Failed to get place details')
+      const placeDetails = await response.json()
+      
+      // Generate Google Maps URL for the place
+      const placeUrl = `https://www.google.com/maps/place/?q=place_id:${place.placeId}`
+      
+      const newItem = {
+        url: placeUrl,
+        place: {
+          placeId: place.placeId,
+          name: place.name,
+          address: place.address,
+          lat: place.lat,
+          lng: place.lng,
+          types: place.types || [],
+          rating: place.rating,
+          userRatingsTotal: place.userRatingsTotal,
+          priceLevel: place.priceLevel,
+          website: placeDetails.website,
+          phoneNumber: placeDetails.phoneNumber,
+          openingHours: placeDetails.openingHours,
+        },
+        title: place.name,
+        description: place.address,
+        listType,
+        listId,
+        archived: false,
+        imageUrl: placeDetails.photoUrl || '',
+      }
+
+      const createdItem = await createUrlItem(newItem)
+      
+      setItems(prevItems => [createdItem, ...prevItems])
+      setNewUrl('')
+      setSearchResults([])
+      setSelectedPlace(null)
+      setIsModalOpen(false)
+      setIsSearching(false)
+    } catch (error) {
+      console.error('Error in handlePlaceSelect:', error)
+      setError('Failed to add place. Please try again.')
+      setIsSearching(false)
+    }
   }
 
   return (
@@ -601,6 +769,62 @@ export function UrlList({
                       >
                         {selectedItem.description}
                       </motion.p>
+                      {selectedItem.place && (
+                        <motion.div
+                          className="space-y-2"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.3 }}
+                        >
+                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <MapPin className="w-4 h-4" />
+                            <span>{selectedItem.place.address}</span>
+                          </div>
+                          {selectedItem.place.rating && (
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                              <span>⭐ {selectedItem.place.rating.toFixed(1)}</span>
+                              {selectedItem.place.userRatingsTotal && (
+                                <span>({selectedItem.place.userRatingsTotal} reviews)</span>
+                              )}
+                            </div>
+                          )}
+                          {selectedItem.place.priceLevel && (
+                            <div className="text-sm text-gray-500">
+                              {'$'.repeat(selectedItem.place.priceLevel)}
+                            </div>
+                          )}
+                          {selectedItem.place.website && (
+                            <a
+                              href={selectedItem.place.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-blue-500 hover:underline"
+                            >
+                              Visit Website
+                            </a>
+                          )}
+                          {selectedItem.place.phoneNumber && (
+                            <a
+                              href={`tel:${selectedItem.place.phoneNumber}`}
+                              className="text-sm text-blue-500 hover:underline"
+                            >
+                              {selectedItem.place.phoneNumber}
+                            </a>
+                          )}
+                          {selectedItem.place.openingHours && (
+                            <div className="text-sm text-gray-500">
+                              {selectedItem.place.openingHours.openNow ? 'Open Now' : 'Closed'}
+                              {selectedItem.place.openingHours.weekdayText && (
+                                <div className="mt-1">
+                                  {selectedItem.place.openingHours.weekdayText.map((text, index) => (
+                                    <div key={index}>{text}</div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
                       {selectedItem.dateRange && (
                         <motion.div
                           className="flex items-center gap-2 text-sm text-gray-500"
@@ -623,15 +847,17 @@ export function UrlList({
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.4 }}
                       >
-                        <a
-                          href={selectedItem.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 hover:text-blue-500"
-                        >
-                          <Link className="w-4 h-4" />
-                          <span>Open Article</span>
-                        </a>
+                        {selectedItem.url && (
+                          <a
+                            href={selectedItem.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 hover:text-blue-500"
+                          >
+                            <Link className="w-4 h-4" />
+                            <span>Open Article</span>
+                          </a>
+                        )}
                       </motion.div>
                       {(selectedItem.tags && selectedItem.tags.length > 0 || selectedItem.notes) && (
                         <motion.div
@@ -711,30 +937,63 @@ export function UrlList({
             >
               <form onSubmit={addItem} className="flex flex-col gap-4">
                 <div className="flex gap-2">
-                  <input
-                    type="url"
-                    value={newUrl}
-                    onChange={(e) => setNewUrl(e.target.value)}
-                    placeholder="Add a URL..."
-                    className={`flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
-                    autoFocus
-                    disabled={isLoading}
-                  />
+                  <div className="flex-1 relative">
+                    <input
+                      type={inputType === 'url' ? 'url' : 'text'}
+                      value={newUrl}
+                      onChange={handleSearchInputChange}
+                      placeholder={inputType === 'url' ? 'Add a URL...' : 'Search for a place (minimum 4 characters)...'}
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
+                      autoFocus
+                      disabled={isLoading || isSearching}
+                    />
+                    {isSearching && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                      </div>
+                    )}
+                    {inputType === 'place' && newUrl.length < 4 && newUrl.length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg p-3 text-sm text-gray-500">
+                        Please enter at least 4 characters to search...
+                      </div>
+                    )}
+                    {inputType === 'place' && searchResults.length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {searchResults.map((place) => (
+                          <button
+                            key={place.placeId}
+                            type="button"
+                            onClick={() => handlePlaceSelect(place)}
+                            className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex items-center gap-2"
+                          >
+                            <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            <div>
+                              <div className="font-medium">{place.name}</div>
+                              <div className="text-sm text-gray-500 truncate">{place.address}</div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <button
                     type="submit"
-                    disabled={isLoading}
-                    className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-lg active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor}`}
+                    disabled={isLoading || isSearching || (inputType === 'url' && !newUrl.trim())}
+                    className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-lg active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} disabled:opacity-50`}
                   >
-                    {isLoading ? (
+                    {isLoading || isSearching ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
                       'Add'
                     )}
                   </button>
+                </div>
+                <div className="flex gap-2 justify-between">
+                  <InputTypeSelector className="grow" value={inputType} onChange={setInputType} />
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-2 py-2 text-gray-600 hover:text-gray-800 focus:outline-none"
+                    className="px-5 py-2 text-gray-600 shrink-0 hover:text-gray-800 focus:outline-none"
                   >
                     <X className="w-5 h-5" />
                   </button>

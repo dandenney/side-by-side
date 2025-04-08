@@ -1,6 +1,23 @@
 import { createClient } from './client'
 import { SHARED_LIST_ID } from '@/lib/constants'
 
+export async function removeUrlOrPlaceConstraint() {
+  const supabase = createClient()
+  console.log('Removing url_or_place constraint...')
+
+  try {
+    const { error } = await supabase.rpc('remove_url_or_place_constraint')
+    if (error) {
+      console.error('Error removing constraint:', error)
+      throw error
+    }
+    console.log('Constraint removed successfully')
+  } catch (error) {
+    console.error('Error in removing constraint:', error)
+    throw error
+  }
+}
+
 export async function migrateToSharedList() {
   const supabase = createClient()
   console.log('Starting migration to shared list...')
