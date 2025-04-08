@@ -289,7 +289,7 @@ export function UrlList({
     <div className={`bg-gradient-to-b ${gradientFrom} ${gradientTo} h-full flex flex-col`}>
       {/* List Items */}
       <div className="flex-1 overflow-y-auto px-4 pb-24">
-        <div className="max-w-lg mx-auto space-y-2 pt-4">
+        <div className="max-w-lg mx-auto space-y-2 pt-4 lg:max-w-7xl">
           <h1 className={`opacity-40 text-center ${titleColor} uppercase font-bold`}>{title}</h1>
 
           {/* Tag Display */}
@@ -306,74 +306,75 @@ export function UrlList({
               ))}
             </div>
           )}
-
-          <AnimatePresence mode="popLayout">
-            {items.filter(item => !item.archived).map(item => (
-              <motion.div
-                key={item.id}
-                variants={itemVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                whileTap="tap"
-                layout
-                className={`flex items-center bg-white rounded-lg shadow-xl border hover:bg-gray-50 overflow-hidden ${selectedItem?.id === item.id ? 'opacity-0' : ''}`}
-                layoutId={`card-${item.id}`}
-              >
-                {item.imageUrl ? (
-                  <motion.div
-                    className="bg-gray-100 relative w-20 aspect-[1200/630] flex-shrink-0 ml-2"
-                    layoutId={`image-${item.id}`}
-                  >
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.title}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                    />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    className="bg-gray-100 relative w-20 aspect-[1200/630] flex-shrink-0 ml-2"
-                    layoutId={`image-${item.id}`}
-                  >
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      <ImageIcon className="w-6 h-6" />
-                    </div>
-                  </motion.div>
-                )}
-                <div className="flex-1 min-w-0 px-3 py-4">
-                  <div
-                    className="cursor-pointer"
-                    onClick={() => handleCardClick(item)}
-                  >
-                    <motion.h3
-                      className={`font-semibold ${textColor} line-clamp-2`}
-                      layoutId={`title-${item.id}`}
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <AnimatePresence mode="popLayout">
+              {items.filter(item => !item.archived).map(item => (
+                <motion.div
+                  key={item.id}
+                  variants={itemVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  whileTap="tap"
+                  layout
+                  className={`flex gap-2 items-center bg-white rounded-lg shadow-xl border overflow-hidden p-2 hover:bg-gray-50 ${selectedItem?.id === item.id ? 'opacity-0' : ''}`}
+                  layoutId={`card-${item.id}`}
+                >
+                  {item.imageUrl ? (
+                    <motion.div
+                      className="bg-gray-100 h-16 flex-shrink-0 overflow-hidden relative w-16"
+                      layoutId={`image-${item.id}`}
                     >
-                      {item.title}
-                    </motion.h3>
+                      <Image
+                        src={item.imageUrl}
+                        alt={item.title}
+                        fill
+                        className="object-cover"
+                        sizes="80px"
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      className="bg-gray-100 relative w-20 aspect-[1200/630] flex-shrink-0 ml-2"
+                      layoutId={`image-${item.id}`}
+                    >
+                      <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                        <ImageIcon className="w-6 h-6" />
+                      </div>
+                    </motion.div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div
+                      className="cursor-pointer"
+                      onClick={() => handleCardClick(item)}
+                    >
+                      <motion.h3
+                        className={`font-semibold ${textColor} line-clamp-2`}
+                        layoutId={`title-${item.id}`}
+                      >
+                        {item.title}
+                      </motion.h3>
+                    </div>
                   </div>
-                </div>
-                <button
-                  onClick={(e) => archiveItem(e, item.id)}
-                  className="p-1 hover:bg-gray-100 rounded-full mr-3"
-                >
-                  <Archive className="w-5 h-5 text-gray-400" />
-                </button>
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1 hover:bg-gray-100 rounded-full mr-3"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Link className="w-5 h-5 text-gray-400" />
-                </a>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                  <button
+                    onClick={(e) => archiveItem(e, item.id)}
+                    className="p-1 hover:bg-gray-100 rounded-full mr-3"
+                  >
+                    <Archive className="w-5 h-5 text-gray-400" />
+                  </button>
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1 hover:bg-gray-100 rounded-full mr-3"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Link className="w-5 h-5 text-gray-400" />
+                  </a>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </section>
         </div>
       </div>
 
