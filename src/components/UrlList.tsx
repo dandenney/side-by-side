@@ -428,7 +428,6 @@ export function UrlList({
           priceLevel: place.priceLevel,
           website: placeDetails.website,
           phoneNumber: placeDetails.phoneNumber,
-          openingHours: placeDetails.openingHours,
         },
         title: place.name,
         description: place.address,
@@ -810,18 +809,6 @@ export function UrlList({
                             >
                               {selectedItem.place.phoneNumber}
                             </a>
-                          )}
-                          {selectedItem.place.openingHours && (
-                            <div className="text-sm text-gray-500">
-                              {selectedItem.place.openingHours.openNow ? 'Open Now' : 'Closed'}
-                              {selectedItem.place.openingHours.weekdayText && (
-                                <div className="mt-1">
-                                  {selectedItem.place.openingHours.weekdayText.map((text, index) => (
-                                    <div key={index}>{text}</div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
                           )}
                         </motion.div>
                       )}
