@@ -14,6 +14,18 @@ interface SupabaseUrlItem {
   created_at: string
   updated_at: string
   archived: boolean
+  place_id: string | null
+  place_name: string | null
+  place_address: string | null
+  place_lat: number | null
+  place_lng: number | null
+  place_types: string[] | null
+  place_rating: number | null
+  place_user_ratings_total: number | null
+  place_price_level: number | null
+  place_website: string | null
+  place_phone_number: string | null
+  date_range: { start: string; end: string } | null
 }
 
 interface SupabaseItemTag {
@@ -24,6 +36,10 @@ interface SupabaseItemTag {
     list_type: 'local' | 'shared'
     created_at: string
   }
+}
+
+interface SupabaseUrlItemWithTags extends SupabaseUrlItem {
+  item_tags: SupabaseItemTag[]
 }
 
 // Helper function to convert UTC date to local date string
@@ -41,7 +57,18 @@ export async function getUrlItems(listType: 'local' | 'shared', listId: string) 
   
   const { data, error } = await supabase
     .from('url_items')
-    .select('*')
+    .select(`
+      *,
+      item_tags (
+        tag:tags (
+          id,
+          name,
+          list_id,
+          list_type,
+          created_at
+        )
+      )
+    `)
     .eq('list_type', listType)
     .eq('list_id', listId)
     .order('created_at', { ascending: false })
@@ -50,34 +77,44 @@ export async function getUrlItems(listType: 'local' | 'shared', listId: string) 
     throw error
   }
 
-  return data.map(item => ({
-    id: item.id,
-    url: item.url,
-    place: item.place_id ? {
-      placeId: item.place_id,
-      name: item.place_name!,
-      address: item.place_address!,
-      lat: item.place_lat!,
-      lng: item.place_lng!,
-      types: item.place_types!,
-      rating: item.place_rating,
-      userRatingsTotal: item.place_user_ratings_total,
-      priceLevel: item.place_price_level,
-      website: item.place_website,
-      phoneNumber: item.place_phone_number,
-      openingHours: item.place_opening_hours as Place['openingHours'],
-    } : undefined,
-    imageUrl: item.image_url,
-    title: item.title,
-    description: item.description,
-    notes: item.notes,
-    dateRange: item.date_range as UrlListItem['dateRange'],
-    listType: item.list_type,
-    listId: item.list_id,
-    createdAt: new Date(item.created_at),
-    updatedAt: new Date(item.updated_at),
-    archived: item.archived,
-  }))
+  return (data as SupabaseUrlItemWithTags[]).map(item => {
+    const tags = item.item_tags?.map(({ tag }) => ({
+      id: tag.id,
+      name: tag.name,
+      listId: tag.list_id,
+      listType: tag.list_type,
+      createdAt: new Date(tag.created_at)
+    })) || []
+
+    return {
+      id: item.id,
+      url: item.url,
+      place: item.place_id ? {
+        placeId: item.place_id,
+        name: item.place_name!,
+        address: item.place_address!,
+        lat: item.place_lat!,
+        lng: item.place_lng!,
+        types: item.place_types!,
+        rating: item.place_rating,
+        userRatingsTotal: item.place_user_ratings_total,
+        priceLevel: item.place_price_level,
+        website: item.place_website,
+        phoneNumber: item.place_phone_number,
+      } : undefined,
+      imageUrl: item.image_url,
+      title: item.title,
+      description: item.description,
+      notes: item.notes,
+      dateRange: item.date_range as UrlListItem['dateRange'],
+      listType: item.list_type,
+      listId: item.list_id,
+      createdAt: new Date(item.created_at),
+      updatedAt: new Date(item.updated_at),
+      archived: item.archived,
+      tags
+    }
+  })
 }
 
 export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' | 'updatedAt'>) {
