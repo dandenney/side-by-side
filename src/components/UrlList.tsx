@@ -473,6 +473,8 @@ export function UrlList({
               ))}
             </div>
           )}
+
+          {/* Items */}
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <AnimatePresence mode="popLayout">
               {items.filter(item => !item.archived).map(item => (
@@ -484,12 +486,12 @@ export function UrlList({
                   exit="exit"
                   whileTap="tap"
                   layout
-                  className={`flex gap-2 items-center bg-white rounded-lg shadow-xl border overflow-hidden p-2 hover:bg-gray-50 ${selectedItem?.id === item.id ? 'opacity-0' : ''}`}
+                  className={`flex gap-4 items-center bg-white rounded-lg shadow-sm border overflow-hidden p-2 hover:bg-gray-50 ${selectedItem?.id === item.id ? 'opacity-0' : ''}`}
                   layoutId={`card-${item.id}`}
                 >
                   {item.imageUrl ? (
                     <motion.div
-                      className="bg-gray-100 h-16 flex-shrink-0 overflow-hidden relative w-16"
+                      className="bg-gray-100 h-16 flex-shrink-0 overflow-hidden relative rounded-lg w-16"
                       layoutId={`image-${item.id}`}
                     >
                       <Image
@@ -516,7 +518,7 @@ export function UrlList({
                       onClick={() => handleCardClick(item)}
                     >
                       <motion.h3
-                        className={`font-semibold ${textColor} line-clamp-2`}
+                        className={`font-semibold text-purple-800 line-clamp-2`}
                         layoutId={`title-${item.id}`}
                       >
                         {item.title}
@@ -721,11 +723,11 @@ export function UrlList({
                   </div>
                 </div>
               ) : (
-                <>
-                  <div className="flex flex-col">
+                <div> 
+                  <div className="flex gap-4 p-4">
                     {selectedItem.imageUrl ? (
                       <motion.div
-                        className="relative w-full aspect-[1200/630]"
+                         className="bg-gray-100 h-20 flex-shrink-0 overflow-hidden relative rounded-lg w-20"
                         layoutId={`image-${selectedItem.id}`}
                       >
                         <Image
@@ -737,165 +739,165 @@ export function UrlList({
                       </motion.div>
                     ) : (
                       <motion.div
-                        className="relative w-full aspect-[1200/630] bg-gray-100"
+                        className="relative shrink-0 w-20"
                         layoutId={`image-${selectedItem.id}`}
                       >
-                        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                        <div className="bg-gray-100 h-20 flex-shrink-0 overflow-hidden relative rounded-lg w-20">
                           <ImageIcon className="w-12 h-12" />
                         </div>
                       </motion.div>
                     )}
-                    <div className="p-6 space-y-4">
-                      <div className="flex justify-between items-start">
-                        <motion.h3
-                          className={`font-semibold ${textColor} text-lg`}
-                          layoutId={`title-${selectedItem.id}`}
-                        >
-                          {selectedItem.title}
-                        </motion.h3>
-                        <button
-                          onClick={handleCloseModal}
-                          className="p-1 hover:bg-gray-100 rounded-full"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
-                      </div>
-                      <motion.p
-                        className="text-gray-600"
+                    <div className="flex justify-between items-start">
+                      <motion.h3
+                        className={`font-semibold text-purple-800 text-lg`}
+                        layoutId={`title-${selectedItem.id}`}
+                      >
+                        {selectedItem.title}
+                      </motion.h3>
+                      <button
+                        onClick={handleCloseModal}
+                        className="p-1 hover:bg-gray-100 rounded-full"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <motion.p
+                      className="text-gray-600"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      {selectedItem.description}
+                    </motion.p>
+                    {selectedItem.place && (
+                      <motion.div
+                        className="space-y-2"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
+                        transition={{ delay: 0.3 }}
                       >
-                        {selectedItem.description}
-                      </motion.p>
-                      {selectedItem.place && (
-                        <motion.div
-                          className="space-y-2"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.3 }}
-                        >
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <MapPin className="w-4 h-4" />
+                          <span>{selectedItem.place.address}</span>
+                        </div>
+                        {selectedItem.place.rating && (
                           <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <MapPin className="w-4 h-4" />
-                            <span>{selectedItem.place.address}</span>
-                          </div>
-                          {selectedItem.place.rating && (
-                            <div className="flex items-center gap-2 text-sm text-gray-500">
-                              <span>⭐ {selectedItem.place.rating.toFixed(1)}</span>
-                              {selectedItem.place.userRatingsTotal && (
-                                <span>({selectedItem.place.userRatingsTotal} reviews)</span>
-                              )}
-                            </div>
-                          )}
-                          {selectedItem.place.priceLevel && (
-                            <div className="text-sm text-gray-500">
-                              {'$'.repeat(selectedItem.place.priceLevel)}
-                            </div>
-                          )}
-                          {selectedItem.place.website && (
-                            <a
-                              href={selectedItem.place.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-blue-500 hover:underline"
-                            >
-                              Visit Website
-                            </a>
-                          )}
-                          {selectedItem.place.phoneNumber && (
-                            <a
-                              href={`tel:${selectedItem.place.phoneNumber}`}
-                              className="text-sm text-blue-500 hover:underline"
-                            >
-                              {selectedItem.place.phoneNumber}
-                            </a>
-                          )}
-                        </motion.div>
-                      )}
-                      {selectedItem.dateRange && (
-                        <motion.div
-                          className="flex items-center gap-2 text-sm text-gray-500"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.3 }}
-                        >
-                          <Calendar className="w-4 h-4" />
-                          <span>
-                            {formatDate(selectedItem.dateRange.start)}
-                            {selectedItem.dateRange.end !== selectedItem.dateRange.start && (
-                              <> - {formatDate(selectedItem.dateRange.end)}</>
+                            <span>⭐ {selectedItem.place.rating.toFixed(1)}</span>
+                            {selectedItem.place.userRatingsTotal && (
+                              <span>({selectedItem.place.userRatingsTotal} reviews)</span>
                             )}
-                          </span>
-                        </motion.div>
-                      )}
+                          </div>
+                        )}
+                        {selectedItem.place.priceLevel && (
+                          <div className="text-sm text-gray-500">
+                            {'$'.repeat(selectedItem.place.priceLevel)}
+                          </div>
+                        )}
+                        {selectedItem.place.website && (
+                          <a
+                            href={selectedItem.place.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-500 hover:underline"
+                          >
+                            Visit Website
+                          </a>
+                        )}
+                        {selectedItem.place.phoneNumber && (
+                          <a
+                            href={`tel:${selectedItem.place.phoneNumber}`}
+                            className="text-sm text-blue-500 hover:underline"
+                          >
+                            {selectedItem.place.phoneNumber}
+                          </a>
+                        )}
+                      </motion.div>
+                    )}
+                    {selectedItem.dateRange && (
                       <motion.div
                         className="flex items-center gap-2 text-sm text-gray-500"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.4 }}
+                        transition={{ delay: 0.3 }}
                       >
-                        {selectedItem.url && (
-                          <a
-                            href={selectedItem.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 hover:text-blue-500"
-                          >
-                            <Link className="w-4 h-4" />
-                            <span>Open Article</span>
-                          </a>
-                        )}
-                      </motion.div>
-                      {(selectedItem.tags && selectedItem.tags.length > 0 || selectedItem.notes) && (
-                        <motion.div
-                          className="flex flex-col gap-2 text-sm text-gray-500"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.5 }}
-                        >
-                          {selectedItem.tags?.map(tag => (
-                            <div key={tag.id} className="flex items-center gap-1">
-                              <TagIcon className="w-4 h-4" />
-                              <span>{tag.name}</span>
-                            </div>
-                          ))}
-                          {selectedItem.notes && (
-                            <div className="flex items-start gap-1">
-                              <StickyNote className="w-4 h-4 mt-1" />
-                              <span>{selectedItem.notes}</span>
-                            </div>
+                        <Calendar className="w-4 h-4" />
+                        <span>
+                          {formatDate(selectedItem.dateRange.start)}
+                          {selectedItem.dateRange.end !== selectedItem.dateRange.start && (
+                            <> - {formatDate(selectedItem.dateRange.end)}</>
                           )}
-                        </motion.div>
+                        </span>
+                      </motion.div>
+                    )}
+                    <motion.div
+                      className="flex items-center gap-2 text-sm text-gray-500"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      {selectedItem.url && (
+                        <a
+                          href={selectedItem.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 hover:text-blue-500"
+                        >
+                          <Link className="w-4 h-4" />
+                          <span>Open Article</span>
+                        </a>
                       )}
+                    </motion.div>
+                    {(selectedItem.tags && selectedItem.tags.length > 0 || selectedItem.notes) && (
                       <motion.div
-                        className="flex justify-end gap-2"
+                        className="flex flex-col gap-2 text-sm text-gray-500"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.6 }}
+                        transition={{ delay: 0.5 }}
                       >
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            startEdit(e, selectedItem)
-                          }}
-                          className="px-4 py-2 text-gray-600 hover:text-blue-500 rounded-lg hover:bg-gray-100"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            archiveItem(e, selectedItem.id)
-                            handleCloseModal()
-                          }}
-                          className="px-4 py-2 text-gray-600 hover:text-yellow-500 rounded-lg hover:bg-gray-100"
-                        >
-                          <Archive className="w-4 h-4" />
-                        </button>
+                        {selectedItem.tags?.map(tag => (
+                          <div key={tag.id} className="flex items-center gap-1">
+                            <TagIcon className="w-4 h-4" />
+                            <span>{tag.name}</span>
+                          </div>
+                        ))}
+                        {selectedItem.notes && (
+                          <div className="flex items-start gap-1">
+                            <StickyNote className="w-4 h-4 mt-1" />
+                            <span>{selectedItem.notes}</span>
+                          </div>
+                        )}
                       </motion.div>
-                    </div>
+                    )}
+                    <motion.div
+                      className="flex justify-end gap-2"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.6 }}
+                    >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          startEdit(e, selectedItem)
+                        }}
+                        className="px-4 py-2 text-gray-600 hover:text-blue-500 rounded-lg hover:bg-gray-100"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          archiveItem(e, selectedItem.id)
+                          handleCloseModal()
+                        }}
+                        className="px-4 py-2 text-gray-600 hover:text-yellow-500 rounded-lg hover:bg-gray-100"
+                      >
+                        <Archive className="w-4 h-4" />
+                      </button>
+                    </motion.div>
                   </div>
-                </>
+                </div>
               )}
             </motion.div>
           </motion.div>
