@@ -61,12 +61,12 @@ export function UrlList({
     { value: 'place', icon: MapPin, label: 'Place' }
   ] as const
 
-  const InputTypeSelector = ({ 
-    value, 
-    onChange, 
+  const InputTypeSelector = ({
+    value,
+    onChange,
     className,
-  }: { 
-    value: 'url' | 'place', 
+  }: {
+    value: 'url' | 'place',
     onChange: (value: 'url' | 'place') => void,
     className?: string
   }) => {
@@ -76,9 +76,8 @@ export function UrlList({
           <button
             key={option.value}
             onClick={() => onChange(option.value)}
-            className={`relative z-10 flex-1 px-3 py-1.5 rounded-md text-gray-400 transition-all ease-in-out hover:text-gray-700 ${
-              value === option.value ? 'bg-gray-200 text-gray-700' : ''
-            }`}
+            className={`relative z-10 flex-1 px-3 py-1.5 rounded-md text-gray-400 transition-all ease-in-out hover:text-gray-700 ${value === option.value ? 'bg-gray-200 text-gray-700' : ''
+              }`}
           >
             <div className="flex items-center justify-center gap-1">
               <option.icon className="w-4 h-4" />
@@ -135,12 +134,12 @@ export function UrlList({
           'Accept': 'application/json',
         },
       })
-      
+
       if (!response.ok) {
         const errorText = await response.text()
         return null
       }
-      
+
       const data = await response.json()
       return data
     } catch (error) {
@@ -173,7 +172,7 @@ export function UrlList({
     try {
       if (inputType === 'url') {
         const metaData = await fetchMetaData(newUrl)
-        
+
         if (!metaData) {
           setError('Failed to retrieve URL information. Please try again or add manually.')
           return
@@ -198,7 +197,7 @@ export function UrlList({
         setError('Place lookup not implemented yet')
         return
       }
-      
+
       setNewUrl('')
       setIsModalOpen(false)
     } catch (error) {
@@ -238,7 +237,7 @@ export function UrlList({
       try {
         const updatedItem = await updateUrlItem(editingItem)
         // Update the items list
-        setItems(items.map(item => 
+        setItems(items.map(item =>
           item.id === updatedItem.id ? updatedItem : item
         ))
         // Update the selected item if it's the one being edited
@@ -372,7 +371,7 @@ export function UrlList({
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setNewUrl(value)
-    
+
     if (inputType === 'place') {
       if (value.length < 4) {
         setSearchResults([])
@@ -410,10 +409,10 @@ export function UrlList({
       const response = await fetch(`/api/places?placeId=${encodeURIComponent(place.placeId)}`)
       if (!response.ok) throw new Error('Failed to get place details')
       const placeDetails = await response.json()
-      
+
       // Generate Google Maps URL for the place
       const placeUrl = `https://www.google.com/maps/place/?q=place_id:${place.placeId}`
-      
+
       const newItem = {
         url: placeUrl,
         place: {
@@ -438,7 +437,7 @@ export function UrlList({
       }
 
       const createdItem = await createUrlItem(newItem)
-      
+
       setItems(prevItems => [createdItem, ...prevItems])
       setNewUrl('')
       setSearchResults([])
@@ -473,8 +472,6 @@ export function UrlList({
               ))}
             </div>
           )}
-
-          {/* Items */}
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <AnimatePresence mode="popLayout">
               {items.filter(item => !item.archived).map(item => (
@@ -486,13 +483,14 @@ export function UrlList({
                   exit="exit"
                   whileTap="tap"
                   layout
-                  className={`flex gap-4 items-center bg-white rounded-lg shadow-sm border overflow-hidden p-2 hover:bg-gray-50 ${selectedItem?.id === item.id ? 'opacity-0' : ''}`}
+                  className={`flex gap-2 items-center bg-white rounded-lg shadow-xl border overflow-hidden p-2 hover:bg-gray-50 ${selectedItem?.id === item.id ? 'opacity-0' : ''}`}
                   layoutId={`card-${item.id}`}
                 >
                   {item.imageUrl ? (
                     <motion.div
-                      className="bg-gray-100 h-16 flex-shrink-0 overflow-hidden relative rounded-lg w-16"
+                      className="bg-gray-100 h-16 w-16 flex-shrink-0 overflow-hidden relative rounded-lg"
                       layoutId={`image-${item.id}`}
+                      style={{ aspectRatio: '1/1' }}
                     >
                       <Image
                         src={item.imageUrl}
@@ -504,8 +502,9 @@ export function UrlList({
                     </motion.div>
                   ) : (
                     <motion.div
-                      className="bg-gray-100 relative w-20 aspect-[1200/630] flex-shrink-0 ml-2"
+                      className="bg-gray-100 h-16 w-16 flex-shrink-0 relative rounded-lg"
                       layoutId={`image-${item.id}`}
+                      style={{ aspectRatio: '1/1' }}
                     >
                       <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                         <ImageIcon className="w-6 h-6" />
@@ -518,7 +517,7 @@ export function UrlList({
                       onClick={() => handleCardClick(item)}
                     >
                       <motion.h3
-                        className={`font-semibold text-purple-800 line-clamp-2`}
+                        className={`font-semibold ${textColor} line-clamp-2`}
                         layoutId={`title-${item.id}`}
                       >
                         {item.title}
@@ -723,12 +722,19 @@ export function UrlList({
                   </div>
                 </div>
               ) : (
-                <div> 
-                  <div className="flex gap-4 p-4">
+                <>
+                  <div className="flex flex-col">
                     {selectedItem.imageUrl ? (
                       <motion.div
-                         className="bg-gray-100 h-20 flex-shrink-0 overflow-hidden relative rounded-lg w-20"
+                        className="relative w-full"
                         layoutId={`image-${selectedItem.id}`}
+                        style={{ aspectRatio: '16/9' }}
+                        transition={{
+                          layout: {
+                            duration: 0.3,
+                            ease: "easeInOut"
+                          }
+                        }}
                       >
                         <Image
                           src={selectedItem.imageUrl}
@@ -739,165 +745,172 @@ export function UrlList({
                       </motion.div>
                     ) : (
                       <motion.div
-                        className="relative shrink-0 w-20"
+                        className="relative w-full bg-gray-100"
                         layoutId={`image-${selectedItem.id}`}
+                        style={{ aspectRatio: '16/9' }}
+                        transition={{
+                          layout: {
+                            duration: 0.3,
+                            ease: "easeInOut"
+                          }
+                        }}
                       >
-                        <div className="bg-gray-100 h-20 flex-shrink-0 overflow-hidden relative rounded-lg w-20">
+                        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                           <ImageIcon className="w-12 h-12" />
                         </div>
                       </motion.div>
                     )}
-                    <div className="flex justify-between items-start">
-                      <motion.h3
-                        className={`font-semibold text-purple-800 text-lg`}
-                        layoutId={`title-${selectedItem.id}`}
-                      >
-                        {selectedItem.title}
-                      </motion.h3>
-                      <button
-                        onClick={handleCloseModal}
-                        className="p-1 hover:bg-gray-100 rounded-full"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <motion.p
-                      className="text-gray-600"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      {selectedItem.description}
-                    </motion.p>
-                    {selectedItem.place && (
-                      <motion.div
-                        className="space-y-2"
+                    <div className="p-6 space-y-4">
+                      <div className="flex justify-between items-start">
+                        <motion.h3
+                          className={`font-semibold ${textColor} text-lg`}
+                          layoutId={`title-${selectedItem.id}`}
+                        >
+                          {selectedItem.title}
+                        </motion.h3>
+                        <button
+                          onClick={handleCloseModal}
+                          className="p-1 hover:bg-gray-100 rounded-full"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                      <motion.p
+                        className="text-gray-600"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
+                        transition={{ delay: 0.2 }}
                       >
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <MapPin className="w-4 h-4" />
-                          <span>{selectedItem.place.address}</span>
-                        </div>
-                        {selectedItem.place.rating && (
+                        {selectedItem.description}
+                      </motion.p>
+                      {selectedItem.place && (
+                        <motion.div
+                          className="space-y-2"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.3 }}
+                        >
                           <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <span>⭐ {selectedItem.place.rating.toFixed(1)}</span>
-                            {selectedItem.place.userRatingsTotal && (
-                              <span>({selectedItem.place.userRatingsTotal} reviews)</span>
+                            <MapPin className="w-4 h-4" />
+                            <span>{selectedItem.place.address}</span>
+                          </div>
+                          {selectedItem.place.rating && (
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                              <span>⭐ {selectedItem.place.rating.toFixed(1)}</span>
+                              {selectedItem.place.userRatingsTotal && (
+                                <span>({selectedItem.place.userRatingsTotal} reviews)</span>
+                              )}
+                            </div>
+                          )}
+                          {selectedItem.place.priceLevel && (
+                            <div className="text-sm text-gray-500">
+                              {'$'.repeat(selectedItem.place.priceLevel)}
+                            </div>
+                          )}
+                          {selectedItem.place.website && (
+                            <a
+                              href={selectedItem.place.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-blue-500 hover:underline"
+                            >
+                              Visit Website
+                            </a>
+                          )}
+                          {selectedItem.place.phoneNumber && (
+                            <a
+                              href={`tel:${selectedItem.place.phoneNumber}`}
+                              className="text-sm text-blue-500 hover:underline"
+                            >
+                              {selectedItem.place.phoneNumber}
+                            </a>
+                          )}
+                        </motion.div>
+                      )}
+                      {selectedItem.dateRange && (
+                        <motion.div
+                          className="flex items-center gap-2 text-sm text-gray-500"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.3 }}
+                        >
+                          <Calendar className="w-4 h-4" />
+                          <span>
+                            {formatDate(selectedItem.dateRange.start)}
+                            {selectedItem.dateRange.end !== selectedItem.dateRange.start && (
+                              <> - {formatDate(selectedItem.dateRange.end)}</>
                             )}
-                          </div>
-                        )}
-                        {selectedItem.place.priceLevel && (
-                          <div className="text-sm text-gray-500">
-                            {'$'.repeat(selectedItem.place.priceLevel)}
-                          </div>
-                        )}
-                        {selectedItem.place.website && (
-                          <a
-                            href={selectedItem.place.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-blue-500 hover:underline"
-                          >
-                            Visit Website
-                          </a>
-                        )}
-                        {selectedItem.place.phoneNumber && (
-                          <a
-                            href={`tel:${selectedItem.place.phoneNumber}`}
-                            className="text-sm text-blue-500 hover:underline"
-                          >
-                            {selectedItem.place.phoneNumber}
-                          </a>
-                        )}
-                      </motion.div>
-                    )}
-                    {selectedItem.dateRange && (
+                          </span>
+                        </motion.div>
+                      )}
                       <motion.div
                         className="flex items-center gap-2 text-sm text-gray-500"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
+                        transition={{ delay: 0.4 }}
                       >
-                        <Calendar className="w-4 h-4" />
-                        <span>
-                          {formatDate(selectedItem.dateRange.start)}
-                          {selectedItem.dateRange.end !== selectedItem.dateRange.start && (
-                            <> - {formatDate(selectedItem.dateRange.end)}</>
-                          )}
-                        </span>
-                      </motion.div>
-                    )}
-                    <motion.div
-                      className="flex items-center gap-2 text-sm text-gray-500"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.4 }}
-                    >
-                      {selectedItem.url && (
-                        <a
-                          href={selectedItem.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 hover:text-blue-500"
-                        >
-                          <Link className="w-4 h-4" />
-                          <span>Open Article</span>
-                        </a>
-                      )}
-                    </motion.div>
-                    {(selectedItem.tags && selectedItem.tags.length > 0 || selectedItem.notes) && (
-                      <motion.div
-                        className="flex flex-col gap-2 text-sm text-gray-500"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.5 }}
-                      >
-                        {selectedItem.tags?.map(tag => (
-                          <div key={tag.id} className="flex items-center gap-1">
-                            <TagIcon className="w-4 h-4" />
-                            <span>{tag.name}</span>
-                          </div>
-                        ))}
-                        {selectedItem.notes && (
-                          <div className="flex items-start gap-1">
-                            <StickyNote className="w-4 h-4 mt-1" />
-                            <span>{selectedItem.notes}</span>
-                          </div>
+                        {selectedItem.url && (
+                          <a
+                            href={selectedItem.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 hover:text-blue-500"
+                          >
+                            <Link className="w-4 h-4" />
+                            <span>Open Article</span>
+                          </a>
                         )}
                       </motion.div>
-                    )}
-                    <motion.div
-                      className="flex justify-end gap-2"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.6 }}
-                    >
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          startEdit(e, selectedItem)
-                        }}
-                        className="px-4 py-2 text-gray-600 hover:text-blue-500 rounded-lg hover:bg-gray-100"
+                      {(selectedItem.tags && selectedItem.tags.length > 0 || selectedItem.notes) && (
+                        <motion.div
+                          className="flex flex-col gap-2 text-sm text-gray-500"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.5 }}
+                        >
+                          {selectedItem.tags?.map(tag => (
+                            <div key={tag.id} className="flex items-center gap-1">
+                              <TagIcon className="w-4 h-4" />
+                              <span>{tag.name}</span>
+                            </div>
+                          ))}
+                          {selectedItem.notes && (
+                            <div className="flex items-start gap-1">
+                              <StickyNote className="w-4 h-4 mt-1" />
+                              <span>{selectedItem.notes}</span>
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                      <motion.div
+                        className="flex justify-end gap-2"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.6 }}
                       >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          archiveItem(e, selectedItem.id)
-                          handleCloseModal()
-                        }}
-                        className="px-4 py-2 text-gray-600 hover:text-yellow-500 rounded-lg hover:bg-gray-100"
-                      >
-                        <Archive className="w-4 h-4" />
-                      </button>
-                    </motion.div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            startEdit(e, selectedItem)
+                          }}
+                          className="px-4 py-2 text-gray-600 hover:text-blue-500 rounded-lg hover:bg-gray-100"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            archiveItem(e, selectedItem.id)
+                            handleCloseModal()
+                          }}
+                          className="px-4 py-2 text-gray-600 hover:text-yellow-500 rounded-lg hover:bg-gray-100"
+                        >
+                          <Archive className="w-4 h-4" />
+                        </button>
+                      </motion.div>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </motion.div>
           </motion.div>
