@@ -483,7 +483,7 @@ export function UrlList({
                   exit="exit"
                   whileTap="tap"
                   layout
-                  className={`flex gap-2 items-center bg-white rounded-lg shadow-xl border overflow-hidden p-2 hover:bg-gray-50 ${selectedItem?.id === item.id ? 'opacity-0' : ''}`}
+                  className={`flex gap-2 items-center bg-white rounded-lg shadow-sm border overflow-hidden p-2 hover:bg-gray-50 ${selectedItem?.id === item.id ? 'opacity-0' : ''}`}
                   layoutId={`card-${item.id}`}
                 >
                   {item.imageUrl ? (
@@ -524,21 +524,22 @@ export function UrlList({
                       </motion.h3>
                     </div>
                   </div>
-                  <button
-                    onClick={(e) => archiveItem(e, item.id)}
-                    className="p-1 hover:bg-gray-100 rounded-full mr-3"
-                  >
+                  <div className="flex">
+                    {/* <button
+                      onClick={(e) => archiveItem(e, item.id)}
+                      className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full">
                     <Archive className="w-5 h-5 text-gray-400" />
-                  </button>
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1 hover:bg-gray-100 rounded-full mr-3"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Link className="w-5 h-5 text-gray-400" />
-                  </a>
+                    </button> */}
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Link className="w-5 h-5 text-gray-400" />
+                    </a>
+                  </div>
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -571,14 +572,14 @@ export function UrlList({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
           >
             <motion.div
               variants={modalContentVariants}
               initial="initial"
               animate="animate"
               exit="exit"
-              className="bg-white rounded-lg w-full max-w-lg overflow-hidden"
+              className="bg-white w-full h-[100dvh] overflow-hidden flex flex-col"
               layoutId={`card-${selectedItem.id}`}
             >
               {editingItem?.id === selectedItem.id ? (
@@ -723,7 +724,7 @@ export function UrlList({
                 </div>
               ) : (
                 <>
-                  <div className="flex flex-col">
+                  <div className="flex-1 overflow-y-auto">
                     {selectedItem.imageUrl ? (
                       <motion.div
                         className="relative w-full"
@@ -790,10 +791,6 @@ export function UrlList({
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.3 }}
                         >
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <MapPin className="w-4 h-4" />
-                            <span>{selectedItem.place.address}</span>
-                          </div>
                           {selectedItem.place.rating && (
                             <div className="flex items-center gap-2 text-sm text-gray-500">
                               <span>⭐ {selectedItem.place.rating.toFixed(1)}</span>
@@ -843,24 +840,6 @@ export function UrlList({
                           </span>
                         </motion.div>
                       )}
-                      <motion.div
-                        className="flex items-center gap-2 text-sm text-gray-500"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.4 }}
-                      >
-                        {selectedItem.url && (
-                          <a
-                            href={selectedItem.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 hover:text-blue-500"
-                          >
-                            <Link className="w-4 h-4" />
-                            <span>Open Article</span>
-                          </a>
-                        )}
-                      </motion.div>
                       {(selectedItem.tags && selectedItem.tags.length > 0 || selectedItem.notes) && (
                         <motion.div
                           className="flex flex-col gap-2 text-sm text-gray-500"
@@ -882,20 +861,41 @@ export function UrlList({
                           )}
                         </motion.div>
                       )}
-                      <motion.div
-                        className="flex justify-end gap-2"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.6 }}
-                      >
+                    </div>
+                  </div>
+                  <div className="border-t border-gray-200 p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-2">
+                        {selectedItem.url && (
+                          <a
+                            href={selectedItem.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
+                          >
+                            <Link className="w-5 h-5 text-gray-400" />
+                          </a>
+                        )}
+                        {selectedItem.place && (
+                          <a
+                            href={`https://www.google.com/maps/place/?q=place_id:${selectedItem.place.placeId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
+                          >
+                            <MapPin className="w-5 h-5 text-gray-400" />
+                          </a>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
                             startEdit(e, selectedItem)
                           }}
-                          className="px-4 py-2 text-gray-600 hover:text-blue-500 rounded-lg hover:bg-gray-100"
+                          className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
                         >
-                          <Edit2 className="w-4 h-4" />
+                          <Edit2 className="w-5 h-5 text-gray-400" />
                         </button>
                         <button
                           onClick={(e) => {
@@ -903,11 +903,11 @@ export function UrlList({
                             archiveItem(e, selectedItem.id)
                             handleCloseModal()
                           }}
-                          className="px-4 py-2 text-gray-600 hover:text-yellow-500 rounded-lg hover:bg-gray-100"
+                          className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
                         >
-                          <Archive className="w-4 h-4" />
+                          <Archive className="w-5 h-5 text-gray-400" />
                         </button>
-                      </motion.div>
+                      </div>
                     </div>
                   </div>
                 </>
