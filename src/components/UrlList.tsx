@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { UrlListItem, Tag } from '@/types/url-list'
-import { Plus, Trash2, Edit2, X, Link, Tag as TagIcon, StickyNote, Archive, Search, Calendar, MapPin } from 'lucide-react'
+import { Plus, Trash2, Edit2, X, Link, Tag as TagIcon, StickyNote, Archive, Search, Calendar, MapPin, Phone } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import AppDrawer from './AppDrawer'
@@ -12,6 +12,7 @@ import { getTags, createTag, deleteTag, addTagToItem, removeTagFromItem, getItem
 import { ImageIcon } from 'lucide-react'
 import { PlaceSearchResult } from '@/lib/google/places'
 import debounce from 'lodash/debounce'
+import { StarRating } from "@/components/ui/star-rating"
 
 type UrlListProps = {
   title: string
@@ -579,7 +580,7 @@ export function UrlList({
               initial="initial"
               animate="animate"
               exit="exit"
-              className="bg-white w-full h-[100dvh] overflow-hidden flex flex-col"
+              className="w-full h-[100dvh] overflow-hidden flex flex-col"
               layoutId={`card-${selectedItem.id}`}
             >
               {editingItem?.id === selectedItem.id ? (
@@ -723,194 +724,186 @@ export function UrlList({
                   </div>
                 </div>
               ) : (
-                <>
-                  <div className="flex-1 overflow-y-auto">
-                    {selectedItem.imageUrl ? (
-                      <motion.div
-                        className="relative w-full"
-                        layoutId={`image-${selectedItem.id}`}
-                        style={{ aspectRatio: '16/9' }}
-                        transition={{
-                          layout: {
-                            duration: 0.3,
-                            ease: "easeInOut"
-                          }
-                        }}
-                      >
-                        <Image
-                          src={selectedItem.imageUrl}
-                          alt={selectedItem.title}
-                          fill
-                          className="object-cover"
-                        />
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        className="relative w-full bg-gray-100"
-                        layoutId={`image-${selectedItem.id}`}
-                        style={{ aspectRatio: '16/9' }}
-                        transition={{
-                          layout: {
-                            duration: 0.3,
-                            ease: "easeInOut"
-                          }
-                        }}
-                      >
-                        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                          <ImageIcon className="w-12 h-12" />
-                        </div>
-                      </motion.div>
-                    )}
-                    <div className="p-6 space-y-4">
-                      <div className="flex justify-between items-start">
-                        <motion.h3
-                          className={`font-semibold ${textColor} text-lg`}
-                          layoutId={`title-${selectedItem.id}`}
-                        >
-                          {selectedItem.title}
-                        </motion.h3>
-                        <button
-                          onClick={handleCloseModal}
-                          className="p-1 hover:bg-gray-100 rounded-full"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
+                <div className="flex flex-col h-full">
+                  {selectedItem.imageUrl ? (
+                    <motion.div
+                      className="relative shrink-0 w-full"
+                      layoutId={`image-${selectedItem.id}`}
+                      style={{ aspectRatio: '16/9' }}
+                      transition={{
+                        layout: {
+                          duration: 0.3,
+                          ease: "easeInOut"
+                        }
+                      }}
+                    >
+                      <Image
+                        src={selectedItem.imageUrl}
+                        alt={selectedItem.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      className="relative w-full bg-gray-100"
+                      layoutId={`image-${selectedItem.id}`}
+                      style={{ aspectRatio: '16/9' }}
+                      transition={{
+                        layout: {
+                          duration: 0.3,
+                          ease: "easeInOut"
+                        }
+                      }}
+                    >
+                      <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                        <ImageIcon className="w-12 h-12" />
                       </div>
-                      <motion.p
-                        className="text-gray-600"
+                    </motion.div>
+                  )}
+                  <button
+                    onClick={handleCloseModal}
+                      className="absolute bg-white/20 p-1 right-4 rounded-full text-white top-4 z-10 hover:bg-gray-100"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                  <div className="bg-white -mt-4 rounded-t-2xl grow p-6 relative space-y-4 z-10">
+                    <div className="flex justify-between items-start">
+                      <motion.h3
+                        className={`font-semibold ${textColor} text-2xl`}
+                        layoutId={`title-${selectedItem.id}`}
+                      >
+                        {selectedItem.title}
+                      </motion.h3>
+                    </div>
+                    <motion.p
+                      className="text-gray-600"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      {selectedItem.description}
+                    </motion.p>
+                    {selectedItem.place && (
+                      <motion.div
+                        className="space-y-2"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
+                        transition={{ delay: 0.3 }}
                       >
-                        {selectedItem.description}
-                      </motion.p>
-                      {selectedItem.place && (
-                        <motion.div
-                          className="space-y-2"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.3 }}
-                        >
-                          {selectedItem.place.rating && (
-                            <div className="flex items-center gap-2 text-sm text-gray-500">
-                              <span>⭐ {selectedItem.place.rating.toFixed(1)}</span>
-                              {selectedItem.place.userRatingsTotal && (
+                        <ul>
+                          {selectedItem.place?.rating && (
+                            <li className="flex items-center gap-2 text-sm text-gray-500">
+                              <StarRating
+                                defaultValue={selectedItem.place.rating}
+                                disabled
+                                size="md"
+                              />
+                              {selectedItem.place?.userRatingsTotal && (
                                 <span>({selectedItem.place.userRatingsTotal} reviews)</span>
                               )}
-                            </div>
+                            </li>
                           )}
                           {selectedItem.place.priceLevel && (
-                            <div className="text-sm text-gray-500">
-                              {'$'.repeat(selectedItem.place.priceLevel)}
-                            </div>
+                            <li className="font-bold mt-4 text-5xl text-gray-500">
+                              {'💵 '.repeat(selectedItem.place.priceLevel)}
+                            </li>
                           )}
-                          {selectedItem.place.website && (
-                            <a
-                              href={selectedItem.place.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-blue-500 hover:underline"
-                            >
-                              Visit Website
-                            </a>
+                        </ul>
+                      </motion.div>
+                    )}
+                    {selectedItem.dateRange && (
+                      <motion.div
+                        className="flex items-center gap-2 text-sm text-gray-500"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                      >
+                        <Calendar className="w-4 h-4" />
+                        <span>
+                          {formatDate(selectedItem.dateRange.start)}
+                          {selectedItem.dateRange.end !== selectedItem.dateRange.start && (
+                            <> - {formatDate(selectedItem.dateRange.end)}</>
                           )}
-                          {selectedItem.place.phoneNumber && (
-                            <a
-                              href={`tel:${selectedItem.place.phoneNumber}`}
-                              className="text-sm text-blue-500 hover:underline"
-                            >
-                              {selectedItem.place.phoneNumber}
-                            </a>
-                          )}
-                        </motion.div>
-                      )}
-                      {selectedItem.dateRange && (
-                        <motion.div
-                          className="flex items-center gap-2 text-sm text-gray-500"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.3 }}
+                        </span>
+                      </motion.div>
+                    )}
+                    {(selectedItem.tags && selectedItem.tags.length > 0 || selectedItem.notes) && (
+                      <motion.div
+                        className="flex flex-col gap-2 text-sm text-gray-500"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                      >
+                        {selectedItem.tags?.map(tag => (
+                          <div key={tag.id} className="flex items-center gap-1">
+                            <TagIcon className="w-4 h-4" />
+                            <span>{tag.name}</span>
+                          </div>
+                        ))}
+                        {selectedItem.notes && (
+                          <div className="flex items-start gap-1">
+                            <StickyNote className="w-4 h-4 mt-1" />
+                            <span>{selectedItem.notes}</span>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </div>
+                  <div className="bg-gray-50 border-t border-gray-200 p-4">
+                    <div className="flex items-center justify-around">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          archiveItem(e, selectedItem.id)
+                          handleCloseModal()
+                        }}
+                        className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
+                      >
+                        <Archive className="w-5 h-5 text-gray-400" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          startEdit(e, selectedItem)
+                        }}
+                        className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
+                      >
+                        <Edit2 className="w-5 h-5 text-gray-400" />
+                      </button>
+
+                      {selectedItem.place?.phoneNumber && (
+                        <a
+                          href={`tel:${selectedItem.place.phoneNumber}`}
+                          className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
                         >
-                          <Calendar className="w-4 h-4" />
-                          <span>
-                            {formatDate(selectedItem.dateRange.start)}
-                            {selectedItem.dateRange.end !== selectedItem.dateRange.start && (
-                              <> - {formatDate(selectedItem.dateRange.end)}</>
-                            )}
-                          </span>
-                        </motion.div>
+                          <Phone className="w-5 h-5 text-gray-400" />
+                        </a>
                       )}
-                      {(selectedItem.tags && selectedItem.tags.length > 0 || selectedItem.notes) && (
-                        <motion.div
-                          className="flex flex-col gap-2 text-sm text-gray-500"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.5 }}
+
+                      {selectedItem.place?.website || selectedItem.url ? (
+                        <a
+                          href={selectedItem.place?.website || selectedItem.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
                         >
-                          {selectedItem.tags?.map(tag => (
-                            <div key={tag.id} className="flex items-center gap-1">
-                              <TagIcon className="w-4 h-4" />
-                              <span>{tag.name}</span>
-                            </div>
-                          ))}
-                          {selectedItem.notes && (
-                            <div className="flex items-start gap-1">
-                              <StickyNote className="w-4 h-4 mt-1" />
-                              <span>{selectedItem.notes}</span>
-                            </div>
-                          )}
-                        </motion.div>
+                          <Link className="w-5 h-5 text-gray-400" />
+                        </a>
+                      ) : null}
+                      {selectedItem.place && (
+                        <a
+                          href={`https://www.google.com/maps/place/?q=place_id:${selectedItem.place.placeId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
+                        >
+                          <MapPin className="w-5 h-5 text-gray-400" />
+                        </a>
                       )}
                     </div>
                   </div>
-                  <div className="border-t border-gray-200 p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex gap-2">
-                        {selectedItem.url && (
-                          <a
-                            href={selectedItem.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
-                          >
-                            <Link className="w-5 h-5 text-gray-400" />
-                          </a>
-                        )}
-                        {selectedItem.place && (
-                          <a
-                            href={`https://www.google.com/maps/place/?q=place_id:${selectedItem.place.placeId}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
-                          >
-                            <MapPin className="w-5 h-5 text-gray-400" />
-                          </a>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            startEdit(e, selectedItem)
-                          }}
-                          className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
-                        >
-                          <Edit2 className="w-5 h-5 text-gray-400" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            archiveItem(e, selectedItem.id)
-                            handleCloseModal()
-                          }}
-                          className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
-                        >
-                          <Archive className="w-5 h-5 text-gray-400" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </>
+                </div>
               )}
             </motion.div>
           </motion.div>
