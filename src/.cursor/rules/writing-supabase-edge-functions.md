@@ -62,7 +62,6 @@ const generateRandomString = (length) => {
 }
 
 const randomString = generateRandomString(10)
-console.log(randomString)
 
 const server = createServer((req, res) => {
   const message = `Hello`

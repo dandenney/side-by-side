@@ -57,6 +57,23 @@ export function ShoppingList({
     { value: 'Aldi', color: 'orange' }
   ] as const
 
+  const groupedItems = useMemo(() => {
+    const groups = items.reduce((acc, item) => {
+      if (!acc[item.store]) {
+        acc[item.store] = []
+      }
+      acc[item.store].push(item)
+      return acc
+    }, {} as Record<string, GroceryItem[]>)
+
+    // Sort items within each store group
+    Object.keys(groups).forEach(store => {
+      groups[store].sort((a, b) => a.name.localeCompare(b.name))
+    })
+
+    return groups
+  }, [items])
+
   useEffect(() => {
     if (!user) return
 
@@ -169,6 +186,13 @@ export function ShoppingList({
     }
   }
 
+  const startEdit = (e: React.MouseEvent, item: GroceryItem) => {
+    e.stopPropagation()
+    setEditingItem(item)
+    setEditText(item.name)
+    setEditStore(item.store)
+  }
+
   const saveEdit = async () => {
     if (!editingItem || !editText.trim() || !user) return
 
@@ -198,6 +222,13 @@ export function ShoppingList({
       setEditText('')
     } catch (error) {
       console.error('Error in saveEdit:', error)
+    }
+  }
+
+  const handleEditBlur = (e: React.FocusEvent) => {
+    // Only save if the blur event is not caused by clicking on the store selector
+    if (!e.relatedTarget || !e.relatedTarget.closest('.store-selector')) {
+      saveEdit()
     }
   }
 
@@ -330,13 +361,6 @@ export function ShoppingList({
     toggleCheck(item.id)
   }
 
-  const startEdit = (e: React.MouseEvent, item: GroceryItem) => {
-    e.stopPropagation()
-    setEditingItem(item)
-    setEditText(item.name)
-    setEditStore(item.store)
-  }
-
   return (
     <div className={`bg-gradient-to-b ${gradientFrom} ${gradientTo} h-full flex flex-col`}>
       {/* List Items */}
@@ -344,123 +368,129 @@ export function ShoppingList({
         <div className="max-w-lg mx-auto space-y-2 pt-4">
           <h1 className={`opacity-40 text-center ${titleColor} uppercase font-bold`}>{title}</h1>
           <AnimatePresence mode="popLayout">
-            {items.map(item => (
-              <motion.div
-                key={item.id}
-                variants={itemVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                whileTap="tap"
-                layout
-                className="flex items-center gap-2 p-3 bg-white rounded-lg shadow-xl border hover:bg-gray-50 cursor-pointer"
-                style={{ touchAction: 'manipulation' }}
-              >
-                <motion.div 
-                  className="flex-1 flex items-center gap-2"
-                  onClick={() => handleMainAreaTap(item)}
-                  style={{ touchAction: 'manipulation' }}
-                >
-                  <motion.div 
-                    className="p-1 rounded-full"
+            {Object.entries(groupedItems).map(([store, storeItems]) => (
+              <div key={store} className="space-y-2">
+                {storeItems.map(item => (
+                  <motion.div
+                    key={item.id}
+                    variants={itemVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    whileTap="tap"
                     layout
+                    className="flex items-center gap-2 p-3 bg-white rounded-lg shadow-xl border hover:bg-gray-50 cursor-pointer"
+                    style={{ touchAction: 'manipulation' }}
                   >
-                    <ShoppingBasket className={`w-5 h-5 transition-all ${item.checked ? iconColor : 'text-gray-400'}`} />
-                  </motion.div>
-
-                  {editingItem?.id === item.id ? (
-                    <div className="flex-1 flex flex-col gap-2">
-                      <input
-                        type="text"
-                        value={editText}
-                        onChange={(e) => setEditText(e.target.value)}
-                        onBlur={saveEdit}
-                        onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                        className={`px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
-                        autoFocus
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                        <AnimatedStoreSelector
-                          value={editStore}
-                          onChange={setEditStore}
-                          storeOptions={storeOptions}
-                        />
-                      </div>
-                    </div>
-                  ) : (
                     <motion.div 
-                      layout
                       className="flex-1 flex items-center gap-2"
-                    >
-                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${item.store === 'Publix' ? 'bg-green-200 text-green-800' :
-                          item.store === 'Costco' ? 'bg-blue-200 text-blue-800' :
-                            'bg-violet-200 text-violet-800'
-                        }`}>
-                        {item.store}
-                      </span>
-                      <span className={`${textColor} ${item.checked ? 'line-through text-gray-500' : ''}`}>
-                        {item.name}
-                      </span>
-                    </motion.div>
-                  )}
-                </motion.div>
-
-                {/* Action Area - Edit Controls */}
-                <div 
-                  className="w-[100px] flex justify-end"
-                  style={{ touchAction: 'manipulation' }}
-                >
-                  <AnimatePresence>
-                    {(showEditControls === item.id || editingItem?.id === item.id) && (
-                      <motion.div 
-                        variants={editControlsVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="hidden"
-                        className="flex gap-1"
-                        layout
-                      >
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            startEdit(e, item)
-                          }}
-                          className={`p-1 text-gray-600 hover:${accentColor} rounded-full hover:bg-gray-100`}
-                          style={{ touchAction: 'manipulation' }}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            deleteItem(e, item.id)
-                          }}
-                          className="p-1 text-gray-600 hover:text-red-500 rounded-full hover:bg-gray-100"
-                          style={{ touchAction: 'manipulation' }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </motion.button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                  {!editingItem && (
-                    <motion.button
-                      whileTap={{ scale: 0.9 }}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setShowEditControls(showEditControls === item.id ? null : item.id)
-                      }}
-                      className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                      onClick={() => handleMainAreaTap(item)}
                       style={{ touchAction: 'manipulation' }}
                     >
-                      <MoreVertical className="w-4 h-4" />
-                    </motion.button>
-                  )}
-                </div>
-              </motion.div>
+                      <motion.div 
+                        className="p-1 rounded-full"
+                        layout
+                      >
+                        <ShoppingBasket className={`w-5 h-5 transition-all ${item.checked ? iconColor : 'text-gray-400'}`} />
+                      </motion.div>
+
+                      {editingItem?.id === item.id ? (
+                        <div className="flex-1 flex flex-col gap-2">
+                          <input
+                            type="text"
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            onBlur={handleEditBlur}
+                            onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
+                            className={`px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
+                            autoFocus
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <div className="flex gap-2 store-selector" onClick={(e) => e.stopPropagation()}>
+                            <AnimatedStoreSelector
+                              value={editStore}
+                              onChange={(newStore) => {
+                                setEditStore(newStore)
+                              }}
+                              storeOptions={storeOptions}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <motion.div 
+                          layout
+                          className="flex-1 flex items-center gap-2"
+                        >
+                          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${item.store === 'Publix' ? 'bg-green-200 text-green-800' :
+                              item.store === 'Costco' ? 'bg-blue-200 text-blue-800' :
+                                'bg-violet-200 text-violet-800'
+                            }`}>
+                            {item.store}
+                          </span>
+                          <span className={`${textColor} ${item.checked ? 'line-through text-gray-500' : ''}`}>
+                            {item.name}
+                          </span>
+                        </motion.div>
+                      )}
+                    </motion.div>
+
+                    {/* Action Area - Edit Controls */}
+                    <div 
+                      className="w-[100px] flex justify-end"
+                      style={{ touchAction: 'manipulation' }}
+                    >
+                      <AnimatePresence>
+                        {(showEditControls === item.id || editingItem?.id === item.id) && (
+                          <motion.div 
+                            variants={editControlsVariants}
+                            initial="hidden"
+                            animate="visible"
+                            exit="hidden"
+                            className="flex gap-1"
+                            layout
+                          >
+                            <motion.button
+                              whileTap={{ scale: 0.9 }}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                startEdit(e, item)
+                              }}
+                              className={`p-1 text-gray-600 hover:${accentColor} rounded-full hover:bg-gray-100`}
+                              style={{ touchAction: 'manipulation' }}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </motion.button>
+                            <motion.button
+                              whileTap={{ scale: 0.9 }}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                deleteItem(e, item.id)
+                              }}
+                              className="p-1 text-gray-600 hover:text-red-500 rounded-full hover:bg-gray-100"
+                              style={{ touchAction: 'manipulation' }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </motion.button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      {!editingItem && (
+                        <motion.button
+                          whileTap={{ scale: 0.9 }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setShowEditControls(showEditControls === item.id ? null : item.id)
+                          }}
+                          className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                          style={{ touchAction: 'manipulation' }}
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </motion.button>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
             ))}
           </AnimatePresence>
         </div>

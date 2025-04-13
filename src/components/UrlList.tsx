@@ -188,10 +188,8 @@ export function UrlList({
           listId,
           archived: false
         }
-        console.log('Creating new URL item:', newItem)
 
         const createdItem = await createUrlItem(newItem)
-        console.log('URL item created:', createdItem)
         setItems([...items, createdItem])
       } else {
         // TODO: Implement place lookup and addition
@@ -659,7 +657,6 @@ export function UrlList({
                       value={editingItem.dateRange?.start || ''}
                       onChange={(e) => {
                         const dateStr = e.target.value
-                        console.log('Start date input value:', dateStr)
                         if (!dateStr) {
                           setEditingItem({
                             ...editingItem,
@@ -688,7 +685,6 @@ export function UrlList({
                       value={editingItem.dateRange?.end || ''}
                       onChange={(e) => {
                         const dateStr = e.target.value
-                        console.log('End date input value:', dateStr)
                         if (!dateStr) {
                           setEditingItem({
                             ...editingItem,

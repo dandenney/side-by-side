@@ -27,9 +27,6 @@ export async function GET(request: Request) {
   const query = searchParams.get('query')
   const placeId = searchParams.get('placeId')
 
-  console.log('API Route - Request params:', { query, placeId })
-  console.log('API Key present:', !!process.env.GOOGLE_MAPS_API_KEY)
-
   // Get client IP (this is a simplified version - in production, use proper IP detection)
   const ip = request.headers.get('x-forwarded-for') || 'unknown'
 
@@ -47,14 +44,10 @@ export async function GET(request: Request) {
 
   try {
     if (placeId) {
-      console.log('Fetching details for place:', placeId)
       const place = await getPlaceDetails(placeId)
-      console.log('Place details received:', place)
       return NextResponse.json(place)
     } else {
-      console.log('Searching places for query:', query)
       const places = await searchPlaces(query!)
-      console.log('Search results:', places)
       return NextResponse.json(places)
     }
   } catch (error: any) {

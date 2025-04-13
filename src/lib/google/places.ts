@@ -77,11 +77,6 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceDetailsResu
     throw new Error('Google Maps API key is not configured')
   }
 
-  console.log('Fetching place details with params:', {
-    placeId,
-    apiKey: process.env.GOOGLE_MAPS_API_KEY?.substring(0, 5) + '...'
-  })
-
   try {
     const response = await client.placeDetails({
       params: {
