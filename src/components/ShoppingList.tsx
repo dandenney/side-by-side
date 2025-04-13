@@ -8,6 +8,7 @@ import AppDrawer from './AppDrawer'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
 import { SHARED_LIST_ID } from '@/lib/constants'
+import AnimatedStoreSelector from './AnimatedStoreSelector'
 
 type ShoppingListProps = {
   title: string
@@ -380,9 +381,10 @@ export function ShoppingList({
                         onClick={(e) => e.stopPropagation()}
                       />
                       <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                        <StoreSelector
+                        <AnimatedStoreSelector
                           value={editStore}
                           onChange={setEditStore}
+                          storeOptions={storeOptions}
                         />
                       </div>
                     </div>
@@ -540,7 +542,12 @@ export function ShoppingList({
                   </button>
                 </div>
                 <div className="flex gap-2 justify-between">
-                  <StoreSelector className="grow" value={selectedStore} onChange={setSelectedStore} />
+                  <AnimatedStoreSelector
+                    className="grow"
+                    value={selectedStore}
+                    onChange={setSelectedStore}
+                    storeOptions={storeOptions}
+                  />
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
