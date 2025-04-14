@@ -56,6 +56,7 @@ export function UrlList({
   const [searchResults, setSearchResults] = useState<PlaceSearchResult[]>([])
   const [selectedPlace, setSelectedPlace] = useState<PlaceSearchResult | null>(null)
   const [isSearching, setIsSearching] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   const inputTypeOptions = [
     { value: 'url', icon: Link, label: 'URL' },
@@ -163,6 +164,10 @@ export function UrlList({
     }
     loadData()
   }, [listType, listId])
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const addItem = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -578,11 +583,12 @@ export function UrlList({
               initial="initial"
               animate="animate"
               exit="exit"
-              className="w-full h-[100dvh] overflow-hidden flex flex-col"
+              className="w-full h-[100dvh] overflow-hidden flex flex-col max-w-4xl mx-auto lg:py-4"
               layoutId={`card-${selectedItem.id}`}
+              style={{ width: '100%', maxWidth: '56rem' }}
             >
               {editingItem?.id === selectedItem.id ? (
-                <div className="p-6 space-y-4">
+                <div className="bg-white p-6 space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Image URL
@@ -924,7 +930,18 @@ export function UrlList({
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              className="fixed left-4 right-4 top-1/4 bg-white rounded-lg shadow-xl p-4 z-50 max-w-md mx-auto"
+              className="fixed left-4 right-4 top-1/4 w-[calc(100%-2rem)] lg:max-w-md lg:left-1/2 lg:-translate-x-1/2 bg-white rounded-lg shadow-xl p-4 z-50"
+              style={{ maxWidth: '28rem' }}
+              data-modal-debug
+              onUpdate={(latest) => {
+                console.log('Modal animation values:', {
+                  width: latest.width,
+                  height: latest.height,
+                  scale: latest.scale,
+                  x: latest.x,
+                  y: latest.y
+                })
+              }}
             >
               <form onSubmit={addItem} className="flex flex-col gap-4">
                 <div className="flex gap-2">
