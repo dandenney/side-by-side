@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MapPin, Menu, X, ShoppingBasket, Store, Link as LinkIcon } from 'lucide-react'
+import { MapPin, Menu, X, ShoppingBasket, Link as LinkIcon, BellElectric } from 'lucide-react'
 import Link from 'next/link'
 
 export default function AppDrawer() {
@@ -10,8 +10,9 @@ export default function AppDrawer() {
 
   const menuItems = [
     { icon: ShoppingBasket, label: 'Groceries', href: '/groceries' },
-    { icon: LinkIcon, label: 'Shares', href: '/shares' },
+    { icon: BellElectric, label: 'Upcoming', href: '/' },
     { icon: MapPin, label: 'Local', href: '/local' },
+    { icon: LinkIcon, label: 'Shares', href: '/shares' },
   ]
 
   return (
@@ -45,7 +46,7 @@ export default function AppDrawer() {
             >
               <div className="p-4 border-b">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Navigation</h2>
+                  <h2 className="text-lg font-semibold">Side by Side</h2>
                   <button
                     onClick={() => setIsOpen(false)}
                     className="p-2 hover:bg-gray-100 rounded-lg"

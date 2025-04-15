@@ -226,16 +226,6 @@ export default function UpcomingList() {
         <div className="max-w-lg mx-auto pt-4 lg:max-w-7xl">
           <h1 className="mb-4 opacity-40 text-center text-white uppercase font-bold">Upcoming Events</h1>
 
-          {items.length > 0 && (
-            <div className="bg-blue-50 -mb-2 p-4 rounded-t-lg">
-              <div className="flex items-center gap-2 text-blue-800">
-                <CalendarIcon className="w-5 h-5" />
-                <span className="font-medium">{items[0].title}</span>
-                <span className="text-blue-600">{formatDateDifference(items[0].startDate)}</span>
-              </div>
-            </div>
-          )}
-
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {isLoading ? (
               <div className="col-span-full flex justify-center">
@@ -244,9 +234,16 @@ export default function UpcomingList() {
             ) : items.length === 0 ? (
               <div className="col-span-full text-center text-gray-500">
                 No upcoming events found. Add your first event!
-              </div>
+              </div>  
             ) : (
               items.map((item, index) => (
+                <div key={index}>
+                  <div className="bg-blue-50 -mb-2 pb-4 pt-2 px-4 rounded-t-lg">
+                    <div className="flex items-center gap-2 text-blue-800">
+                      <CalendarIcon className="w-5 h-5" />
+                      <span className="text-blue-600">{formatDateDifference(item.startDate)}</span>
+                    </div>
+                  </div>
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -258,7 +255,6 @@ export default function UpcomingList() {
                     <div>
                       <h3 className="font-medium text-gray-900">{item.title}</h3>
                       <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
-                        <CalendarIcon className="w-4 h-4" />
                         <span>{formatDate(item.startDate)}</span>
                       </div>
                     </div>
@@ -270,7 +266,7 @@ export default function UpcomingList() {
                       {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                     </span>
                   </div>
-                </motion.div>
+                </motion.div></div>
               ))
             )}
           </section>
