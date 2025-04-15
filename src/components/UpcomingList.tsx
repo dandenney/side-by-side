@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import { DateRange } from 'react-day-picker'
+import AppDrawer from './AppDrawer'
 
 const formatDate = (dateStr: string) => {
   const [year, month, day] = dateStr.split('-')
@@ -46,6 +47,12 @@ const initialFormState: UpcomingItemForm = {
   startDate: '',
   endDate: '',
   status: 'definitely'
+}
+
+const modalContentVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.2 } },
+  exit: { opacity: 0, transition: { duration: 0.4 } },
 }
 
 export default function UpcomingList() {
@@ -151,6 +158,10 @@ export default function UpcomingList() {
           const updated = prev.map(item => item.id === updatedItem.id ? updatedItem : item)
           return updated.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
         })
+        // Update the selectedItem if it's the one being edited
+        if (selectedItem?.id === editingItem.id) {
+          setSelectedItem(updatedItem)
+        }
       } else {
         const newItem = await createUpcomingEvent(formData)
         setItems(prev => {
@@ -160,6 +171,7 @@ export default function UpcomingList() {
       }
       setIsModalOpen(false)
       setFormData(initialFormState)
+      setEditingItem(null)
     } catch (error) {
       console.error('Error saving event:', error)
     }
@@ -208,63 +220,79 @@ export default function UpcomingList() {
   }
 
   return (
-    <div className="space-y-6">
-      {items.length > 0 && (
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <div className="flex items-center gap-2 text-blue-800">
-            <CalendarIcon className="w-5 h-5" />
-            <span className="font-medium">{items[0].title}</span>
-            <span className="text-blue-600">{formatDateDifference(items[0].startDate)}</span>
-          </div>
-        </div>
-      )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {isLoading ? (
-          <div className="col-span-full flex justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          </div>
-        ) : items.length === 0 ? (
-          <div className="col-span-full text-center text-gray-500">
-            No upcoming events found. Add your first event!
-          </div>
-        ) : (
-          items.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-lg shadow-sm border p-4 hover:bg-gray-50 cursor-pointer"
-              onClick={() => handleCardClick(item)}
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-medium text-gray-900">{item.title}</h3>
-                  <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
-                    <CalendarIcon className="w-4 h-4" />
-                    <span>{formatDate(item.startDate)}</span>
-                  </div>
-                </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  item.status === 'tickets' ? 'bg-green-100 text-green-800' :
-                  item.status === 'definitely' ? 'bg-blue-100 text-blue-800' :
-                  'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                </span>
+    <div className="bg-gradient-to-b from-blue-500 to-blue-600 h-full flex flex-col">
+      {/* List Items */}
+      <div className="flex-1 overflow-y-auto px-4 pb-24">
+        <div className="max-w-lg mx-auto pt-4 lg:max-w-7xl">
+          <h1 className="mb-4 opacity-40 text-center text-white uppercase font-bold">Upcoming Events</h1>
+
+          {items.length > 0 && (
+            <div className="bg-blue-50 -mb-2 p-4 rounded-t-lg">
+              <div className="flex items-center gap-2 text-blue-800">
+                <CalendarIcon className="w-5 h-5" />
+                <span className="font-medium">{items[0].title}</span>
+                <span className="text-blue-600">{formatDateDifference(items[0].startDate)}</span>
               </div>
-            </motion.div>
-          ))
-        )}
+            </div>
+          )}
+
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {isLoading ? (
+              <div className="col-span-full flex justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+              </div>
+            ) : items.length === 0 ? (
+              <div className="col-span-full text-center text-gray-500">
+                No upcoming events found. Add your first event!
+              </div>
+            ) : (
+              items.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-lg shadow-sm border p-4 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handleCardClick(item)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="font-medium text-gray-900">{item.title}</h3>
+                      <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
+                        <CalendarIcon className="w-4 h-4" />
+                        <span>{formatDate(item.startDate)}</span>
+                      </div>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      item.status === 'tickets' ? 'bg-green-100 text-green-800' :
+                      item.status === 'definitely' ? 'bg-blue-100 text-blue-800' :
+                      'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                    </span>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </section>
+        </div>
       </div>
 
-      <div className="flex justify-between items-center">
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Add Event
-        </button>
+      {/* Add Item Button */}
+      <div className="bg-white fixed bottom-0 left-0 mx-auto max-w-md py-1 right-0 rounded-t-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)]">
+        <div className="grid grid-cols-3 gap-8 px-4 items-center justify-items-center">
+          <div className="justify-self-end">
+            <AppDrawer />
+          </div>
+          <div>
+            <motion.button
+              onClick={() => setIsModalOpen(true)}
+              whileTap={{ y: 4 }}
+              className="w-20 h-20 bg-gradient-to-b from-blue-500 to-blue-600 border-8 border-white -mt-12 text-white rounded-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)] active:from-blue-600 active:to-blue-500 active:-translate-y-2 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center"
+            >
+              <Plus className="w-8 h-8" />
+            </motion.button>
+          </div>
+        </div>
       </div>
 
       {/* Event Detail Modal */}
@@ -277,79 +305,86 @@ export default function UpcomingList() {
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md"
+              variants={modalContentVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="w-full max-w-4xl mx-auto lg:py-4 overflow-y-auto max-h-[90vh]"
+              layoutId={`card-${selectedItem.id}`}
+              style={{ width: '100%', maxWidth: '56rem' }}
             >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">{selectedItem.title}</h2>
-                <button
-                  onClick={handleCloseModal}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
+              <div className="flex flex-col bg-white rounded-2xl">
                 {selectedItem.imageUrl && (
-                  <div className="relative w-full h-48 rounded-lg overflow-hidden">
+                  <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
                     <img
                       src={selectedItem.imageUrl}
                       alt={selectedItem.title}
-                      className="object-cover w-full h-full"
+                      className="object-cover w-full h-full rounded-t-2xl"
                     />
                   </div>
                 )}
-                {selectedItem.description && (
-                  <p className="text-gray-600">{selectedItem.description}</p>
-                )}
-
-                <div className="space-y-2 text-sm text-gray-500">
-                  <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4" />
-                    <span>
-                      {formatDate(selectedItem.startDate)} -{' '}
-                      {formatDate(selectedItem.endDate)}
-                    </span>
+                <div className="p-6 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <h2 className="text-xl font-semibold">{selectedItem.title}</h2>
+                    <button
+                      onClick={handleCloseModal}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
                   </div>
 
-                  {selectedItem.location && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      <span>{selectedItem.location}</span>
-                    </div>
-                  )}
+                  <div className="space-y-4">
+                    {selectedItem.description && (
+                      <p className="text-gray-600">{selectedItem.description}</p>
+                    )}
 
-                  {selectedItem.url && (
-                    <div className="flex items-center gap-2">
-                      <Link className="w-4 h-4" />
-                      <a
-                        href={selectedItem.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline"
+                    <div className="space-y-2 text-sm text-gray-500">
+                      <div className="flex items-center gap-2">
+                        <CalendarIcon className="w-4 h-4" />
+                        <span>
+                          {formatDate(selectedItem.startDate)} -{' '}
+                          {formatDate(selectedItem.endDate)}
+                        </span>
+                      </div>
+
+                      {selectedItem.location && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4" />
+                          <span>{selectedItem.location}</span>
+                        </div>
+                      )}
+
+                      {selectedItem.url && (
+                        <div className="flex items-center gap-2">
+                          <Link className="w-4 h-4" />
+                          <a
+                            href={selectedItem.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:underline"
+                          >
+                            Visit Website
+                          </a>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-4">
+                      <button
+                        onClick={() => handleEdit(selectedItem)}
+                        className="px-3 py-1 text-gray-600 hover:text-gray-800"
                       >
-                        Visit Website
-                      </a>
+                        <Edit2 className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(selectedItem.id)}
+                        className="px-3 py-1 text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
                     </div>
-                  )}
-                </div>
-
-                <div className="flex justify-end gap-2 pt-4">
-                  <button
-                    onClick={() => handleEdit(selectedItem)}
-                    className="px-3 py-1 text-gray-600 hover:text-gray-800"
-                  >
-                    <Edit2 className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(selectedItem.id)}
-                    className="px-3 py-1 text-red-500 hover:text-red-700"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                  </div>
                 </div>
               </div>
             </motion.div>
