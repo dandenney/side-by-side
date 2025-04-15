@@ -17,21 +17,43 @@ const formatDate = (dateStr: string) => {
   return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 }
 
+const formatDateDifference = (dateStr: string) => {
+  const [year, month, day] = dateStr.split('-')
+  const eventDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
+  const diffTime = eventDate.getTime() - today.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  
+  if (diffDays < 0) return 'Past event'
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return 'Tomorrow'
+  if (diffDays < 7) return `In ${diffDays} days`
+  if (diffDays < 14) return 'Next week'
+  if (diffDays < 21) return 'In two weeks'
+  if (diffDays < 28) return 'In three weeks'
+  if (diffDays < 60) return 'Next month'
+  return formatDate(dateStr)
+}
+
+const initialFormState: UpcomingItemForm = {
+  title: '',
+  description: '',
+  url: '',
+  imageUrl: '',
+  location: '',
+  startDate: '',
+  endDate: '',
+  status: 'definitely'
+}
+
 export default function UpcomingList() {
   const [items, setItems] = useState<UpcomingItem[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState<UpcomingItem | null>(null)
   const [editingItem, setEditingItem] = useState<UpcomingItem | null>(null)
-  const [formData, setFormData] = useState<UpcomingItemForm>({
-    title: '',
-    description: '',
-    url: '',
-    imageUrl: '',
-    location: '',
-    startDate: '',
-    endDate: '',
-    status: 'definitely',
-  })
+  const [formData, setFormData] = useState<UpcomingItemForm>(initialFormState)
   const [isFetchingMeta, setIsFetchingMeta] = useState(false)
   const [metaError, setMetaError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
@@ -45,7 +67,13 @@ export default function UpcomingList() {
     try {
       setIsLoading(true)
       const events = await getUpcomingEvents()
-      setItems(events)
+      // Sort events by start date
+      const sortedEvents = events.sort((a, b) => {
+        const dateA = new Date(a.startDate)
+        const dateB = new Date(b.startDate)
+        return dateA.getTime() - dateB.getTime()
+      })
+      setItems(sortedEvents)
     } catch (error) {
       console.error('Error loading upcoming events:', error)
     } finally {
@@ -125,16 +153,7 @@ export default function UpcomingList() {
         setItems(prev => [...prev, newItem])
       }
       setIsModalOpen(false)
-      setFormData({
-        title: '',
-        description: '',
-        url: '',
-        imageUrl: '',
-        location: '',
-        startDate: '',
-        endDate: '',
-        status: 'definitely',
-      })
+      setFormData(initialFormState)
     } catch (error) {
       console.error('Error saving event:', error)
     }
@@ -184,16 +203,15 @@ export default function UpcomingList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Add Event
-        </button>
-      </div>
-
+      {items.length > 0 && (
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <div className="flex items-center gap-2 text-blue-800">
+            <CalendarIcon className="w-5 h-5" />
+            <span className="font-medium">{items[0].title}</span>
+            <span className="text-blue-600">{formatDateDifference(items[0].startDate)}</span>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoading ? (
           <div className="col-span-full flex justify-center">
@@ -204,7 +222,7 @@ export default function UpcomingList() {
             No upcoming events found. Add your first event!
           </div>
         ) : (
-          items.map(item => (
+          items.map((item, index) => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, y: 20 }}
@@ -217,7 +235,7 @@ export default function UpcomingList() {
                   <h3 className="font-medium text-gray-900">{item.title}</h3>
                   <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
                     <CalendarIcon className="w-4 h-4" />
-                    <span>{formatDate(item.startDate)}</span>
+                    <span>{index === 0 ? formatDateDifference(item.startDate) : formatDate(item.startDate)}</span>
                   </div>
                 </div>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -231,6 +249,16 @@ export default function UpcomingList() {
             </motion.div>
           ))
         )}
+      </div>
+
+      <div className="flex justify-between items-center">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+        >
+          <Plus className="w-5 h-5" />
+          Add Event
+        </button>
       </div>
 
       {/* Event Detail Modal */}

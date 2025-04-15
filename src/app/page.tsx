@@ -99,8 +99,7 @@ export default function HomePage() {
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">Welcome back, {user.email}</h2>
-          <p className="mt-2 text-gray-600">Your upcoming events and activities</p>
+          <h2 className="text-2xl font-bold text-gray-900">Upcoming</h2>
         </div>
         <UpcomingList />
       </main>

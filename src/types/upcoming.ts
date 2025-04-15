@@ -8,6 +8,7 @@ export interface UpcomingItem {
   startDate: string
   endDate: string
   status: 'tickets' | 'definitely' | 'maybe'
+  listId: string
   createdAt: Date
   updatedAt: Date
 }
