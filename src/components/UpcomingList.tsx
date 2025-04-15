@@ -18,39 +18,49 @@ const formatDate = (dateStr: string) => {
   return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 }
 
-const fetchMetaData = async (url: string) => {
-  try {
-    const response = await fetch(`/api/meta?url=${encodeURIComponent(url)}`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
-    })
-
-    if (!response.ok) {
-      return null
-    }
-
-    const data = await response.json()
-    return data
-  } catch (error) {
-    return null
-  }
-}
-
 export default function UpcomingList() {
   const [items, setItems] = useState<UpcomingItem[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<UpcomingItem | null>(null)
   const [formData, setFormData] = useState<UpcomingItemForm>({
     title: '',
+    description: '',
+    url: '',
+    imageUrl: '',
+    location: '',
     startDate: '',
     endDate: '',
+    status: 'definitely',
   })
   const [isFetchingMeta, setIsFetchingMeta] = useState(false)
+  const [metaError, setMetaError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
 
-  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const fetchMetaData = async (url: string) => {
+    try {
+      setMetaError(null)
+      const response = await fetch(`/api/meta?url=${encodeURIComponent(url)}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to fetch metadata')
+      }
+
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Error fetching metadata:', error)
+      setMetaError(error instanceof Error ? error.message : 'Failed to fetch metadata')
+      return null
+    }
+  }
+
+  const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
 
@@ -94,8 +104,13 @@ export default function UpcomingList() {
     setIsModalOpen(false)
     setFormData({
       title: '',
+      description: '',
+      url: '',
+      imageUrl: '',
+      location: '',
       startDate: '',
       endDate: '',
+      status: 'definitely',
     })
   }
 
@@ -109,6 +124,7 @@ export default function UpcomingList() {
       location: item.location || '',
       startDate: item.startDate,
       endDate: item.endDate,
+      status: item.status,
     })
     setIsModalOpen(true)
   }
@@ -158,6 +174,15 @@ export default function UpcomingList() {
                   <span>
                     {formatDate(item.startDate)} -{' '}
                     {formatDate(item.endDate)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    item.status === 'tickets' ? 'bg-green-100 text-green-800' :
+                    item.status === 'definitely' ? 'bg-blue-100 text-blue-800' :
+                    'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                   </span>
                 </div>
                 {item.location && (
@@ -223,8 +248,13 @@ export default function UpcomingList() {
                     setEditingItem(null)
                     setFormData({
                       title: '',
+                      description: '',
+                      url: '',
+                      imageUrl: '',
+                      location: '',
                       startDate: '',
                       endDate: '',
+                      status: 'definitely',
                     })
                   }}
                   className="text-gray-500 hover:text-gray-700"
@@ -269,6 +299,7 @@ export default function UpcomingList() {
                       value={formData.url}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="https://example.com"
                     />
                     {isFetchingMeta && (
                       <div className="absolute right-3 top-2">
@@ -276,6 +307,9 @@ export default function UpcomingList() {
                       </div>
                     )}
                   </div>
+                  {metaError && (
+                    <p className="mt-1 text-sm text-red-500">{metaError}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -340,6 +374,21 @@ export default function UpcomingList() {
                       />
                     </PopoverContent>
                   </Popover>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="tickets">Tickets</option>
+                    <option value="definitely">Definitely</option>
+                    <option value="maybe">Maybe</option>
+                  </select>
                 </div>
                 <div className="flex justify-end">
                   <button

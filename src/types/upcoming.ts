@@ -7,6 +7,7 @@ export interface UpcomingItem {
   location?: string
   startDate: string
   endDate: string
+  status: 'tickets' | 'definitely' | 'maybe'
   createdAt: string
   updatedAt: string
 }
@@ -19,4 +20,5 @@ export interface UpcomingItemForm {
   location?: string
   startDate: string
   endDate: string
+  status: 'tickets' | 'definitely' | 'maybe'
 } 

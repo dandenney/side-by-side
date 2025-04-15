@@ -17,7 +17,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const response = await fetch(url, {
+    // Ensure the URL is properly formatted
+    let targetUrl = url
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      targetUrl = `https://${url}`
+    }
+
+    const response = await fetch(targetUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -58,7 +64,13 @@ export async function GET(request: NextRequest) {
     // Extract image
     const ogImageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]*)"[^>]*>/i)
     const twitterImageMatch = html.match(/<meta[^>]*name="twitter:image"[^>]*content="([^"]*)"[^>]*>/i)
-    const image = ogImageMatch?.[1] || twitterImageMatch?.[1] || ''
+    let image = ogImageMatch?.[1] || twitterImageMatch?.[1] || ''
+
+    // Convert relative image URLs to absolute
+    if (image && !image.startsWith('http')) {
+      const baseUrl = new URL(targetUrl)
+      image = new URL(image, baseUrl.origin).toString()
+    }
 
     return NextResponse.json({
       title,
