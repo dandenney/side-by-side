@@ -576,14 +576,14 @@ export function UrlList({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
           >
             <motion.div
               variants={modalContentVariants}
               initial="initial"
               animate="animate"
               exit="exit"
-              className="w-full h-[100dvh] overflow-hidden flex flex-col max-w-4xl mx-auto lg:py-4"
+              className="w-full max-w-4xl mx-auto lg:py-4 overflow-y-auto max-h-[90vh]"
               layoutId={`card-${selectedItem.id}`}
               style={{ width: '100%', maxWidth: '56rem' }}
             >
@@ -726,7 +726,7 @@ export function UrlList({
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col h-full">
+                <div className="flex flex-col bg-white rounded-2xl">
                   {selectedItem.imageUrl ? (
                     <motion.div
                       className="relative shrink-0 w-full"
@@ -743,7 +743,7 @@ export function UrlList({
                         src={selectedItem.imageUrl}
                         alt={selectedItem.title}
                         fill
-                        className="object-cover"
+                        className="object-cover rounded-t-2xl"
                       />
                     </motion.div>
                   ) : (
@@ -763,13 +763,7 @@ export function UrlList({
                       </div>
                     </motion.div>
                   )}
-                  <button
-                    onClick={handleCloseModal}
-                      className="absolute bg-white/20 p-1 right-4 rounded-full text-white top-4 z-10 hover:bg-gray-100"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                  <div className="bg-white -mt-4 rounded-t-2xl grow p-6 relative space-y-4 z-10">
+                  <div className="p-6 space-y-4">
                     <div className="flex justify-between items-start">
                       <motion.h3
                         className={`font-semibold ${textColor} text-2xl`}
@@ -778,133 +772,40 @@ export function UrlList({
                         {selectedItem.title}
                       </motion.h3>
                     </div>
-                    <motion.p
-                      className="text-gray-600"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      {selectedItem.description}
-                    </motion.p>
-                    {selectedItem.place && (
-                      <motion.div
-                        className="space-y-2"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                      >
-                        <ul>
-                          {selectedItem.place?.rating && (
-                            <li className="flex items-center gap-2 text-sm text-gray-500">
-                              <StarRating
-                                defaultValue={selectedItem.place.rating}
-                                disabled
-                                size="md"
-                              />
-                              {selectedItem.place?.userRatingsTotal && (
-                                <span>({selectedItem.place.userRatingsTotal} reviews)</span>
-                              )}
-                            </li>
-                          )}
-                          {selectedItem.place.priceLevel && (
-                            <li className="font-bold mt-4 text-5xl text-gray-500">
-                              {'💵 '.repeat(selectedItem.place.priceLevel)}
-                            </li>
-                          )}
-                        </ul>
-                      </motion.div>
-                    )}
-                    {selectedItem.dateRange && (
-                      <motion.div
-                        className="flex items-center gap-2 text-sm text-gray-500"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                      >
-                        <Calendar className="w-4 h-4" />
-                        <span>
-                          {formatDate(selectedItem.dateRange.start)}
-                          {selectedItem.dateRange.end !== selectedItem.dateRange.start && (
-                            <> - {formatDate(selectedItem.dateRange.end)}</>
-                          )}
-                        </span>
-                      </motion.div>
-                    )}
-                    {(selectedItem.tags && selectedItem.tags.length > 0 || selectedItem.notes) && (
-                      <motion.div
-                        className="flex flex-col gap-2 text-sm text-gray-500"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.5 }}
-                      >
-                        {selectedItem.tags?.map(tag => (
-                          <div key={tag.id} className="flex items-center gap-1">
-                            <TagIcon className="w-4 h-4" />
-                            <span>{tag.name}</span>
-                          </div>
-                        ))}
-                        {selectedItem.notes && (
-                          <div className="flex items-start gap-1">
-                            <StickyNote className="w-4 h-4 mt-1" />
-                            <span>{selectedItem.notes}</span>
-                          </div>
-                        )}
-                      </motion.div>
-                    )}
-                  </div>
-                  <div className="bg-gray-50 border-t border-gray-200 p-4">
-                    <div className="flex items-center justify-around">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          archiveItem(e, selectedItem.id)
-                          handleCloseModal()
-                        }}
-                        className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
-                      >
-                        <Archive className="w-5 h-5 text-gray-400" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          startEdit(e, selectedItem)
-                        }}
-                        className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
-                      >
-                        <Edit2 className="w-5 h-5 text-gray-400" />
-                      </button>
-
-                      {selectedItem.place?.phoneNumber && (
+                    <div className="space-y-4">
+                      {selectedItem.description && (
+                        <p className="text-gray-600">{selectedItem.description}</p>
+                      )}
+                      {selectedItem.url && (
                         <a
-                          href={`tel:${selectedItem.place.phoneNumber}`}
-                          className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
+                          href={selectedItem.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:underline inline-flex items-center gap-2"
                         >
-                          <Phone className="w-5 h-5 text-gray-400" />
+                          <Link className="w-4 h-4" />
+                          Visit Website
                         </a>
                       )}
-
-                      {selectedItem.place?.website || selectedItem.url ? (
-                        <a
-                          href={selectedItem.place?.website || selectedItem.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
-                        >
-                          <Link className="w-5 h-5 text-gray-400" />
-                        </a>
-                      ) : null}
                       {selectedItem.place && (
-                        <a
-                          href={`https://www.google.com/maps/place/?q=place_id:${selectedItem.place.placeId}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
-                        >
-                          <MapPin className="w-5 h-5 text-gray-400" />
-                        </a>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <MapPin className="w-4 h-4" />
+                            <span>{selectedItem.place.name}</span>
+                          </div>
+                          {selectedItem.place.address && (
+                            <p className="text-sm text-gray-500">{selectedItem.place.address}</p>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
+                  <button
+                    onClick={handleCloseModal}
+                    className="absolute bg-white/20 p-1 right-4 rounded-full text-white top-4 z-10 hover:bg-gray-100"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
               )}
             </motion.div>

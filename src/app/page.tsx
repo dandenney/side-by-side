@@ -85,7 +85,6 @@ export default function HomePage() {
               <h1 className="text-xl font-semibold">Side by Side</h1>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-gray-700">{user.email}</span>
               <button
                 onClick={() => signOut()}
                 className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"

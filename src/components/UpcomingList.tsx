@@ -147,10 +147,16 @@ export default function UpcomingList() {
     try {
       if (editingItem) {
         const updatedItem = await updateUpcomingEvent(editingItem.id, formData)
-        setItems(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item))
+        setItems(prev => {
+          const updated = prev.map(item => item.id === updatedItem.id ? updatedItem : item)
+          return updated.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+        })
       } else {
         const newItem = await createUpcomingEvent(formData)
-        setItems(prev => [...prev, newItem])
+        setItems(prev => {
+          const updated = [...prev, newItem]
+          return updated.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+        })
       }
       setIsModalOpen(false)
       setFormData(initialFormState)
@@ -235,7 +241,7 @@ export default function UpcomingList() {
                   <h3 className="font-medium text-gray-900">{item.title}</h3>
                   <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
                     <CalendarIcon className="w-4 h-4" />
-                    <span>{index === 0 ? formatDateDifference(item.startDate) : formatDate(item.startDate)}</span>
+                    <span>{formatDate(item.startDate)}</span>
                   </div>
                 </div>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
