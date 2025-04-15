@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { UpcomingItem, UpcomingItemForm } from '@/types/upcoming'
 import { Plus, Trash2, Edit2, X, Link, Calendar as CalendarIcon, MapPin, Image as ImageIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { DateRange } from 'react-day-picker'
+import { getUpcomingEvents, createUpcomingEvent, updateUpcomingEvent, deleteUpcomingEvent } from '@/services/upcomingEvents'
 
 const formatDate = (dateStr: string) => {
   const [year, month, day] = dateStr.split('-')
@@ -35,6 +36,23 @@ export default function UpcomingList() {
   const [isFetchingMeta, setIsFetchingMeta] = useState(false)
   const [metaError, setMetaError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    loadUpcomingEvents()
+  }, [])
+
+  const loadUpcomingEvents = async () => {
+    try {
+      setIsLoading(true)
+      const events = await getUpcomingEvents()
+      setItems(events)
+    } catch (error) {
+      console.error('Error loading upcoming events:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const fetchMetaData = async (url: string) => {
     try {
@@ -93,25 +111,28 @@ export default function UpcomingList() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement database integration
-    const newItem: UpcomingItem = {
-      id: Date.now().toString(),
-      ...formData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    try {
+      if (editingItem) {
+        const updatedItem = await updateUpcomingEvent(editingItem.id, formData)
+        setItems(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item))
+      } else {
+        const newItem = await createUpcomingEvent(formData)
+        setItems(prev => [...prev, newItem])
+      }
+      setIsModalOpen(false)
+      setFormData({
+        title: '',
+        description: '',
+        url: '',
+        imageUrl: '',
+        location: '',
+        startDate: '',
+        endDate: '',
+        status: 'definitely',
+      })
+    } catch (error) {
+      console.error('Error saving event:', error)
     }
-    setItems(prev => [...prev, newItem])
-    setIsModalOpen(false)
-    setFormData({
-      title: '',
-      description: '',
-      url: '',
-      imageUrl: '',
-      location: '',
-      startDate: '',
-      endDate: '',
-      status: 'definitely',
-    })
   }
 
   const handleEdit = (item: UpcomingItem) => {
@@ -129,8 +150,13 @@ export default function UpcomingList() {
     setIsModalOpen(true)
   }
 
-  const handleDelete = (id: string) => {
-    setItems(prev => prev.filter(item => item.id !== id))
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteUpcomingEvent(id)
+      setItems(prev => prev.filter(item => item.id !== id))
+    } catch (error) {
+      console.error('Error deleting event:', error)
+    }
   }
 
   return (
@@ -146,82 +172,92 @@ export default function UpcomingList() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {items.map(item => (
-          <motion.div
-            key={item.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-lg shadow-md overflow-hidden"
-          >
-            {item.imageUrl && (
-              <div className="relative h-48">
-                <Image
-                  src={item.imageUrl}
-                  alt={item.title}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            )}
-            <div className="p-4">
-              <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-              {item.description && (
-                <p className="text-gray-600 mb-4">{item.description}</p>
+        {isLoading ? (
+          <div className="col-span-full flex justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="col-span-full text-center text-gray-500">
+            No upcoming events found. Add your first event!
+          </div>
+        ) : (
+          items.map(item => (
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-lg shadow-md overflow-hidden"
+            >
+              {item.imageUrl && (
+                <div className="relative h-48">
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
               )}
-              <div className="space-y-2 text-sm text-gray-500">
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="w-4 h-4" />
-                  <span>
-                    {formatDate(item.startDate)} -{' '}
-                    {formatDate(item.endDate)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    item.status === 'tickets' ? 'bg-green-100 text-green-800' :
-                    item.status === 'definitely' ? 'bg-blue-100 text-blue-800' :
-                    'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                  </span>
-                </div>
-                {item.location && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4" />
-                    <span>{item.location}</span>
-                  </div>
+              <div className="p-4">
+                <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+                {item.description && (
+                  <p className="text-gray-600 mb-4">{item.description}</p>
                 )}
-                {item.url && (
+                <div className="space-y-2 text-sm text-gray-500">
                   <div className="flex items-center gap-2">
-                    <Link className="w-4 h-4" />
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:underline"
-                    >
-                      Visit Website
-                    </a>
+                    <CalendarIcon className="w-4 h-4" />
+                    <span>
+                      {formatDate(item.startDate)} -{' '}
+                      {formatDate(item.endDate)}
+                    </span>
                   </div>
-                )}
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      item.status === 'tickets' ? 'bg-green-100 text-green-800' :
+                      item.status === 'definitely' ? 'bg-blue-100 text-blue-800' :
+                      'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                    </span>
+                  </div>
+                  {item.location && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      <span>{item.location}</span>
+                    </div>
+                  )}
+                  {item.url && (
+                    <div className="flex items-center gap-2">
+                      <Link className="w-4 h-4" />
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline"
+                      >
+                        Visit Website
+                      </a>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-4 flex justify-end gap-2">
+                  <button
+                    onClick={() => handleEdit(item)}
+                    className="p-2 text-gray-500 hover:text-gray-700"
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="p-2 text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  onClick={() => handleEdit(item)}
-                  className="p-2 text-gray-500 hover:text-gray-700"
-                >
-                  <Edit2 className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => handleDelete(item.id)}
-                  className="p-2 text-red-500 hover:text-red-700"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))
+        )}
       </div>
 
       <AnimatePresence>
