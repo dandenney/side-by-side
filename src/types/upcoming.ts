@@ -8,10 +8,8 @@ export interface UpcomingItem {
   startDate: string
   endDate: string
   status: 'tickets' | 'definitely' | 'maybe'
-  listType: 'local' | 'shared'
-  listId: string
-  createdAt: string
-  updatedAt: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface UpcomingItemForm {
@@ -23,6 +21,4 @@ export interface UpcomingItemForm {
   startDate: string
   endDate: string
   status: 'tickets' | 'definitely' | 'maybe'
-  listType?: 'local' | 'shared'
-  listId?: string
 } 

@@ -2,16 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { UpcomingItem, UpcomingItemForm } from '@/types/upcoming'
-import { Plus, Trash2, Edit2, X, Link, Calendar as CalendarIcon, MapPin, Image as ImageIcon } from 'lucide-react'
+import { Plus, Trash2, Edit2, X, Link, Calendar as CalendarIcon, MapPin } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Image from 'next/image'
+import { getUpcomingEvents, createUpcomingEvent, updateUpcomingEvent, deleteUpcomingEvent } from '@/services/upcomingEvents'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { format } from 'date-fns'
 import { DateRange } from 'react-day-picker'
-import { getUpcomingEvents, createUpcomingEvent, updateUpcomingEvent, deleteUpcomingEvent } from '@/services/upcomingEvents'
 
 const formatDate = (dateStr: string) => {
   const [year, month, day] = dateStr.split('-')
@@ -22,6 +20,7 @@ const formatDate = (dateStr: string) => {
 export default function UpcomingList() {
   const [items, setItems] = useState<UpcomingItem[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<UpcomingItem | null>(null)
   const [editingItem, setEditingItem] = useState<UpcomingItem | null>(null)
   const [formData, setFormData] = useState<UpcomingItemForm>({
     title: '',
@@ -101,10 +100,16 @@ export default function UpcomingList() {
   const handleDateSelect = (range: DateRange | undefined) => {
     setDateRange(range)
     if (range?.from && range?.to) {
+      const formatDateForDb = (date: Date) => {
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+      }
       setFormData(prev => ({
         ...prev,
-        startDate: format(range.from!, 'yyyy-MM-dd'),
-        endDate: format(range.to!, 'yyyy-MM-dd'),
+        startDate: formatDateForDb(range.from!),
+        endDate: formatDateForDb(range.to!),
       }))
     }
   }
@@ -147,6 +152,13 @@ export default function UpcomingList() {
       endDate: item.endDate,
       status: item.status,
     })
+    // Set the date range for the calendar
+    const [startYear, startMonth, startDay] = item.startDate.split('-')
+    const [endYear, endMonth, endDay] = item.endDate.split('-')
+    setDateRange({
+      from: new Date(parseInt(startYear), parseInt(startMonth) - 1, parseInt(startDay)),
+      to: new Date(parseInt(endYear), parseInt(endMonth) - 1, parseInt(endDay))
+    })
     setIsModalOpen(true)
   }
 
@@ -157,6 +169,17 @@ export default function UpcomingList() {
     } catch (error) {
       console.error('Error deleting event:', error)
     }
+  }
+
+  const handleCardClick = (item: UpcomingItem) => {
+    setSelectedItem(item)
+  }
+
+  const handleCloseModal = () => {
+    setSelectedItem(null)
+    setEditingItem(null)
+    setIsModalOpen(false)
+    setDateRange(undefined)
   }
 
   return (
@@ -171,7 +194,7 @@ export default function UpcomingList() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoading ? (
           <div className="col-span-full flex justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -186,51 +209,90 @@ export default function UpcomingList() {
               key={item.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-lg shadow-md overflow-hidden"
+              className="bg-white rounded-lg shadow-sm border p-4 hover:bg-gray-50 cursor-pointer"
+              onClick={() => handleCardClick(item)}
             >
-              {item.imageUrl && (
-                <div className="relative h-48">
-                  <Image
-                    src={item.imageUrl}
-                    alt={item.title}
-                    fill
-                    className="object-cover"
-                  />
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-medium text-gray-900">{item.title}</h3>
+                  <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
+                    <CalendarIcon className="w-4 h-4" />
+                    <span>{formatDate(item.startDate)}</span>
+                  </div>
                 </div>
-              )}
-              <div className="p-4">
-                <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                {item.description && (
-                  <p className="text-gray-600 mb-4">{item.description}</p>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  item.status === 'tickets' ? 'bg-green-100 text-green-800' :
+                  item.status === 'definitely' ? 'bg-blue-100 text-blue-800' :
+                  'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                </span>
+              </div>
+            </motion.div>
+          ))
+        )}
+      </div>
+
+      {/* Event Detail Modal */}
+      <AnimatePresence>
+        {selectedItem && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-lg p-6 w-full max-w-md"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">{selectedItem.title}</h2>
+                <button
+                  onClick={handleCloseModal}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {selectedItem.imageUrl && (
+                  <div className="relative w-full h-48 rounded-lg overflow-hidden">
+                    <img
+                      src={selectedItem.imageUrl}
+                      alt={selectedItem.title}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
                 )}
+                {selectedItem.description && (
+                  <p className="text-gray-600">{selectedItem.description}</p>
+                )}
+
                 <div className="space-y-2 text-sm text-gray-500">
                   <div className="flex items-center gap-2">
                     <CalendarIcon className="w-4 h-4" />
                     <span>
-                      {formatDate(item.startDate)} -{' '}
-                      {formatDate(item.endDate)}
+                      {formatDate(selectedItem.startDate)} -{' '}
+                      {formatDate(selectedItem.endDate)}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      item.status === 'tickets' ? 'bg-green-100 text-green-800' :
-                      item.status === 'definitely' ? 'bg-blue-100 text-blue-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                    </span>
-                  </div>
-                  {item.location && (
+
+                  {selectedItem.location && (
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4" />
-                      <span>{item.location}</span>
+                      <span>{selectedItem.location}</span>
                     </div>
                   )}
-                  {item.url && (
+
+                  {selectedItem.url && (
                     <div className="flex items-center gap-2">
                       <Link className="w-4 h-4" />
                       <a
-                        href={item.url}
+                        href={selectedItem.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-500 hover:underline"
@@ -240,26 +302,28 @@ export default function UpcomingList() {
                     </div>
                   )}
                 </div>
-                <div className="mt-4 flex justify-end gap-2">
+
+                <div className="flex justify-end gap-2 pt-4">
                   <button
-                    onClick={() => handleEdit(item)}
-                    className="p-2 text-gray-500 hover:text-gray-700"
+                    onClick={() => handleEdit(selectedItem)}
+                    className="px-3 py-1 text-gray-600 hover:text-gray-800"
                   >
                     <Edit2 className="w-5 h-5" />
                   </button>
                   <button
-                    onClick={() => handleDelete(item.id)}
-                    className="p-2 text-red-500 hover:text-red-700"
+                    onClick={() => handleDelete(selectedItem.id)}
+                    className="px-3 py-1 text-red-500 hover:text-red-700"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
               </div>
             </motion.div>
-          ))
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
 
+      {/* Add/Edit Event Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
@@ -279,25 +343,13 @@ export default function UpcomingList() {
                   {editingItem ? 'Edit Event' : 'Add Event'}
                 </h2>
                 <button
-                  onClick={() => {
-                    setIsModalOpen(false)
-                    setEditingItem(null)
-                    setFormData({
-                      title: '',
-                      description: '',
-                      url: '',
-                      imageUrl: '',
-                      location: '',
-                      startDate: '',
-                      endDate: '',
-                      status: 'definitely',
-                    })
-                  }}
+                  onClick={handleCloseModal}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -312,6 +364,7 @@ export default function UpcomingList() {
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Description
@@ -324,6 +377,7 @@ export default function UpcomingList() {
                     rows={3}
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     URL
@@ -347,6 +401,7 @@ export default function UpcomingList() {
                     <p className="mt-1 text-sm text-red-500">{metaError}</p>
                   )}
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Image URL
@@ -359,6 +414,7 @@ export default function UpcomingList() {
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Location
@@ -371,6 +427,7 @@ export default function UpcomingList() {
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Date Range *
@@ -388,11 +445,11 @@ export default function UpcomingList() {
                         {dateRange?.from ? (
                           dateRange?.to ? (
                             <>
-                              {format(dateRange.from, "LLL dd, y")} -{" "}
-                              {format(dateRange.to, "LLL dd, y")}
+                              {formatDate(dateRange.from.toISOString().split('T')[0])} -{" "}
+                              {formatDate(dateRange.to.toISOString().split('T')[0])}
                             </>
                           ) : (
-                            format(dateRange.from, "LLL dd, y")
+                            formatDate(dateRange.from.toISOString().split('T')[0])
                           )
                         ) : (
                           <span>Pick a date range</span>
@@ -411,6 +468,7 @@ export default function UpcomingList() {
                     </PopoverContent>
                   </Popover>
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Status
@@ -426,6 +484,7 @@ export default function UpcomingList() {
                     <option value="maybe">Maybe</option>
                   </select>
                 </div>
+
                 <div className="flex justify-end">
                   <button
                     type="submit"

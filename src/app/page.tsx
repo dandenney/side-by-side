@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { Link as LinkIcon, MapPin, ShoppingBasket } from 'lucide-react'
 import Link from 'next/link'
+import UpcomingList from '@/components/UpcomingList'
 
 type PageCardProps = {
   title: string
@@ -99,14 +100,9 @@ export default function HomePage() {
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900">Welcome back, {user.email}</h2>
-          <p className="mt-2 text-gray-600">Choose a section to get started</p>
+          <p className="mt-2 text-gray-600">Your upcoming events and activities</p>
         </div>
-
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {pages.map((page) => (
-            <PageCard key={page.href} {...page} />
-          ))}
-        </div>
+        <UpcomingList />
       </main>
     </div>
   )
