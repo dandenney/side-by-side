@@ -24,8 +24,6 @@ export default function SharesList() {
     <main className="h-[100dvh]">
       <UrlList
         title="Shares"
-        gradientFrom="from-purple-50"
-        gradientTo="to-purple-100"
         textColor="text-purple-900"
         titleColor="text-purple-900"
         accentColor="text-purple-500"
