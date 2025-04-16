@@ -306,7 +306,7 @@ export function ShoppingList({
     className?: string
   }) => {
     return (
-      <div className={`relative flex justify-end font-medium rounded-lg bg-gray-100 ${className}`}>
+      <div className={`relative flex justify-end font-medium rounded-2xl bg-gray-100 ${className}`}>
         {storeOptions.map((option) => (
           <button
             key={option.value}
@@ -379,7 +379,7 @@ export function ShoppingList({
                     exit="exit"
                     whileTap="tap"
                     layout
-                    className="flex items-center gap-2 p-3 bg-white rounded-lg shadow-xl border hover:bg-gray-50 cursor-pointer"
+                    className="flex items-center gap-2 p-3 bg-white rounded-2xl shadow-xl border hover:bg-gray-50 cursor-pointer"
                     style={{ touchAction: 'manipulation' }}
                   >
                     <motion.div 
@@ -552,7 +552,7 @@ export function ShoppingList({
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              className="fixed left-4 right-4 top-1/4 bg-white rounded-lg shadow-xl p-4 z-50 max-w-md mx-auto"
+              className="fixed left-4 right-4 top-1/4 bg-white rounded-2xl shadow-xl p-4 z-50 max-w-md mx-auto"
             >
               <form onSubmit={addItem} className="flex flex-col gap-4">
                 <div className="flex gap-2">
@@ -561,12 +561,12 @@ export function ShoppingList({
                     value={newItem}
                     onChange={(e) => setNewItem(e.target.value)}
                     placeholder="Add a new item..."
-                    className={`flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
+                    className={`flex-1 px-4 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
                     autoFocus
                   />
                   <button
                     type="submit"
-                    className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-lg active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor}`}
+                    className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-2xl active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor}`}
                   >
                     Add
                   </button>

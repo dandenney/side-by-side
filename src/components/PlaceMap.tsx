@@ -123,7 +123,7 @@ export function PlaceMap({ places, className = '', onPlaceClick }: PlaceMapProps
 
   if (mapError) {
     return (
-      <div className={`bg-gray-100 rounded-lg p-4 text-center ${className}`}>
+      <div className={`bg-gray-100 rounded-2xl p-4 text-center ${className}`}>
         <p className="text-red-500">{mapError}</p>
       </div>
     )
@@ -131,7 +131,7 @@ export function PlaceMap({ places, className = '', onPlaceClick }: PlaceMapProps
 
   return (
     <div className={`relative ${className}`}>
-      <div id="map" className="w-full h-[500px] rounded-lg" />
+      <div id="map" className="w-full h-[500px] rounded-2xl" />
     </div>
   )
 } 

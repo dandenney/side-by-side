@@ -22,7 +22,7 @@ function PageCard({ title, description, href, icon, gradientFrom, gradientTo }: 
       <div className={`group relative overflow-hidden rounded-xl bg-gradient-to-br ${gradientFrom} ${gradientTo} p-6 transition-all hover:scale-[1.02]`}>
         <div className="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100" />
         <div className="relative flex items-center gap-4">
-          <div className="rounded-lg bg-white/10 p-3">
+          <div className="rounded-2xl bg-white/10 p-3">
             {icon}
           </div>
           <div>
@@ -96,7 +96,7 @@ export default function HomePage() {
         </div>
       </nav>
 
-      <main className="bg-slate-100">
+      <main className="bg-blue-50 pb-20 px-4">
         <UpcomingList />
       </main>
     </div>

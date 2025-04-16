@@ -58,7 +58,7 @@ const AnimatedStoreSelector = ({
   return (
     <div
       ref={containerRef}
-      className={`relative flex justify-between font-medium rounded-lg bg-gray-100 overflow-hidden ${className}`}
+      className={`relative flex justify-between font-medium rounded-2xl bg-gray-100 overflow-hidden ${className}`}
     >
       {/* Background indicator - using layout animation instead of entry/exit */}
       {activeButtonData && (

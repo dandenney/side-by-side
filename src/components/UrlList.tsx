@@ -69,7 +69,7 @@ export function UrlList({
     className?: string
   }) => {
     return (
-      <div className={`relative flex justify-end font-medium rounded-lg bg-gray-100 ${className}`}>
+      <div className={`relative flex justify-end font-medium rounded-2xl bg-gray-100 ${className}`}>
         {inputTypeOptions.map((option) => (
           <button
             key={option.value}
@@ -484,12 +484,12 @@ export function UrlList({
                   exit="exit"
                   whileTap="tap"
                   layout
-                  className={`flex gap-2 items-center bg-white rounded-lg shadow-sm border overflow-hidden p-2 hover:bg-gray-50 ${selectedItem?.id === item.id ? 'opacity-0' : ''}`}
+                  className={`flex gap-2 items-center bg-white rounded-2xl shadow-sm border overflow-hidden p-2 hover:bg-gray-50 ${selectedItem?.id === item.id ? 'opacity-0' : ''}`}
                   layoutId={`card-${item.id}`}
                 >
                   {item.imageUrl ? (
                     <motion.div
-                      className="bg-gray-100 h-16 w-16 flex-shrink-0 overflow-hidden relative rounded-lg"
+                      className="bg-gray-100 h-16 w-16 flex-shrink-0 overflow-hidden relative rounded-2xl"
                       layoutId={`image-${item.id}`}
                       style={{ aspectRatio: '1/1' }}
                     >
@@ -503,7 +503,7 @@ export function UrlList({
                     </motion.div>
                   ) : (
                     <motion.div
-                      className="bg-gray-100 h-16 w-16 flex-shrink-0 relative rounded-lg"
+                      className="bg-gray-100 h-16 w-16 flex-shrink-0 relative rounded-2xl"
                       layoutId={`image-${item.id}`}
                       style={{ aspectRatio: '1/1' }}
                     >
@@ -589,7 +589,7 @@ export function UrlList({
                       type="url"
                       value={editingItem.imageUrl}
                       onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Image URL"
                     />
                   </div>
@@ -602,7 +602,7 @@ export function UrlList({
                       type="text"
                       value={editingItem.title}
                       onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Title"
                     />
                   </div>
@@ -615,7 +615,7 @@ export function UrlList({
                       type="text"
                       value={editingItem.description}
                       onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Description"
                     />
                   </div>
@@ -640,7 +640,7 @@ export function UrlList({
                     <textarea
                       value={editingItem.notes || ''}
                       onChange={(e) => setEditingItem({ ...editingItem, notes: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                       rows={3}
                       placeholder="Notes (optional)"
                     />
@@ -670,7 +670,7 @@ export function UrlList({
                           }
                         })
                       }}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
@@ -698,7 +698,7 @@ export function UrlList({
                           }
                         })
                       }}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
@@ -711,7 +711,7 @@ export function UrlList({
                     </button>
                     <button
                       onClick={() => handleSaveEdit()}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                      className="px-4 py-2 bg-blue-500 text-white rounded-2xl hover:bg-blue-600"
                     >
                       Save
                     </button>
@@ -844,7 +844,7 @@ export function UrlList({
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              className="fixed left-4 right-4 top-1/4 w-[calc(100%-2rem)] lg:max-w-md lg:left-1/2 lg:-translate-x-1/2 bg-white rounded-lg shadow-xl p-4 z-50"
+              className="fixed left-4 right-4 top-1/4 w-[calc(100%-2rem)] lg:max-w-md lg:left-1/2 lg:-translate-x-1/2 bg-white rounded-2xl shadow-xl p-4 z-50"
               style={{ maxWidth: '28rem' }}
               data-modal-debug
               onUpdate={(latest) => {
@@ -865,7 +865,7 @@ export function UrlList({
                       value={newUrl}
                       onChange={handleSearchInputChange}
                       placeholder={inputType === 'url' ? 'Add a URL...' : 'Search for a place (minimum 4 characters)...'}
-                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
+                      className={`w-full px-4 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
                       autoFocus
                       disabled={isLoading || isSearching}
                     />
@@ -875,12 +875,12 @@ export function UrlList({
                       </div>
                     )}
                     {inputType === 'place' && newUrl.length < 4 && newUrl.length > 0 && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg p-3 text-sm text-gray-500">
+                      <div className="absolute z-50 w-full mt-1 bg-white border rounded-2xl shadow-lg p-3 text-sm text-gray-500">
                         Please enter at least 4 characters to search...
                       </div>
                     )}
                     {inputType === 'place' && searchResults.length > 0 && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      <div className="absolute z-50 w-full mt-1 bg-white border rounded-2xl shadow-lg max-h-60 overflow-y-auto">
                         {searchResults.map((place) => (
                           <button
                             key={place.placeId}
@@ -901,7 +901,7 @@ export function UrlList({
                   <button
                     type="submit"
                     disabled={isLoading || isSearching || (inputType === 'url' && !newUrl.trim())}
-                    className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-lg active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} disabled:opacity-50`}
+                    className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-2xl active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} disabled:opacity-50`}
                   >
                     {isLoading || isSearching ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

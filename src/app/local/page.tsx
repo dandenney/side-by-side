@@ -54,7 +54,7 @@ export default function LocalList() {
   }
 
   return (
-    <main className="bg-slate-100 h-[100dvh]">
+    <main className="bg-purple-100 h-[100dvh]">
       <div className="p-4 space-y-4">
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
@@ -198,7 +198,7 @@ export default function LocalList() {
                     e.stopPropagation();
                     // TODO: Implement delete functionality
                   }}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  className="px-4 py-2 bg-red-500 text-white rounded-2xl hover:bg-red-600"
                 >
                   Delete
                 </button>

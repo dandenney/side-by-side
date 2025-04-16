@@ -224,7 +224,7 @@ export default function UpcomingList() {
       {/* List Items */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-lg mx-auto pt-4 lg:max-w-7xl">
-          <h1 className="mb-4 opacity-40 text-center uppercase font-bold">Upcoming Events</h1>
+          <h1 className="mb-4 opacity-40 text-blue-900 text-center uppercase font-bold">Upcoming Events</h1>
 
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {isLoading ? (
@@ -238,17 +238,17 @@ export default function UpcomingList() {
             ) : (
               items.map((item, index) => (
                 <div key={index}>
-                  <div className="bg-blue-100 -mb-2 pb-4 pt-2 px-4 rounded-t-lg">
+                  <div className="bg-blue-100 -mb-2 pb-4 pt-2 px-4 rounded-t-lg shadow-sm">
                     <div className="flex items-center gap-2 text-blue-800">
-                      <CalendarIcon className="w-5 h-5" />
-                      <span className="text-blue-600">{formatDateDifference(item.startDate)}</span>
+                      <CalendarIcon className="w-4 h-4" />
+                      <span className="text-blue-800 text-xs font-semibold uppercase">{formatDateDifference(item.startDate)}</span>
                     </div>
                   </div>
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-lg shadow-sm border p-4 hover:bg-gray-50 cursor-pointer"
+                  className="bg-white rounded-2xl shadow-sm border p-4 hover:bg-gray-50 cursor-pointer"
                   onClick={() => handleCardClick(item)}
                 >
                   <div className="flex items-start justify-between">
@@ -401,7 +401,7 @@ export default function UpcomingList() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 w-full max-w-md"
+              className="bg-white rounded-2xl p-6 w-full max-w-md"
             >
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">
@@ -426,7 +426,7 @@ export default function UpcomingList() {
                     value={formData.title}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -438,7 +438,7 @@ export default function UpcomingList() {
                     name="description"
                     value={formData.description}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     rows={3}
                   />
                 </div>
@@ -453,7 +453,7 @@ export default function UpcomingList() {
                       name="url"
                       value={formData.url}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="https://example.com"
                     />
                     {isFetchingMeta && (
@@ -476,7 +476,7 @@ export default function UpcomingList() {
                     name="imageUrl"
                     value={formData.imageUrl}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -489,7 +489,7 @@ export default function UpcomingList() {
                     name="location"
                     value={formData.location}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -542,7 +542,7 @@ export default function UpcomingList() {
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="tickets">Tickets</option>
                     <option value="definitely">Definitely</option>
@@ -553,7 +553,7 @@ export default function UpcomingList() {
                 <div className="flex justify-end">
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    className="px-4 py-2 bg-blue-500 text-white rounded-2xl hover:bg-blue-600 transition-colors"
                   >
                     {editingItem ? 'Update' : 'Add'} Event
                   </button>

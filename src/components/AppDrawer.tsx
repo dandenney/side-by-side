@@ -19,7 +19,7 @@ export default function AppDrawer() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="p-2 hover:bg-gray-100 rounded-lg"
+        className="p-2 hover:bg-gray-100 rounded-2xl"
       >
         <Menu className="w-6 h-6 text-gray-600" />
       </button>
@@ -49,7 +49,7 @@ export default function AppDrawer() {
                   <h2 className="text-lg font-semibold">Side by Side</h2>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 hover:bg-gray-100 rounded-lg"
+                    className="p-2 hover:bg-gray-100 rounded-2xl"
                   >
                     <X className="w-5 h-5 text-gray-600" />
                   </button>
@@ -63,7 +63,7 @@ export default function AppDrawer() {
                       <Link
                         href={item.href}
                         onClick={() => setIsOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                        className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-2xl"
                       >
                         <item.icon className="w-5 h-5" />
                         <span>{item.label}</span>
