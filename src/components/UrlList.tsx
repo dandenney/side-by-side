@@ -455,7 +455,7 @@ export function UrlList({
   return (
     <div className={`h-full flex flex-col`}>
       {/* List Items */}
-      <div className="flex-1 overflow-y-auto px-4 pb-24">
+      <div className="flex-1 overflow-y-auto">
         <div className="max-w-lg mx-auto space-y-2 pt-4 lg:max-w-7xl">
           <h1 className={`opacity-40 text-center ${titleColor} uppercase font-bold`}>{title}</h1>
 

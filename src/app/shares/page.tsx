@@ -21,7 +21,7 @@ export default function SharesList() {
   }
 
   return (
-    <main className="h-[100dvh]">
+    <main className="bg-slate-100 h-[100dvh] px-4">
       <UrlList
         title="Shares"
         textColor="text-purple-900"

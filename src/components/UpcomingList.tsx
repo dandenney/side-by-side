@@ -222,7 +222,7 @@ export default function UpcomingList() {
   return (
     <div className="h-full flex flex-col">
       {/* List Items */}
-      <div className="flex-1 overflow-y-auto px-4 pb-24">
+      <div className="flex-1 overflow-y-auto">
         <div className="max-w-lg mx-auto pt-4 lg:max-w-7xl">
           <h1 className="mb-4 opacity-40 text-center uppercase font-bold">Upcoming Events</h1>
 
