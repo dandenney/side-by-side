@@ -718,10 +718,10 @@ export function UrlList({
                   </div>
                 </div>
               ) : (
-                <div className="bg-white flex flex-col max-w-[352px] rounded-2xl p-4">
+                <div className="bg-white flex flex-col rounded-2xl p-4">
                   {selectedItem.imageUrl ? (
                     <motion.div
-                      className="h-80 mx-auto relative shrink-0 w-80"
+                      className="aspect-square mx-auto relative shrink-0 w-full"
                       layoutId={`image-${selectedItem.id}`}
                       transition={{
                         layout: {
@@ -753,7 +753,7 @@ export function UrlList({
                       </div>
                     </motion.div>
                   )}
-                  <div className="p-6 space-y-4">
+                  <div className="pt-4 space-y-4">
                     <div className="flex justify-between items-start">
                       <motion.h3
                         className={`font-semibold ${textColor} text-2xl`}
