@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@googlemaps/google-maps-services-js": "^3.4.1",
+    "@radix-ui/react-dialog": "^1.1.7",
     "@radix-ui/react-popover": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.0",
     "@react-spring/web": "^9.7.5",
@@ -27,7 +28,7 @@
     "react-day-picker": "8.10.1",
     "react-dom": "^18.2.0",
     "react-rating": "^2.0.5",
-    "tailwind-merge": "^3.1.0",
+    "tailwind-merge": "^3.2.0",
     "tailwindcss-animate": "^1.0.7",
     "unfurl": "^0.1.0"
   },
