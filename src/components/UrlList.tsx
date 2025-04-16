@@ -518,7 +518,7 @@ export function UrlList({
                       onClick={() => handleCardClick(item)}
                     >
                       <motion.h3
-                        className={`font-semibold ${textColor} line-clamp-2 text-lg`}
+                        className={`font-semibold ${textColor} line-clamp-2`}
                         layoutId={`title-${item.id}`}
                       >
                         {item.title}
