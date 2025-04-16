@@ -193,9 +193,13 @@ export function UrlList({
         const createdItem = await createUrlItem(newItem)
         setItems([...items, createdItem])
       } else {
-        // TODO: Implement place lookup and addition
-        setError('Place lookup not implemented yet')
-        return
+        // If we have search results and a selected place, use handlePlaceSelect
+        if (searchResults.length > 0 && selectedPlace) {
+          await handlePlaceSelect(selectedPlace)
+        } else {
+          setError('Please select a place from the search results')
+          return
+        }
       }
 
       setNewUrl('')
@@ -885,7 +889,10 @@ export function UrlList({
                           <button
                             key={place.placeId}
                             type="button"
-                            onClick={() => handlePlaceSelect(place)}
+                            onClick={() => {
+                              setSelectedPlace(place)
+                              handlePlaceSelect(place)
+                            }}
                             className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex items-center gap-2"
                           >
                             <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
