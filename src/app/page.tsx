@@ -96,7 +96,7 @@ export default function HomePage() {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-7xl">
+      <main className="bg-slate-100">
         <UpcomingList />
       </main>
     </div>

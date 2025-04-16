@@ -220,11 +220,11 @@ export default function UpcomingList() {
   }
 
   return (
-    <div className="bg-gradient-to-b from-blue-500 to-blue-600 h-full flex flex-col">
+    <div className="h-full flex flex-col">
       {/* List Items */}
       <div className="flex-1 overflow-y-auto px-4 pb-24">
         <div className="max-w-lg mx-auto pt-4 lg:max-w-7xl">
-          <h1 className="mb-4 opacity-40 text-center text-white uppercase font-bold">Upcoming Events</h1>
+          <h1 className="mb-4 opacity-40 text-center uppercase font-bold">Upcoming Events</h1>
 
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {isLoading ? (
@@ -238,7 +238,7 @@ export default function UpcomingList() {
             ) : (
               items.map((item, index) => (
                 <div key={index}>
-                  <div className="bg-blue-50 -mb-2 pb-4 pt-2 px-4 rounded-t-lg">
+                  <div className="bg-blue-100 -mb-2 pb-4 pt-2 px-4 rounded-t-lg">
                     <div className="flex items-center gap-2 text-blue-800">
                       <CalendarIcon className="w-5 h-5" />
                       <span className="text-blue-600">{formatDateDifference(item.startDate)}</span>

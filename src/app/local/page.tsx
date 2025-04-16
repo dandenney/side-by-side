@@ -54,7 +54,7 @@ export default function LocalList() {
   }
 
   return (
-    <main className="h-[100dvh]">
+    <main className="bg-slate-100 h-[100dvh]">
       <div className="p-4 space-y-4">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-purple-900">Local Places</h1>
@@ -81,8 +81,6 @@ export default function LocalList() {
         {viewMode === 'list' ? (
           <UrlList
             title="Local"
-            gradientFrom="from-purple-50"
-            gradientTo="to-purple-100"
             textColor="text-purple-900"
             titleColor="text-purple-900"
             accentColor="text-purple-500"

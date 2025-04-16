@@ -16,8 +16,6 @@ import { StarRating } from "@/components/ui/star-rating"
 
 type UrlListProps = {
   title: string
-  gradientFrom: string
-  gradientTo: string
   textColor: string
   titleColor: string
   accentColor: string
@@ -31,8 +29,6 @@ type UrlListProps = {
 
 export function UrlList({
   title,
-  gradientFrom,
-  gradientTo,
   textColor,
   titleColor,
   accentColor,
@@ -457,7 +453,7 @@ export function UrlList({
   }
 
   return (
-    <div className={`bg-gradient-to-b ${gradientFrom} ${gradientTo} h-full flex flex-col`}>
+    <div className={`h-full flex flex-col`}>
       {/* List Items */}
       <div className="flex-1 overflow-y-auto px-4 pb-24">
         <div className="max-w-lg mx-auto space-y-2 pt-4 lg:max-w-7xl">
@@ -722,12 +718,11 @@ export function UrlList({
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col bg-white rounded-2xl">
+                <div className="bg-white flex flex-col max-w-[352px] rounded-2xl p-4">
                   {selectedItem.imageUrl ? (
                     <motion.div
-                      className="relative shrink-0 w-full"
+                      className="h-80 mx-auto relative shrink-0 w-80"
                       layoutId={`image-${selectedItem.id}`}
-                      style={{ aspectRatio: '16/9' }}
                       transition={{
                         layout: {
                           duration: 0.3,
@@ -739,14 +734,13 @@ export function UrlList({
                         src={selectedItem.imageUrl}
                         alt={selectedItem.title}
                         fill
-                        className="object-cover rounded-t-2xl"
+                        className="object-cover rounded-2xl"
                       />
                     </motion.div>
                   ) : (
                     <motion.div
                       className="relative w-full bg-gray-100"
                       layoutId={`image-${selectedItem.id}`}
-                      style={{ aspectRatio: '16/9' }}
                       transition={{
                         layout: {
                           duration: 0.3,
