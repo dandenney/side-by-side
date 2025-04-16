@@ -260,6 +260,7 @@ export function UrlList({
     try {
       await deleteUrlItem(id)
       setItems(items.filter(item => item.id !== id))
+      setSelectedItem(null)
     } catch (error) {
       alert('Failed to delete item. Please try again.')
     }
@@ -529,11 +530,6 @@ export function UrlList({
                     </div>
                   </div>
                   <div className="flex">
-                    {/* <button
-                      onClick={(e) => archiveItem(e, item.id)}
-                      className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full">
-                    <Archive className="w-5 h-5 text-gray-400" />
-                    </button> */}
                     <a
                       href={item.url}
                       target="_blank"
@@ -776,17 +772,39 @@ export function UrlList({
                       {selectedItem.description && (
                         <p className="text-gray-600">{selectedItem.description}</p>
                       )}
-                      {selectedItem.url && (
-                        <a
-                          href={selectedItem.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-500 hover:underline inline-flex items-center gap-2"
-                        >
-                          <Link className="w-4 h-4" />
-                          Visit Website
-                        </a>
-                      )}
+                      <div className="flex justify-between items-center">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteItem(e, selectedItem.id);
+                            }}
+                            className="p-2 hover:bg-gray-100 rounded-full"
+                          >
+                            <Trash2 className="w-5 h-5 text-gray-400" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startEdit(e, selectedItem);
+                            }}
+                            className="p-2 hover:bg-gray-100 rounded-full"
+                          >
+                            <Edit2 className="w-5 h-5 text-gray-400" />
+                          </button>
+                        </div>
+                          {selectedItem.url && (
+                            <a
+                              href={selectedItem.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:underline inline-flex items-center gap-2"
+                            >
+                              <Link className="w-4 h-4" />
+                              Visit Website
+                            </a>
+                          )}
+                      </div>
                       {selectedItem.place && (
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-gray-600">
@@ -800,6 +818,7 @@ export function UrlList({
                       )}
                     </div>
                   </div>
+                  
                   <button
                     onClick={handleCloseModal}
                     className="absolute bg-white/20 p-1 right-4 rounded-full text-white top-4 z-10 hover:bg-gray-100"
