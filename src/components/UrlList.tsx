@@ -53,6 +53,7 @@ export function UrlList({
   const [selectedPlace, setSelectedPlace] = useState<PlaceSearchResult | null>(null)
   const [isSearching, setIsSearching] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const inputTypeOptions = [
     { value: 'url', icon: Link, label: 'URL' },
@@ -165,6 +166,32 @@ export function UrlList({
     setMounted(true)
   }, [])
 
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setNewUrl(value)
+    setSearchQuery(value)
+  }
+
+  const handlePlaceSearch = async () => {
+    if (!searchQuery.trim() || searchQuery.length < 4) {
+      setSearchResults([])
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      const response = await fetch(`/api/places?query=${encodeURIComponent(searchQuery)}`)
+      if (!response.ok) throw new Error('Failed to search places')
+      const results = await response.json()
+      setSearchResults(results)
+    } catch (error) {
+      console.error('Error searching places:', error)
+      setError('Failed to search places. Please try again.')
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
   const addItem = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newUrl.trim()) return
@@ -203,6 +230,8 @@ export function UrlList({
       }
 
       setNewUrl('')
+      setSearchQuery('')
+      setSearchResults([])
       setIsModalOpen(false)
     } catch (error) {
       console.error('Error in addItem:', error)
@@ -337,74 +366,6 @@ export function UrlList({
     const [year, month, day] = dateStr.split('-')
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-  }
-
-  // Add debounced search function
-  const debouncedSearch = useMemo(
-    () =>
-      debounce(async (value: string) => {
-        if (value.length < 4) {
-          setSearchResults([])
-          setIsSearching(false)
-          return
-        }
-
-        setIsSearching(true)
-        try {
-          const response = await fetch(`/api/places?query=${encodeURIComponent(value)}`)
-          if (!response.ok) throw new Error('Failed to search places')
-          const results = await response.json()
-          setSearchResults(results)
-        } catch (error) {
-          console.error('Error searching places:', error)
-          setError('Failed to search places. Please try again.')
-        } finally {
-          setIsSearching(false)
-        }
-      }, 300),
-    []
-  )
-
-  // Cleanup debounce on unmount
-  useEffect(() => {
-    return () => {
-      debouncedSearch.cancel()
-    }
-  }, [debouncedSearch])
-
-  // Update the search input handling
-  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setNewUrl(value)
-
-    if (inputType === 'place') {
-      if (value.length < 4) {
-        setSearchResults([])
-        setIsSearching(false)
-      } else {
-        debouncedSearch(value)
-      }
-    }
-  }
-
-  const handlePlaceSearch = async (query: string) => {
-    if (!query.trim()) {
-      setSearchResults([])
-      return
-    }
-
-    setIsSearching(true)
-    try {
-      const response = await fetch(`/api/places?query=${encodeURIComponent(query)}`)
-      if (!response.ok) throw new Error('Failed to search places')
-      const results = await response.json()
-      setSearchResults(results)
-    } catch (error) {
-      console.error('Error searching places:', error)
-      setError('Failed to search places. Please try again.')
-    } finally {
-      setIsSearching(false)
-    }
   }
 
   const handlePlaceSelect = async (place: PlaceSearchResult) => {
@@ -868,7 +829,7 @@ export function UrlList({
                       type={inputType === 'url' ? 'url' : 'text'}
                       value={newUrl}
                       onChange={handleSearchInputChange}
-                      placeholder={inputType === 'url' ? 'Add a URL...' : 'Search for a place (minimum 4 characters)...'}
+                      placeholder={inputType === 'url' ? 'Add a URL...' : 'Search for a place...'}
                       className={`w-full px-4 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
                       autoFocus
                       disabled={isLoading || isSearching}
@@ -905,17 +866,32 @@ export function UrlList({
                       </div>
                     )}
                   </div>
-                  <button
-                    type="submit"
-                    disabled={isLoading || isSearching || (inputType === 'url' && !newUrl.trim())}
-                    className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-2xl active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} disabled:opacity-50`}
-                  >
-                    {isLoading || isSearching ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      'Add'
-                    )}
-                  </button>
+                  {inputType === 'place' ? (
+                    <button
+                      type="button"
+                      onClick={handlePlaceSearch}
+                      disabled={isLoading || isSearching || newUrl.length < 4}
+                      className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-2xl active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} disabled:opacity-50`}
+                    >
+                      {isSearching ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Search className="w-5 h-5" />
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={isLoading || !newUrl.trim()}
+                      className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-2xl active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} disabled:opacity-50`}
+                    >
+                      {isLoading ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        'Add'
+                      )}
+                    </button>
+                  )}
                 </div>
                 <div className="flex gap-2 justify-between">
                   <InputTypeSelector className="grow" value={inputType} onChange={setInputType} />
