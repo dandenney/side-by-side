@@ -683,107 +683,102 @@ export function UrlList({
                   </div>
                 </div>
               ) : (
-                <div className="bg-white flex flex-col rounded-2xl p-4">
-                  {selectedItem.imageUrl ? (
-                    <motion.div
-                      className="aspect-square mx-auto relative shrink-0 w-full"
-                      layoutId={`image-${selectedItem.id}`}
-                      transition={{
-                        layout: {
-                          duration: 0.3,
-                          ease: "easeInOut"
-                        }
-                      }}
-                    >
-                      <Image
-                        src={selectedItem.imageUrl}
-                        alt={selectedItem.title}
-                        fill
-                        className="object-cover rounded-2xl"
-                      />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      className="relative w-full bg-gray-100"
-                      layoutId={`image-${selectedItem.id}`}
-                      transition={{
-                        layout: {
-                          duration: 0.3,
-                          ease: "easeInOut"
-                        }
-                      }}
-                    >
-                      <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                        <ImageIcon className="w-12 h-12" />
-                      </div>
-                    </motion.div>
-                  )}
-                  <div className="pt-4 space-y-4">
-                    <div className="flex justify-between items-start">
+                <div className="bg-white flex flex-col rounded-2xl">
+                  <div className='pt-4 px-4'>
+                    {selectedItem.imageUrl ? (
+                      <motion.div
+                        className="aspect-square relative shrink-0"
+                        layoutId={`image-${selectedItem.id}`}
+                        transition={{
+                          layout: {
+                            duration: 0.3,
+                            ease: "easeInOut"
+                          }
+                        }}
+                      >
+                        <Image
+                          src={selectedItem.imageUrl}
+                          alt={selectedItem.title}
+                          fill
+                          className="object-cover rounded-2xl"
+                        />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        className="relative w-full bg-gray-100"
+                        layoutId={`image-${selectedItem.id}`}
+                        transition={{
+                          layout: {
+                            duration: 0.3,
+                            ease: "easeInOut"
+                          }
+                        }}
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                          <ImageIcon className="w-12 h-12" />
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                  <div className="pb-6 pt-4 px-4 space-y-4">
+                    <div>
                       <motion.h3
                         className={`font-semibold ${textColor} text-2xl`}
                         layoutId={`title-${selectedItem.id}`}
                       >
                         {selectedItem.title}
                       </motion.h3>
-                    </div>
-                    <div className="space-y-4">
                       {selectedItem.description && (
                         <p className="text-gray-600">{selectedItem.description}</p>
                       )}
-                      <div className="flex justify-between items-center">
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      {selectedItem.place && <StarRating defaultValue={selectedItem.place.rating} size='sm' />}
+                      {selectedItem.place?.priceLevel && (
                         <div className="flex gap-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteItem(e, selectedItem.id);
-                            }}
-                            className="p-2 hover:bg-gray-100 rounded-full"
-                          >
-                            <Trash2 className="w-5 h-5 text-gray-400" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              startEdit(e, selectedItem);
-                            }}
-                            className="p-2 hover:bg-gray-100 rounded-full"
-                          >
-                            <Edit2 className="w-5 h-5 text-gray-400" />
-                          </button>
-                        </div>
-                          {selectedItem.url && (
-                            <a
-                              href={selectedItem.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-500 hover:underline inline-flex items-center gap-2"
-                            >
-                              <Link className="w-4 h-4" />
-                              Visit Website
-                            </a>
-                          )}
-                      </div>
-                      {selectedItem.place && (
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <MapPin className="w-4 h-4" />
-                            <span>{selectedItem.place.name}</span>
-                          </div>
-                          {selectedItem.place.address && (
-                            <p className="text-sm text-gray-500">{selectedItem.place.address}</p>
-                          )}
+                          {Array(selectedItem.place.priceLevel).fill('💵').map((emoji, index) => (
+                            <span className='text-xl' key={index}>{emoji}</span>
+                          ))}
                         </div>
                       )}
                     </div>
                   </div>
-                  
-                  <button
-                    onClick={handleCloseModal}
-                    className="absolute bg-white/20 p-1 right-4 rounded-full text-white top-4 z-10 hover:bg-gray-100"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+                  <nav className="bg-slate-100 border-t border-slate-200 flex justify-between rounded-b-2xl">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteItem(e, selectedItem.id);
+                      }}
+                      className="p-4 hover:bg-gray-100 rounded-full"
+                    >
+                      <Trash2 className="w-5 h-5 text-gray-400" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEdit(e, selectedItem);
+                      }}
+                      className="p-4 hover:bg-gray-100 rounded-full"
+                    >
+                      <Edit2 className="w-5 h-5 text-gray-400" />
+                    </button>
+                    {selectedItem.url && (
+                      <a
+                        href={selectedItem.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline inline-flex items-center gap-2 p-4"
+                      >
+                        <Link className="w-4 h-4" />
+                      </a>
+                    )}
+                    <button
+                      onClick={handleCloseModal}
+                      className="p-4"
+                    >
+                      <X className="w-5 h-5 text-gray-400" />
+                    </button>
+                  </nav>
                 </div>
               )}
             </motion.div>
