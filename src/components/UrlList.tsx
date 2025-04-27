@@ -54,6 +54,7 @@ export function UrlList({
   const [isSearching, setIsSearching] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedTag, setSelectedTag] = useState<string | null>(null)
 
   const inputTypeOptions = [
     { value: 'url', icon: Link, label: 'URL' },
@@ -268,16 +269,29 @@ export function UrlList({
   const handleSaveEdit = async () => {
     if (editingItem) {
       try {
-        const updatedItem = await updateUrlItem(editingItem)
-        // Update the items list
-        setItems(items.map(item =>
-          item.id === updatedItem.id ? updatedItem : item
-        ))
+        const updatedItem = await updateUrlItem(editingItem) as UrlListItem
+        
+        // Refresh the items list to get the latest data with tags
+        const refreshedItems = await getUrlItems(listType, listId)
+        setItems(refreshedItems)
+        
         // Update the selected item if it's the one being edited
-        if (selectedItem?.id === updatedItem.id) {
-          setSelectedItem(updatedItem)
+        const refreshedItem = refreshedItems.find(item => item.id === updatedItem.id)
+        if (refreshedItem) {
+          setSelectedItem(refreshedItem)
         }
+        
         setEditingItem(null)
+        
+        // If we're in a tag filter view and the item's tags changed,
+        // we need to close the modal to prevent the broken animation
+        const shouldCloseModal = selectedTag && 
+          ((selectedTag === 'untagged' && editingItem.tags?.length) ||
+          (selectedTag !== 'untagged' && !editingItem.tags?.some((tag: Tag) => tag.name === selectedTag)))
+        
+        if (shouldCloseModal) {
+          setSelectedItem(null)
+        }
       } catch (error) {
         alert('Failed to update item. Please try again.')
       }
@@ -417,6 +431,32 @@ export function UrlList({
     }
   }
 
+  // Sort items by tag, with untagged items last
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      // If both items have tags, sort by first tag name
+      if (a.tags?.length && b.tags?.length) {
+        return a.tags[0].name.localeCompare(b.tags[0].name)
+      }
+      // If only one has tags, put the tagged one first
+      if (a.tags?.length) return -1
+      if (b.tags?.length) return 1
+      // If neither has tags, maintain original order
+      return 0
+    })
+  }, [items])
+
+  // Filter items by selected tag
+  const filteredItems = useMemo(() => {
+    if (!selectedTag) return sortedItems
+    if (selectedTag === 'untagged') {
+      return sortedItems.filter(item => !item.tags?.length)
+    }
+    return sortedItems.filter(item => 
+      item.tags?.some(tag => tag.name === selectedTag)
+    )
+  }, [sortedItems, selectedTag])
+
   return (
     <div className={`h-full flex flex-col`}>
       {/* List Items */}
@@ -424,23 +464,49 @@ export function UrlList({
         <div className="max-w-lg mx-auto space-y-2 pt-4 lg:max-w-7xl">
           <h1 className={`opacity-40 text-center ${titleColor} uppercase font-bold`}>{title}</h1>
 
-          {/* Tag Display */}
-          {existingTags.length > 0 && (
-            <div className="flex flex-wrap gap-2 px-4 justify-center">
-              {existingTags.map(tag => (
-                <div
-                  key={tag}
-                  className="flex items-center gap-1 px-2 py-1 bg-white/50 rounded-full text-sm text-gray-600"
-                >
-                  <TagIcon className="w-3 h-3" />
-                  <span>{tag}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Tag Filter */}
+          <div className="flex flex-wrap gap-2 px-4 justify-center">
+            <button
+              onClick={() => setSelectedTag(null)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm ${
+                selectedTag === null
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-white/50 text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <TagIcon className="w-3 h-3" />
+              <span>All</span>
+            </button>
+            <button
+              onClick={() => setSelectedTag('untagged')}
+              className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm ${
+                selectedTag === 'untagged'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-white/50 text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <TagIcon className="w-3 h-3" />
+              <span>Untagged</span>
+            </button>
+            {existingTags.map(tag => (
+              <button
+                key={tag}
+                onClick={() => setSelectedTag(tag)}
+                className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm ${
+                  selectedTag === tag
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-white/50 text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <TagIcon className="w-3 h-3" />
+                <span>{tag}</span>
+              </button>
+            ))}
+          </div>
+
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <AnimatePresence mode="popLayout">
-              {items.filter(item => !item.archived).map(item => (
+              {filteredItems.filter(item => !item.archived).map(item => (
                 <motion.div
                   key={item.id}
                   variants={itemVariants}
@@ -483,11 +549,32 @@ export function UrlList({
                       onClick={() => handleCardClick(item)}
                     >
                       <motion.h3
-                        className={`font-semibold ${textColor} line-clamp-2`}
+                        className={`font-semibold ${textColor} line-clamp-1 mb-1`}
                         layoutId={`title-${item.id}`}
                       >
                         {item.title}
                       </motion.h3>
+                      <motion.div
+                        className="flex flex-wrap gap-1"
+                        layoutId={`tags-${item.id}`}
+                      >
+                        {item.tags?.length ? (
+                          item.tags.map(tag => (
+                            <span
+                              key={tag.id}
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600"
+                            >
+                              <TagIcon className="w-3 h-3" />
+                              {tag.name}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-400">
+                            <TagIcon className="w-3 h-3" />
+                            Untagged
+                          </span>
+                        )}
+                      </motion.div>
                     </div>
                   </div>
                   <div className="flex">
