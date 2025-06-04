@@ -78,7 +78,9 @@ interface SupabaseUrlItem {
   place_price_level: number | null
   place_website: string | null
   place_phone_number: string | null
-  date_range: { start: string; end: string } | null
+  place_opening_hours: any | null
+  date_range_start: string | null
+  date_range_end: string | null
 }
 
 interface SupabaseItemTag {
@@ -108,49 +110,45 @@ const localToUtcDate = (localDate: string) => {
 async function uploadImageToStorage(imageUrl: string): Promise<string | null> {
   console.log('🖼️ Starting image upload process for URL:', imageUrl)
   try {
-    // First, download the image through our API route
+    // Download the image through our API route
     console.log('📥 Downloading image through API route...')
-    const downloadResponse = await fetch('/api/download-image', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ imageUrl }),
-    })
-
-    if (!downloadResponse.ok) {
-      console.error('❌ Failed to download image:', await downloadResponse.text())
+    const response = await fetch(`/api/fetch-image?url=${encodeURIComponent(imageUrl)}`)
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      console.error('❌ Failed to download image:', errorData.error || response.statusText)
       return null
     }
 
-    const { data: base64Data, contentType } = await downloadResponse.json()
+    const blob = await response.blob()
     console.log('✅ Image downloaded successfully')
 
-    // Upload to storage through server-side route
+    // Upload to Supabase storage
+    const supabase = createClient()
     const fileName = `url-image-${Date.now()}.jpg`
     console.log('📤 Uploading to Supabase Storage as:', fileName)
     
-    const uploadResponse = await fetch('/api/upload-to-storage', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        fileName,
-        base64Data,
-        contentType
-      }),
-    })
+    const { data, error } = await supabase.storage
+      .from('url-images')
+      .upload(fileName, blob, {
+        contentType: blob.type,
+        cacheControl: '3600',
+        upsert: false
+      })
 
-    if (!uploadResponse.ok) {
-      console.error('❌ Failed to upload image:', await uploadResponse.text())
+    if (error) {
+      console.error('❌ Failed to upload image:', error)
       return null
     }
 
-    const { url } = await uploadResponse.json()
+    // Get the public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('url-images')
+      .getPublicUrl(fileName)
+
     console.log('✅ Image uploaded successfully to Supabase')
-    console.log('🔗 Public URL:', url)
-    return url
+    console.log('🔗 Public URL:', publicUrl)
+    return publicUrl
   } catch (error) {
     console.error('❌ Unexpected error during image upload:', error)
     return null
@@ -206,14 +204,15 @@ export async function getUrlItems(listType: 'local' | 'shared', listId: string) 
         priceLevel: item.place_price_level ?? undefined,
         website: item.place_website ?? undefined,
         phoneNumber: item.place_phone_number ?? undefined,
+        openingHours: item.place_opening_hours as Place['openingHours'],
       } : undefined,
       imageUrl: item.image_url ?? undefined,
       title: item.title,
       description: item.description ?? undefined,
       notes: item.notes ?? undefined,
-      dateRange: item.date_range ? {
-        start: item.date_range.start,
-        end: item.date_range.end
+      dateRange: (item.date_range_start || item.date_range_end) ? {
+        start: item.date_range_start!,
+        end: item.date_range_end!,
       } : undefined,
       listType: item.list_type,
       listId: item.list_id,
@@ -233,7 +232,7 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
   let storedImageUrl = item.imageUrl
   if (item.imageUrl) {
     try {
-      storedImageUrl = await storeImageFromUrl(item.imageUrl)
+      storedImageUrl = await uploadImageToStorage(item.imageUrl) || item.imageUrl
     } catch (error) {
       console.error('Failed to store image:', error)
       // Continue with original image URL if storage fails
@@ -267,61 +266,69 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
     place_opening_hours: item.place?.openingHours || null,
   }
 
-  // If an imageUrl is provided, upload the image to Supabase Storage
-  if (item.imageUrl) {
-    console.log('🖼️ Image URL provided, attempting to upload to storage...')
-    const storedImageUrl = await uploadImageToStorage(item.imageUrl)
-    if (storedImageUrl) {
-      console.log('✅ Image uploaded successfully, updating image_url in database')
-      insertData.image_url = storedImageUrl
-    } else {
-      console.log('⚠️ Failed to upload image, keeping original URL')
-    }
-  }
-
-  console.log('💾 Saving item to database...')
   const { data, error } = await supabase
     .from('url_items')
-    .insert(insertData)
-    .select()
+    .insert([insertData])
+    .select(`
+      *,
+      item_tags (
+        tag:tags (
+          id,
+          name,
+          list_id,
+          list_type,
+          created_at
+        )
+      )
+    `)
     .single()
 
   if (error) {
-    console.error('❌ Error saving item to database:', error.message)
+    console.error('❌ Error creating item:', error.message)
     throw error
   }
 
   console.log('✅ Item created successfully')
+  
+  // Transform the data back to UrlListItem type
+  const urlItem = data as SupabaseUrlItemWithTags
   return {
-    id: data.id,
-    url: data.url,
-    place: data.place_id ? {
-      placeId: data.place_id,
-      name: data.place_name!,
-      address: data.place_address!,
-      lat: data.place_lat!,
-      lng: data.place_lng!,
-      types: data.place_types!,
-      rating: data.place_rating,
-      userRatingsTotal: data.place_user_ratings_total,
-      priceLevel: data.place_price_level,
-      website: data.place_website,
-      phoneNumber: data.place_phone_number,
-      openingHours: data.place_opening_hours as Place['openingHours'],
+    id: urlItem.id,
+    url: urlItem.url,
+    place: urlItem.place_id ? {
+      placeId: urlItem.place_id,
+      name: urlItem.place_name!,
+      address: urlItem.place_address!,
+      lat: urlItem.place_lat!,
+      lng: urlItem.place_lng!,
+      types: urlItem.place_types!,
+      rating: urlItem.place_rating ?? undefined,
+      userRatingsTotal: urlItem.place_user_ratings_total ?? undefined,
+      priceLevel: urlItem.place_price_level ?? undefined,
+      website: urlItem.place_website ?? undefined,
+      phoneNumber: urlItem.place_phone_number ?? undefined,
+      openingHours: urlItem.place_opening_hours as Place['openingHours'],
     } : undefined,
-    imageUrl: data.image_url,
-    title: data.title,
-    description: data.description,
-    notes: data.notes,
-    dateRange: (data.date_range_start || data.date_range_end) ? {
-      start: data.date_range_start!,
-      end: data.date_range_end!,
+    imageUrl: urlItem.image_url ?? undefined,
+    title: urlItem.title,
+    description: urlItem.description ?? undefined,
+    notes: urlItem.notes ?? undefined,
+    dateRange: (urlItem.date_range_start || urlItem.date_range_end) ? {
+      start: urlItem.date_range_start!,
+      end: urlItem.date_range_end!,
     } : undefined,
-    listType: data.list_type,
-    listId: data.list_id,
-    createdAt: new Date(data.created_at),
-    updatedAt: new Date(data.updated_at),
-    archived: data.archived,
+    listType: urlItem.list_type,
+    listId: urlItem.list_id,
+    createdAt: new Date(urlItem.created_at),
+    updatedAt: new Date(urlItem.updated_at),
+    archived: urlItem.archived,
+    tags: urlItem.item_tags?.map(({ tag }) => ({
+      id: tag.id,
+      name: tag.name,
+      listId: tag.list_id,
+      listType: tag.list_type,
+      createdAt: new Date(tag.created_at)
+    })) || []
   }
 }
 
@@ -363,13 +370,25 @@ export async function updateUrlItem(item: UrlListItem) {
       title: item.title,
       description: item.description,
       notes: item.notes,
-      date_range: item.dateRange,
+      date_range_start: item.dateRange?.start,
+      date_range_end: item.dateRange?.end,
       list_type: item.listType,
       list_id: item.listId,
       archived: item.archived,
     })
     .eq('id', item.id)
-    .select()
+    .select(`
+      *,
+      item_tags (
+        tag:tags (
+          id,
+          name,
+          list_id,
+          list_type,
+          created_at
+        )
+      )
+    `)
     .single()
 
   if (error) {
@@ -378,33 +397,46 @@ export async function updateUrlItem(item: UrlListItem) {
   }
 
   console.log('✅ Item updated successfully')
+  
+  // Transform the data back to UrlListItem type
+  const urlItem = data as SupabaseUrlItemWithTags
   return {
-    id: data.id,
-    url: data.url,
-    place: data.place_id ? {
-      placeId: data.place_id,
-      name: data.place_name!,
-      address: data.place_address!,
-      lat: data.place_lat!,
-      lng: data.place_lng!,
-      types: data.place_types!,
-      rating: data.place_rating,
-      userRatingsTotal: data.place_user_ratings_total,
-      priceLevel: data.place_price_level,
-      website: data.place_website,
-      phoneNumber: data.place_phone_number,
-      openingHours: data.place_opening_hours as Place['openingHours'],
+    id: urlItem.id,
+    url: urlItem.url,
+    place: urlItem.place_id ? {
+      placeId: urlItem.place_id,
+      name: urlItem.place_name!,
+      address: urlItem.place_address!,
+      lat: urlItem.place_lat!,
+      lng: urlItem.place_lng!,
+      types: urlItem.place_types!,
+      rating: urlItem.place_rating ?? undefined,
+      userRatingsTotal: urlItem.place_user_ratings_total ?? undefined,
+      priceLevel: urlItem.place_price_level ?? undefined,
+      website: urlItem.place_website ?? undefined,
+      phoneNumber: urlItem.place_phone_number ?? undefined,
+      openingHours: urlItem.place_opening_hours as Place['openingHours'],
     } : undefined,
-    imageUrl: data.image_url,
-    title: data.title,
-    description: data.description,
-    notes: data.notes,
-    dateRange: data.date_range as UrlListItem['dateRange'],
-    listType: data.list_type,
-    listId: data.list_id,
-    createdAt: new Date(data.created_at),
-    updatedAt: new Date(data.updated_at),
-    archived: data.archived,
+    imageUrl: urlItem.image_url ?? undefined,
+    title: urlItem.title,
+    description: urlItem.description ?? undefined,
+    notes: urlItem.notes ?? undefined,
+    dateRange: (urlItem.date_range_start || urlItem.date_range_end) ? {
+      start: urlItem.date_range_start!,
+      end: urlItem.date_range_end!,
+    } : undefined,
+    listType: urlItem.list_type,
+    listId: urlItem.list_id,
+    createdAt: new Date(urlItem.created_at),
+    updatedAt: new Date(urlItem.updated_at),
+    archived: urlItem.archived,
+    tags: urlItem.item_tags?.map(({ tag }) => ({
+      id: tag.id,
+      name: tag.name,
+      listId: tag.list_id,
+      listType: tag.list_type,
+      createdAt: new Date(tag.created_at)
+    })) || []
   }
 }
 

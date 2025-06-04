@@ -620,7 +620,7 @@ export function UrlList({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 "
           >
             <motion.div
               variants={modalContentVariants}
@@ -770,7 +770,7 @@ export function UrlList({
                   </div>
                 </div>
               ) : (
-                <div className="bg-white flex flex-col rounded-2xl">
+                  <div className="bg-white flex flex-col rounded-2xl xl:max-w-md xl:mx-auto">
                   <div className='pt-4 px-4'>
                     {selectedItem.imageUrl ? (
                       <motion.div
