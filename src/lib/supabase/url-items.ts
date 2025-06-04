@@ -229,10 +229,21 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
   console.log('📝 Creating new URL item with image:', item.imageUrl ? 'Yes' : 'No')
   const supabase = createClient()
   
+  // Store image if provided
+  let storedImageUrl = item.imageUrl
+  if (item.imageUrl) {
+    try {
+      storedImageUrl = await storeImageFromUrl(item.imageUrl)
+    } catch (error) {
+      console.error('Failed to store image:', error)
+      // Continue with original image URL if storage fails
+    }
+  }
+  
   // Transform place data to match Supabase schema
   const insertData = {
     url: item.url,
-    image_url: item.imageUrl,
+    image_url: storedImageUrl,
     title: item.title,
     description: item.description,
     notes: item.notes,
