@@ -2,6 +2,59 @@ import { createClient } from '@/lib/supabase/client'
 import { UrlListItem, Tag, Place } from '@/types/url-list'
 import { SHARED_LIST_ID } from '@/lib/constants'
 
+interface UrlItem {
+  id: number
+  url: string
+  image_url?: string
+  title?: string
+  description?: string
+  notes?: string
+  list_type: string
+  list_id: string
+  created_at: string
+  updated_at: string
+  archived: boolean
+  place_id?: string
+  place_name?: string
+  place_address?: string
+  place_lat?: number
+  place_lng?: number
+  place_types?: string[]
+  place_rating?: number
+  place_user_ratings_total?: number
+  place_price_level?: number
+  place_website?: string
+  place_phone_number?: string
+  place_opening_hours?: any
+  date_range_start?: string
+  date_range_end?: string
+}
+
+interface UrlItemInsert {
+  url: string
+  image_url?: string
+  title?: string
+  description?: string
+  notes?: string
+  list_type: string
+  list_id: string
+  archived?: boolean
+  place_id?: string
+  place_name?: string
+  place_address?: string
+  place_lat?: number
+  place_lng?: number
+  place_types?: string[]
+  place_rating?: number
+  place_user_ratings_total?: number
+  place_price_level?: number
+  place_website?: string
+  place_phone_number?: string
+  place_opening_hours?: any
+  date_range_start?: string
+  date_range_end?: string
+}
+
 interface SupabaseUrlItem {
   id: string
   url: string
@@ -50,6 +103,58 @@ const utcToLocalDate = (utcDate: string) => {
 // Helper function to convert local date to UTC date string
 const localToUtcDate = (localDate: string) => {
   return `${localDate}T00:00:00Z`
+}
+
+async function uploadImageToStorage(imageUrl: string): Promise<string | null> {
+  console.log('🖼️ Starting image upload process for URL:', imageUrl)
+  try {
+    // First, download the image through our API route
+    console.log('📥 Downloading image through API route...')
+    const downloadResponse = await fetch('/api/download-image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ imageUrl }),
+    })
+
+    if (!downloadResponse.ok) {
+      console.error('❌ Failed to download image:', await downloadResponse.text())
+      return null
+    }
+
+    const { data: base64Data, contentType } = await downloadResponse.json()
+    console.log('✅ Image downloaded successfully')
+
+    // Upload to storage through server-side route
+    const fileName = `url-image-${Date.now()}.jpg`
+    console.log('📤 Uploading to Supabase Storage as:', fileName)
+    
+    const uploadResponse = await fetch('/api/upload-to-storage', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fileName,
+        base64Data,
+        contentType
+      }),
+    })
+
+    if (!uploadResponse.ok) {
+      console.error('❌ Failed to upload image:', await uploadResponse.text())
+      return null
+    }
+
+    const { url } = await uploadResponse.json()
+    console.log('✅ Image uploaded successfully to Supabase')
+    console.log('🔗 Public URL:', url)
+    return url
+  } catch (error) {
+    console.error('❌ Unexpected error during image upload:', error)
+    return null
+  }
 }
 
 export async function getUrlItems(listType: 'local' | 'shared', listId: string) {
@@ -121,6 +226,7 @@ export async function getUrlItems(listType: 'local' | 'shared', listId: string) 
 }
 
 export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' | 'updatedAt'>) {
+  console.log('📝 Creating new URL item with image:', item.imageUrl ? 'Yes' : 'No')
   const supabase = createClient()
   
   // Transform place data to match Supabase schema
@@ -150,6 +256,19 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
     place_opening_hours: item.place?.openingHours || null,
   }
 
+  // If an imageUrl is provided, upload the image to Supabase Storage
+  if (item.imageUrl) {
+    console.log('🖼️ Image URL provided, attempting to upload to storage...')
+    const storedImageUrl = await uploadImageToStorage(item.imageUrl)
+    if (storedImageUrl) {
+      console.log('✅ Image uploaded successfully, updating image_url in database')
+      insertData.image_url = storedImageUrl
+    } else {
+      console.log('⚠️ Failed to upload image, keeping original URL')
+    }
+  }
+
+  console.log('💾 Saving item to database...')
   const { data, error } = await supabase
     .from('url_items')
     .insert(insertData)
@@ -157,9 +276,11 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
     .single()
 
   if (error) {
+    console.error('❌ Error saving item to database:', error.message)
     throw error
   }
 
+  console.log('✅ Item created successfully')
   return {
     id: data.id,
     url: data.url,
@@ -194,8 +315,23 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
 }
 
 export async function updateUrlItem(item: UrlListItem) {
+  console.log('📝 Updating URL item:', item.id)
   const supabase = createClient()
+
+  // If the image URL has changed, upload the new image
+  let imageUrl = item.imageUrl
+  if (item.imageUrl && !item.imageUrl.startsWith('https://')) {
+    console.log('🖼️ New image URL detected, attempting to upload...')
+    const storedImageUrl = await uploadImageToStorage(item.imageUrl)
+    if (storedImageUrl) {
+      console.log('✅ New image uploaded successfully')
+      imageUrl = storedImageUrl
+    } else {
+      console.log('⚠️ Failed to upload new image, keeping original URL')
+    }
+  }
   
+  console.log('💾 Updating item in database...')
   const { data, error } = await supabase
     .from('url_items')
     .update({
@@ -212,7 +348,7 @@ export async function updateUrlItem(item: UrlListItem) {
       place_website: item.place?.website,
       place_phone_number: item.place?.phoneNumber,
       place_opening_hours: item.place?.openingHours,
-      image_url: item.imageUrl,
+      image_url: imageUrl,
       title: item.title,
       description: item.description,
       notes: item.notes,
@@ -226,9 +362,11 @@ export async function updateUrlItem(item: UrlListItem) {
     .single()
 
   if (error) {
+    console.error('❌ Error updating item:', error.message)
     throw error
   }
 
+  console.log('✅ Item updated successfully')
   return {
     id: data.id,
     url: data.url,

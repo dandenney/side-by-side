@@ -11,6 +11,7 @@ const nextConfig = {
         hostname: '**',
       },
     ],
+    domains: ['irrrwoauazazkoszoled.supabase.co'],
   },
 }
 
