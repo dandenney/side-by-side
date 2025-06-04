@@ -893,16 +893,6 @@ export function UrlList({
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
               className="fixed left-4 right-4 top-1/4 w-[calc(100%-2rem)] lg:max-w-md lg:left-1/2 lg:-translate-x-1/2 bg-white rounded-2xl shadow-xl p-4 z-50"
               style={{ maxWidth: '28rem' }}
-              data-modal-debug
-              onUpdate={(latest) => {
-                console.log('Modal animation values:', {
-                  width: latest.width,
-                  height: latest.height,
-                  scale: latest.scale,
-                  x: latest.x,
-                  y: latest.y
-                })
-              }}
             >
               <form onSubmit={addItem} className="flex flex-col gap-4 relative">
                 <div className="flex gap-2">
