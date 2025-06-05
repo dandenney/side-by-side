@@ -1,59 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
-import { UrlListItem, Tag, Place } from '@/types/url-list'
-import { SHARED_LIST_ID } from '@/lib/constants'
-
-interface UrlItem {
-  id: number
-  url: string
-  image_url?: string
-  title?: string
-  description?: string
-  notes?: string
-  list_type: string
-  list_id: string
-  created_at: string
-  updated_at: string
-  archived: boolean
-  place_id?: string
-  place_name?: string
-  place_address?: string
-  place_lat?: number
-  place_lng?: number
-  place_types?: string[]
-  place_rating?: number
-  place_user_ratings_total?: number
-  place_price_level?: number
-  place_website?: string
-  place_phone_number?: string
-  place_opening_hours?: any
-  date_range_start?: string
-  date_range_end?: string
-}
-
-interface UrlItemInsert {
-  url: string
-  image_url?: string
-  title?: string
-  description?: string
-  notes?: string
-  list_type: string
-  list_id: string
-  archived?: boolean
-  place_id?: string
-  place_name?: string
-  place_address?: string
-  place_lat?: number
-  place_lng?: number
-  place_types?: string[]
-  place_rating?: number
-  place_user_ratings_total?: number
-  place_price_level?: number
-  place_website?: string
-  place_phone_number?: string
-  place_opening_hours?: any
-  date_range_start?: string
-  date_range_end?: string
-}
+import { UrlListItem, Place } from '@/types/url-list'
 
 interface SupabaseUrlItem {
   id: string
@@ -108,27 +54,20 @@ const localToUtcDate = (localDate: string) => {
 }
 
 async function uploadImageToStorage(imageUrl: string): Promise<string | null> {
-  console.log('🖼️ Starting image upload process for URL:', imageUrl)
   try {
-    // Download the image through our API route
-    console.log('📥 Downloading image through API route...')
     const response = await fetch(`/api/fetch-image?url=${encodeURIComponent(imageUrl)}`)
     
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      console.error('❌ Failed to download image:', errorData.error || response.statusText)
       return null
     }
 
     const blob = await response.blob()
-    console.log('✅ Image downloaded successfully')
 
     // Upload to Supabase storage
     const supabase = createClient()
     const fileName = `url-image-${Date.now()}.jpg`
-    console.log('📤 Uploading to Supabase Storage as:', fileName)
     
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('url-images')
       .upload(fileName, blob, {
         contentType: blob.type,
@@ -137,7 +76,6 @@ async function uploadImageToStorage(imageUrl: string): Promise<string | null> {
       })
 
     if (error) {
-      console.error('❌ Failed to upload image:', error)
       return null
     }
 
@@ -146,11 +84,8 @@ async function uploadImageToStorage(imageUrl: string): Promise<string | null> {
       .from('url-images')
       .getPublicUrl(fileName)
 
-    console.log('✅ Image uploaded successfully to Supabase')
-    console.log('🔗 Public URL:', publicUrl)
     return publicUrl
   } catch (error) {
-    console.error('❌ Unexpected error during image upload:', error)
     return null
   }
 }
@@ -225,7 +160,6 @@ export async function getUrlItems(listType: 'local' | 'shared', listId: string) 
 }
 
 export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' | 'updatedAt'>) {
-  console.log('📝 Creating new URL item with image:', item.imageUrl ? 'Yes' : 'No')
   const supabase = createClient()
   
   // Store image if provided
@@ -287,8 +221,6 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
     console.error('❌ Error creating item:', error.message)
     throw error
   }
-
-  console.log('✅ Item created successfully')
   
   // Transform the data back to UrlListItem type
   const urlItem = data as SupabaseUrlItemWithTags
@@ -333,23 +265,19 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
 }
 
 export async function updateUrlItem(item: UrlListItem) {
-  console.log('📝 Updating URL item:', item.id)
   const supabase = createClient()
 
   // If the image URL has changed, upload the new image
   let imageUrl = item.imageUrl
   if (item.imageUrl && !item.imageUrl.startsWith('https://')) {
-    console.log('🖼️ New image URL detected, attempting to upload...')
     const storedImageUrl = await uploadImageToStorage(item.imageUrl)
     if (storedImageUrl) {
-      console.log('✅ New image uploaded successfully')
       imageUrl = storedImageUrl
     } else {
       console.log('⚠️ Failed to upload new image, keeping original URL')
     }
   }
   
-  console.log('💾 Updating item in database...')
   const { data, error } = await supabase
     .from('url_items')
     .update({
@@ -392,11 +320,8 @@ export async function updateUrlItem(item: UrlListItem) {
     .single()
 
   if (error) {
-    console.error('❌ Error updating item:', error.message)
     throw error
   }
-
-  console.log('✅ Item updated successfully')
   
   // Transform the data back to UrlListItem type
   const urlItem = data as SupabaseUrlItemWithTags

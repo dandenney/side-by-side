@@ -46,7 +46,7 @@ export default function LocalList() {
   }
 
   return (
-    <main className="bg-purple-100 h-[100dvh]">
+    <main className="bg-purple-100 min-h-[100dvh] pb-24">
       <div className="p-4 space-y-4">
         <div className="flex justify-between items-center">
           <div className="flex gap-2">

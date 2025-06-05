@@ -17,8 +17,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.className}`}>
+    <html className="overscroll-none"  lang="en">
+      <body className={`${inter.className} overscroll-none`}>
         <AuthProvider>
           <Migration />
           {children}

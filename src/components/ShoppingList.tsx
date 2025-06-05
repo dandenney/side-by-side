@@ -362,7 +362,7 @@ export function ShoppingList({
   }
 
   return (
-    <div className={`bg-gradient-to-b ${gradientFrom} ${gradientTo} h-full flex flex-col`}>
+    <div className={`bg-gradient-to-b ${gradientFrom} ${gradientTo} h-full flex flex-col min-h-[100dvh]`}>
       {/* List Items */}
       <div className="flex-1 overflow-y-auto px-4 pb-24">
         <div className="max-w-lg mx-auto space-y-2 pt-4">

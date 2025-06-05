@@ -8,7 +8,6 @@ export async function POST(req: NextRequest) {
     const supabase = createClient()
 
     // Download the image
-    console.log('Downloading image from:', imageUrl)
     const response = await fetch(imageUrl)
     if (!response.ok) {
       console.error('Failed to fetch image:', response.statusText)
@@ -17,11 +16,9 @@ export async function POST(req: NextRequest) {
 
     const arrayBuffer = await response.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
-    console.log('Image downloaded, size:', buffer.length)
 
     // Upload to Supabase Storage
     const fileName = `test-image-${Date.now()}.jpg`
-    console.log('Uploading to Supabase as:', fileName)
     
     const { data, error } = await supabase.storage
       .from('url-images')
@@ -40,7 +37,6 @@ export async function POST(req: NextRequest) {
       .from('url-images')
       .getPublicUrl(fileName)
 
-    console.log('Upload successful, public URL:', publicUrlData.publicUrl)
     return NextResponse.json({ 
       success: true, 
       url: publicUrlData.publicUrl,

@@ -238,7 +238,7 @@ export default function UpcomingList() {
             ) : (
               items.map((item, index) => (
                 <div key={index}>
-                  <div className="bg-blue-100 -mb-2 pb-4 pt-2 px-4 rounded-t-lg shadow-sm">
+                  <div className="bg-blue-100 -mb-2 pb-4 pt-2 px-4 rounded-t-2xl shadow-sm">
                     <div className="flex items-center gap-2 text-blue-800">
                       <CalendarIcon className="w-4 h-4" />
                       <span className="text-blue-800 text-xs font-semibold uppercase">{formatDateDifference(item.startDate)}</span>

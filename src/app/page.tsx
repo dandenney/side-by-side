@@ -96,7 +96,7 @@ export default function HomePage() {
         </div>
       </nav>
 
-      <main className="bg-blue-50 pb-20 px-4">
+      <main className="bg-blue-50 pb-20 px-4 min-h-[calc(100dvh-64px)]">
         <UpcomingList />
       </main>
     </div>
