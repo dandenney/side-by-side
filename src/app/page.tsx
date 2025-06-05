@@ -36,7 +36,7 @@ function PageCard({ title, description, href, icon, gradientFrom, gradientTo }: 
 }
 
 export default function HomePage() {
-  const { user, loading, signOut } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -77,28 +77,8 @@ export default function HomePage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold">Side by Side</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => signOut()}
-                className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
-              >
-                Sign out
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main className="bg-blue-50 pb-20 px-4 min-h-[calc(100dvh-64px)]">
-        <UpcomingList />
-      </main>
-    </div>
+    <main className="bg-blue-50 pb-20 px-4 min-h-[100dvh]">
+      <UpcomingList />
+    </main>
   )
 }

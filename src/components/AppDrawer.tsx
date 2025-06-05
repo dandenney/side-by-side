@@ -4,9 +4,11 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MapPin, Menu, X, ShoppingBasket, Link as LinkIcon, BellElectric } from 'lucide-react'
 import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function AppDrawer() {
   const [isOpen, setIsOpen] = useState(false)
+  const { signOut } = useAuth()
 
   const menuItems = [
     { icon: ShoppingBasket, label: 'Groceries', href: '/groceries' },
@@ -42,10 +44,16 @@ export default function AppDrawer() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 20 }}
-              className="fixed left-0 bottom-0 right-0 bg-white rounded-t-2xl shadow-xl z-50"
+              className="fixed left-0 bottom-0 right-0 bg-white max-w-md mx-auto rounded-t-2xl shadow-xl z-50"
             >
               <div className="p-4 border-b">
                 <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => signOut()}
+                    className="rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                  >
+                    Sign out
+                  </button>
                   <h2 className="text-lg font-semibold">Side by Side</h2>
                   <button
                     onClick={() => setIsOpen(false)}
