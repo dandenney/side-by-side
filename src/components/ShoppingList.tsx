@@ -552,7 +552,7 @@ export function ShoppingList({
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              className="fixed left-4 right-4 top-1/4 bg-white rounded-2xl shadow-xl p-4 z-50 max-w-md mx-auto"
+              className="fixed left-4 right-4 top-1/4 bg-white rounded-2xl shadow-xl p-4 z-50 max-w-md mx-auto max-h-[80vh] overflow-y-auto"
             >
               <form onSubmit={addItem} className="flex flex-col gap-4">
                 <div className="flex gap-2">

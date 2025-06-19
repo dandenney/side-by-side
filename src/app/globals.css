@@ -88,4 +88,27 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Prevent mobile auto-zoom on inputs */
+  input[type="text"],
+  input[type="url"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+  
+  /* Ensure modals are properly sized for mobile */
+  @media (max-width: 640px) {
+    .modal-content {
+      max-height: 90vh;
+      overflow-y: auto;
+      margin: 1rem;
+      width: calc(100% - 2rem);
+    }
+  }
 } 

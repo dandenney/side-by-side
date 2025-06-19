@@ -620,223 +620,183 @@ export function UrlList({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 "
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
           >
             <motion.div
               variants={modalContentVariants}
               initial="initial"
               animate="animate"
               exit="exit"
-              className="w-full max-w-4xl mx-auto lg:py-4 overflow-y-auto max-h-[90vh]"
+              className="w-full max-w-4xl mx-auto bg-white rounded-2xl overflow-hidden max-h-[90vh] flex flex-col"
               layoutId={`card-${selectedItem.id}`}
               style={{ width: '100%', maxWidth: '56rem' }}
             >
               {editingItem?.id === selectedItem.id ? (
-                <div className="bg-white p-6 space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Image URL
-                    </label>
-                    <input
-                      type="url"
-                      value={editingItem.imageUrl}
-                      onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Image URL"
-                    />
-                  </div>
+                <div className="flex flex-col h-full">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Image URL
+                      </label>
+                      <input
+                        type="url"
+                        value={editingItem.imageUrl}
+                        onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Image URL"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Title
-                    </label>
-                    <input
-                      type="text"
-                      value={editingItem.title}
-                      onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Title"
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Title
+                      </label>
+                      <input
+                        type="text"
+                        value={editingItem.title}
+                        onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Title"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Description
-                    </label>
-                    <input
-                      type="text"
-                      value={editingItem.description}
-                      onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Description"
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Description
+                      </label>
+                      <input
+                        type="text"
+                        value={editingItem.description}
+                        onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Description"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Tags</label>
-                    <TagInput
-                      existingTags={tags}
-                      selectedTags={editingItem.tags}
-                      onTagSelect={handleTagSelect}
-                      onTagRemove={handleTagRemove}
-                      onCreateTag={handleCreateTag}
-                      listType={listType}
-                      listId={listId}
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Tags</label>
+                      <TagInput
+                        existingTags={tags}
+                        selectedTags={editingItem.tags}
+                        onTagSelect={handleTagSelect}
+                        onTagRemove={handleTagRemove}
+                        onCreateTag={handleCreateTag}
+                        listType={listType}
+                        listId={listId}
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Notes
-                    </label>
-                    <textarea
-                      value={editingItem.notes || ''}
-                      onChange={(e) => setEditingItem({ ...editingItem, notes: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={3}
-                      placeholder="Notes (optional)"
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Notes
+                      </label>
+                      <textarea
+                        value={editingItem.notes || ''}
+                        onChange={(e) => setEditingItem({ ...editingItem, notes: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows={3}
+                        placeholder="Notes (optional)"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Start Date
-                    </label>
-                    <input
-                      type="date"
-                      value={editingItem.dateRange?.start || ''}
-                      onChange={(e) => {
-                        const dateStr = e.target.value
-                        if (!dateStr) {
-                          setEditingItem({
-                            ...editingItem,
-                            dateRange: undefined
-                          })
-                          return
-                        }
-                        setEditingItem({
-                          ...editingItem,
-                          dateRange: {
-                            start: dateStr,
-                            end: editingItem.dateRange?.end || dateStr
-                          }
-                        })
-                      }}
-                      className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      End Date
-                    </label>
-                    <input
-                      type="date"
-                      value={editingItem.dateRange?.end || ''}
-                      onChange={(e) => {
-                        const dateStr = e.target.value
-                        if (!dateStr) {
-                          setEditingItem({
-                            ...editingItem,
-                            dateRange: undefined
-                          })
-                          return
-                        }
-                        setEditingItem({
-                          ...editingItem,
-                          dateRange: {
-                            start: editingItem.dateRange?.start || dateStr,
-                            end: dateStr
-                          }
-                        })
-                      }}
-                      className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => setEditingItem(null)}
-                      className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() => handleSaveEdit()}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-2xl hover:bg-blue-600"
-                    >
-                      Save
-                    </button>
+                    <div className="flex gap-2 pt-4">
+                      <button
+                        onClick={handleSaveEdit}
+                        className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={handleCloseModal}
+                        className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-2xl hover:bg-gray-300 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (
-                  <div className="bg-white flex flex-col rounded-2xl xl:max-w-md xl:mx-auto">
-                  <div className='pt-4 px-4'>
-                    {selectedItem.imageUrl ? (
-                      <motion.div
-                        className="aspect-square relative shrink-0"
-                        layoutId={`image-${selectedItem.id}`}
-                        transition={{
-                          layout: {
-                            duration: 0.3,
-                            ease: "easeInOut"
-                          }
-                        }}
+                <div className="flex flex-col h-full">
+                  {selectedItem.imageUrl && (
+                    <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
+                      <img
+                        src={selectedItem.imageUrl}
+                        alt={selectedItem.title}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                    <div className="flex justify-between items-start">
+                      <h2 className="text-xl font-semibold">{selectedItem.title}</h2>
+                      <button
+                        onClick={handleCloseModal}
+                        className="text-gray-500 hover:text-gray-700 p-2"
                       >
-                        <Image
-                          src={selectedItem.imageUrl}
-                          alt={selectedItem.title}
-                          fill
-                          className="object-cover rounded-2xl"
-                        />
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        className="relative w-full bg-gray-100"
-                        layoutId={`image-${selectedItem.id}`}
-                        transition={{
-                          layout: {
-                            duration: 0.3,
-                            ease: "easeInOut"
-                          }
-                        }}
-                      >
-                        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                          <ImageIcon className="w-12 h-12" />
-                        </div>
-                      </motion.div>
-                    )}
-                  </div>
-                  <div className="pb-6 pt-4 px-4 space-y-4">
-                    <div>
-                      <motion.h3
-                        className={`font-semibold ${textColor} text-2xl`}
-                        layoutId={`title-${selectedItem.id}`}
-                      >
-                        {selectedItem.title}
-                      </motion.h3>
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
                       {selectedItem.description && (
                         <p className="text-gray-600">{selectedItem.description}</p>
                       )}
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      {selectedItem.place && <StarRating defaultValue={selectedItem.place.rating} size='sm' />}
-                      {selectedItem.place?.priceLevel && (
-                        <div className="flex gap-2">
-                          {Array(selectedItem.place.priceLevel).fill('💵').map((emoji, index) => (
-                            <span className='text-xl' key={index}>{emoji}</span>
+
+                      {selectedItem.tags && selectedItem.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {selectedItem.tags.map(tag => (
+                            <span
+                              key={tag.id}
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600"
+                            >
+                              <TagIcon className="w-3 h-3" />
+                              {tag.name}
+                            </span>
                           ))}
                         </div>
                       )}
+
+                      {selectedItem.notes && (
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-700 mb-1">Notes</h3>
+                          <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-2xl">
+                            {selectedItem.notes}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="space-y-2 text-sm text-gray-500">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          <span>
+                            Added {formatDate(selectedItem.createdAt.toISOString().split('T')[0])}
+                          </span>
+                        </div>
+
+                        {selectedItem.url && (
+                          <div className="flex items-center gap-2">
+                            <Link className="w-4 h-4" />
+                            <a
+                              href={selectedItem.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:underline"
+                            >
+                              Visit Website
+                            </a>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <nav className="bg-slate-100 border-t border-slate-200 flex justify-between rounded-b-2xl">
+
+                  <nav className="bg-slate-100 border-t border-slate-200 flex justify-between rounded-b-2xl p-2">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         deleteItem(e, selectedItem.id);
                       }}
-                      className="p-4 hover:bg-gray-100 rounded-full"
+                      className="p-3 hover:bg-gray-100 rounded-full"
                     >
                       <Trash2 className="w-5 h-5 text-gray-400" />
                     </button>
@@ -845,7 +805,7 @@ export function UrlList({
                         e.stopPropagation();
                         startEdit(e, selectedItem);
                       }}
-                      className="p-4 hover:bg-gray-100 rounded-full"
+                      className="p-3 hover:bg-gray-100 rounded-full"
                     >
                       <Edit2 className="w-5 h-5 text-gray-400" />
                     </button>
@@ -854,14 +814,14 @@ export function UrlList({
                         href={selectedItem.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline inline-flex items-center gap-2 p-4"
+                        className="text-blue-500 hover:underline inline-flex items-center gap-2 p-3"
                       >
                         <Link className="w-4 h-4" />
                       </a>
                     )}
                     <button
                       onClick={handleCloseModal}
-                      className="p-4"
+                      className="p-3"
                     >
                       <X className="w-5 h-5 text-gray-400" />
                     </button>
@@ -891,7 +851,7 @@ export function UrlList({
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              className="fixed left-4 right-4 top-1/4 w-[calc(100%-2rem)] lg:max-w-md lg:left-1/2 lg:-translate-x-1/2 bg-white rounded-2xl shadow-xl p-4 z-50"
+              className="fixed left-4 right-4 top-1/4 w-[calc(100%-2rem)] lg:max-w-md lg:left-1/2 lg:-translate-x-1/2 bg-white rounded-2xl shadow-xl p-4 z-50 max-h-[80vh] overflow-y-auto"
               style={{ maxWidth: '28rem' }}
             >
               <form onSubmit={addItem} className="flex flex-col gap-4 relative">

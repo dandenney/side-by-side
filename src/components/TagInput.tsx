@@ -108,7 +108,7 @@ export default function TagInput({
             onChange={(e) => setInputValue(e.target.value)}
             onFocus={() => setIsOpen(true)}
             placeholder={placeholder}
-            className="flex-1 bg-transparent border-none outline-none text-sm"
+            className="flex-1 bg-transparent border-none outline-none text-base"
           />
         </div>
 

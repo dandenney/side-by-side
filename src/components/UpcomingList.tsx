@@ -298,33 +298,33 @@ export default function UpcomingList() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
           >
             <motion.div
               variants={modalContentVariants}
               initial="initial"
               animate="animate"
               exit="exit"
-              className="w-full max-w-4xl mx-auto lg:py-4 overflow-y-auto max-h-[90vh]"
+              className="w-full max-w-4xl mx-auto bg-white rounded-2xl overflow-hidden max-h-[90vh] flex flex-col"
               layoutId={`card-${selectedItem.id}`}
               style={{ width: '100%', maxWidth: '56rem' }}
             >
-              <div className="flex flex-col bg-white rounded-2xl">
+              <div className="flex flex-col h-full">
                 {selectedItem.imageUrl && (
                   <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
                     <img
                       src={selectedItem.imageUrl}
                       alt={selectedItem.title}
-                      className="object-cover w-full h-full rounded-t-2xl"
+                      className="object-cover w-full h-full"
                     />
                   </div>
                 )}
-                <div className="p-6 space-y-4">
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
                   <div className="flex justify-between items-start">
                     <h2 className="text-xl font-semibold">{selectedItem.title}</h2>
                     <button
                       onClick={handleCloseModal}
-                      className="text-gray-500 hover:text-gray-700"
+                      className="text-gray-500 hover:text-gray-700 p-2"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -365,23 +365,47 @@ export default function UpcomingList() {
                         </div>
                       )}
                     </div>
-
-                    <div className="flex justify-end gap-2 pt-4">
-                      <button
-                        onClick={() => handleEdit(selectedItem)}
-                        className="px-3 py-1 text-gray-600 hover:text-gray-800"
-                      >
-                        <Edit2 className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(selectedItem.id)}
-                        className="px-3 py-1 text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </div>
                   </div>
                 </div>
+
+                <nav className="bg-slate-100 border-t border-slate-200 flex justify-between rounded-b-2xl p-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteUpcomingEvent(selectedItem.id);
+                      handleCloseModal();
+                    }}
+                    className="p-3 hover:bg-gray-100 rounded-full"
+                  >
+                    <Trash2 className="w-5 h-5 text-gray-400" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(selectedItem);
+                      handleCloseModal();
+                    }}
+                    className="p-3 hover:bg-gray-100 rounded-full"
+                  >
+                    <Edit2 className="w-5 h-5 text-gray-400" />
+                  </button>
+                  {selectedItem.url && (
+                    <a
+                      href={selectedItem.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline inline-flex items-center gap-2 p-3"
+                    >
+                      <Link className="w-4 h-4" />
+                    </a>
+                  )}
+                  <button
+                    onClick={handleCloseModal}
+                    className="p-3"
+                  >
+                    <X className="w-5 h-5 text-gray-400" />
+                  </button>
+                </nav>
               </div>
             </motion.div>
           </motion.div>
@@ -395,13 +419,13 @@ export default function UpcomingList() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 w-full max-w-md"
+              className="bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
             >
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">
