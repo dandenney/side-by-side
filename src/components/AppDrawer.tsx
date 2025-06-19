@@ -44,7 +44,7 @@ export default function AppDrawer() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 20 }}
-              className="fixed left-0 bottom-0 right-0 bg-white max-w-md mx-auto rounded-t-2xl shadow-xl z-50"
+              className="fixed left-0 bottom-0 right-0 bg-white max-w-md mx-auto rounded-t-2xl shadow-xl z-50 max-h-[80vh] overflow-y-auto"
             >
               <div className="p-4 border-b">
                 <div className="flex items-center justify-between">

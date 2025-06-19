@@ -118,26 +118,26 @@ export default function TagInput({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute z-10 w-full mt-2 bg-white rounded-2xl shadow-lg border border-gray-200"
+              className="absolute z-10 w-full mt-2 bg-white rounded-2xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto"
             >
-              <div className="max-h-60 overflow-y-auto p-2">
+              <div className="p-2">
                 {filteredTags.length > 0 ? (
                   filteredTags.map(tag => (
                     <div
                       key={tag.id}
                       onClick={() => handleSelectTag(tag)}
-                      className="flex items-center justify-between p-2 hover:bg-gray-100 rounded-2xl cursor-pointer"
+                      className="flex items-center justify-between p-3 hover:bg-gray-100 rounded-2xl cursor-pointer"
                     >
-                      <span className="text-sm">{tag.name}</span>
+                      <span className="text-base">{tag.name}</span>
                       <Check className="w-4 h-4 text-green-500" />
                     </div>
                   ))
                 ) : (
                   <div
                     onClick={handleCreateTag}
-                    className="p-2 hover:bg-gray-100 rounded-2xl cursor-pointer"
+                    className="p-3 hover:bg-gray-100 rounded-2xl cursor-pointer"
                   >
-                    <span className="text-sm text-gray-500">
+                    <span className="text-base text-gray-500">
                       Create "{inputValue}"
                     </span>
                   </div>
