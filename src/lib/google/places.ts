@@ -29,15 +29,15 @@ export interface PlaceDetailsResult extends PlaceSearchResult {
 }
 
 export async function searchPlaces(query: string): Promise<PlaceSearchResult[]> {
-  if (!process.env.GOOGLE_MAPS_API_KEY) {
-    throw new Error('Google Maps API key is not configured')
+  if (!process.env.GOOGLE_MAPS_API_SERVER_KEY) {
+    throw new Error('Google Maps API server key is not configured')
   }
 
   try {
     const response = await client.textSearch({
       params: {
         query,
-        key: process.env.GOOGLE_MAPS_API_KEY,
+        key: process.env.GOOGLE_MAPS_API_SERVER_KEY,
       },
     })
 
@@ -73,15 +73,15 @@ export async function searchPlaces(query: string): Promise<PlaceSearchResult[]> 
 }
 
 export async function getPlaceDetails(placeId: string): Promise<PlaceDetailsResult> {
-  if (!process.env.GOOGLE_MAPS_API_KEY) {
-    throw new Error('Google Maps API key is not configured')
+  if (!process.env.GOOGLE_MAPS_API_SERVER_KEY) {
+    throw new Error('Google Maps API server key is not configured')
   }
 
   try {
     const response = await client.placeDetails({
       params: {
         place_id: placeId,
-        key: process.env.GOOGLE_MAPS_API_KEY,
+        key: process.env.GOOGLE_MAPS_API_SERVER_KEY,
         fields: ['name', 'formatted_address', 'geometry', 'website', 'formatted_phone_number', 'opening_hours', 'photos']
       },
     })
@@ -92,7 +92,7 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceDetailsResu
 
     const place = response.data.result
     const photoUrl = place.photos?.[0]?.photo_reference 
-      ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${place.photos[0].photo_reference}&key=${process.env.GOOGLE_MAPS_API_KEY}`
+      ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${place.photos[0].photo_reference}&key=${process.env.GOOGLE_MAPS_API_SERVER_KEY}`
       : undefined
 
     return {

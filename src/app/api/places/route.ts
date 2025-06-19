@@ -42,6 +42,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Missing query or placeId parameter' }, { status: 400 })
   }
 
+  // Debug: Check if API key is available
+  if (!process.env.GOOGLE_MAPS_API_SERVER_KEY) {
+    console.error('GOOGLE_MAPS_API_SERVER_KEY is not set')
+    return NextResponse.json(
+      { error: 'Google Maps API server key is not configured' },
+      { status: 500 }
+    )
+  }
+
   try {
     if (placeId) {
       const place = await getPlaceDetails(placeId)
@@ -54,7 +63,9 @@ export async function GET(request: Request) {
     console.error('Detailed error in places API:', {
       message: error.message,
       stack: error.stack,
-      details: error.response?.data || error.response || error
+      details: error.response?.data || error.response || error,
+      apiKeyExists: !!process.env.GOOGLE_MAPS_API_SERVER_KEY,
+      apiKeyLength: process.env.GOOGLE_MAPS_API_SERVER_KEY?.length
     })
     return NextResponse.json(
       { error: error.message || 'Failed to fetch place data' },
