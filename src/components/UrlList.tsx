@@ -856,7 +856,7 @@ export function UrlList({
             >
               <form onSubmit={addItem} className="flex flex-col gap-4 relative">
                 <div className="flex gap-2">
-                  <div className="flex-1">
+                  <div className="flex-1 relative">
                     <input
                       type={inputType === 'url' ? 'url' : 'text'}
                       value={newUrl}
@@ -872,12 +872,12 @@ export function UrlList({
                       </div>
                     )}
                     {inputType === 'place' && newUrl.length < 4 && newUrl.length > 0 && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border rounded-2xl shadow-lg p-3 text-sm text-gray-500">
+                      <div className="absolute z-[60] w-full mt-1 bg-white border rounded-2xl shadow-lg p-3 text-sm text-gray-500">
                         Please enter at least 4 characters to search...
                       </div>
                     )}
                     {inputType === 'place' && searchResults.length > 0 && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border rounded-2xl shadow-lg max-h-60 overflow-y-auto transform translate-y-full bottom-0">
+                      <div className="absolute z-[60] w-full mt-1 bg-white border rounded-2xl shadow-lg max-h-60 overflow-y-auto top-full">
                         {searchResults.map((place) => (
                           <button
                             key={place.placeId}
