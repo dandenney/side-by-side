@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils'
 import { DateRange } from 'react-day-picker'
 import AppDrawer from './AppDrawer'
+import Image from 'next/image'
 
 const formatDate = (dateStr: string) => {
   const [year, month, day] = dateStr.split('-')
@@ -312,10 +313,12 @@ export default function UpcomingList() {
               <div className="flex flex-col h-full">
                 {selectedItem.imageUrl && (
                   <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
-                    <img
+                    <Image
                       src={selectedItem.imageUrl}
                       alt={selectedItem.title}
-                      className="object-cover w-full h-full"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   </div>
                 )}

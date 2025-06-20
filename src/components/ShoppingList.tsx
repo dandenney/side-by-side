@@ -47,7 +47,7 @@ export function ShoppingList({
   const [loading, setLoading] = useState(true)
 
   const { user } = useAuth()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const hasCheckedItems = useMemo(() => items.some(item => item.checked), [items])
 
@@ -120,7 +120,7 @@ export function ShoppingList({
     }
 
     initializeList()
-  }, [user])
+  }, [user, supabase])
 
   const addItem = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -743,10 +743,12 @@ export function UrlList({
                         style={{ aspectRatio: '16/9' }}
                         layoutId={`image-${selectedItem.id}`}
                       >
-                        <img
+                        <Image
                           src={selectedItem.imageUrl}
                           alt={selectedItem.title}
-                          className="object-cover w-full h-full"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                       </motion.div>
                     )}

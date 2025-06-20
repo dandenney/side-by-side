@@ -138,7 +138,7 @@ export default function TagInput({
                     className="p-3 hover:bg-gray-100 rounded-2xl cursor-pointer"
                   >
                     <span className="text-base text-gray-500">
-                      Create "{inputValue}"
+                      Create &ldquo;{inputValue}&rdquo;
                     </span>
                   </div>
                 )}

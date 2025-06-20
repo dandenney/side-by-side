@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Place } from '@/types/url-list'
 import { MapPin, Link, Star } from 'lucide-react'
 
@@ -12,26 +12,7 @@ export function PlaceMap({ places, className = '', onPlaceClick }: PlaceMapProps
   const [mapLoaded, setMapLoaded] = useState(false)
   const [mapError, setMapError] = useState<string | null>(null)
 
-  useEffect(() => {
-    // Load Google Maps script
-    const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
-    script.async = true
-    script.onload = () => {
-      setMapLoaded(true)
-      initializeMap()
-    }
-    script.onerror = () => {
-      setMapError('Failed to load Google Maps')
-    }
-    document.head.appendChild(script)
-
-    return () => {
-      document.head.removeChild(script)
-    }
-  }, [])
-
-  const initializeMap = () => {
+  const initializeMap = useCallback(() => {
     if (typeof google === 'undefined') return
 
     const mapElement = document.getElementById('map')
@@ -119,7 +100,26 @@ export function PlaceMap({ places, className = '', onPlaceClick }: PlaceMapProps
       map.setCenter({ lat: 0, lng: 0 })
       map.setZoom(2)
     }
-  }
+  }, [places, onPlaceClick])
+
+  useEffect(() => {
+    // Load Google Maps script
+    const script = document.createElement('script')
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+    script.async = true
+    script.onload = () => {
+      setMapLoaded(true)
+      initializeMap()
+    }
+    script.onerror = () => {
+      setMapError('Failed to load Google Maps')
+    }
+    document.head.appendChild(script)
+
+    return () => {
+      document.head.removeChild(script)
+    }
+  }, [initializeMap])
 
   if (mapError) {
     return (
