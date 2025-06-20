@@ -621,6 +621,7 @@ export function UrlList({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            onClick={handleCloseModal}
           >
             <motion.div
               variants={modalContentVariants}
@@ -630,6 +631,7 @@ export function UrlList({
               className="w-full max-w-4xl mx-auto bg-white rounded-2xl overflow-hidden max-h-[90vh] flex flex-col"
               layoutId={`card-${selectedItem.id}`}
               style={{ width: '100%', maxWidth: '56rem' }}
+              onClick={(e) => e.stopPropagation()}
             >
               {editingItem?.id === selectedItem.id ? (
                 <div className="flex flex-col h-full">
@@ -717,80 +719,103 @@ export function UrlList({
                 </div>
               ) : (
                 <div className="flex flex-col h-full">
-                  {selectedItem.imageUrl && (
-                    <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
-                      <img
-                        src={selectedItem.imageUrl}
-                        alt={selectedItem.title}
-                        className="object-cover w-full h-full"
-                      />
-                    </div>
-                  )}
-                  <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                    <div className="flex justify-between items-start">
-                      <h2 className="text-xl font-semibold">{selectedItem.title}</h2>
-                      <button
-                        onClick={handleCloseModal}
-                        className="text-gray-500 hover:text-gray-700 p-2"
+                  {/* Header with close button - always visible */}
+                  <div className="flex justify-between items-start p-4 border-b border-gray-200 flex-shrink-0">
+                    <motion.h2 
+                      className="text-xl font-semibold pr-4"
+                      layoutId={`title-${selectedItem.id}`}
+                    >
+                      {selectedItem.title}
+                    </motion.h2>
+                    <button
+                      onClick={handleCloseModal}
+                      className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full flex-shrink-0"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Scrollable content area */}
+                  <div className="flex-1 overflow-y-auto">
+                    {selectedItem.imageUrl && (
+                      <motion.div 
+                        className="relative w-full" 
+                        style={{ aspectRatio: '16/9' }}
+                        layoutId={`image-${selectedItem.id}`}
                       >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
+                        <img
+                          src={selectedItem.imageUrl}
+                          alt={selectedItem.title}
+                          className="object-cover w-full h-full"
+                        />
+                      </motion.div>
+                    )}
+                    
+                    <div className="p-6 space-y-4">
+                      <div className="space-y-4">
+                        {selectedItem.description && (
+                          <p className="text-gray-600">{selectedItem.description}</p>
+                        )}
 
-                    <div className="space-y-4">
-                      {selectedItem.description && (
-                        <p className="text-gray-600">{selectedItem.description}</p>
-                      )}
-
-                      {selectedItem.tags && selectedItem.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {selectedItem.tags.map(tag => (
-                            <span
-                              key={tag.id}
-                              className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600"
-                            >
+                        <motion.div 
+                          className="flex flex-wrap gap-2"
+                          layoutId={`tags-${selectedItem.id}`}
+                        >
+                          {selectedItem.tags && selectedItem.tags.length > 0 ? (
+                            selectedItem.tags.map(tag => (
+                              <span
+                                key={tag.id}
+                                className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600"
+                              >
+                                <TagIcon className="w-3 h-3" />
+                                {tag.name}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-400">
                               <TagIcon className="w-3 h-3" />
-                              {tag.name}
+                              Untagged
                             </span>
-                          ))}
-                        </div>
-                      )}
+                          )}
+                        </motion.div>
 
-                      {selectedItem.notes && (
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-700 mb-1">Notes</h3>
-                          <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-2xl">
-                            {selectedItem.notes}
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="space-y-2 text-sm text-gray-500">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          <span>
-                            Added {formatDate(selectedItem.createdAt.toISOString().split('T')[0])}
-                          </span>
-                        </div>
-
-                        {selectedItem.url && (
-                          <div className="flex items-center gap-2">
-                            <Link className="w-4 h-4" />
-                            <a
-                              href={selectedItem.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-500 hover:underline"
-                            >
-                              Visit Website
-                            </a>
+                        {selectedItem.notes && (
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-700 mb-1">Notes</h3>
+                            <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-2xl">
+                              {selectedItem.notes}
+                            </p>
                           </div>
                         )}
+
+                        <div className="space-y-2 text-sm text-gray-500">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            <span>
+                              Added {formatDate(selectedItem.createdAt.toISOString().split('T')[0])}
+                            </span>
+                          </div>
+
+                          {selectedItem.url && (
+                            <div className="flex items-center gap-2">
+                              <Link className="w-4 h-4" />
+                              <a
+                                href={selectedItem.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:underline"
+                              >
+                                Visit Website
+                              </a>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <nav className="bg-slate-100 border-t border-slate-200 flex justify-between rounded-b-2xl p-2">
+                  {/* Footer navigation - always visible */}
+                  <nav className="bg-slate-100 border-t border-slate-200 flex justify-between rounded-b-2xl p-2 flex-shrink-0">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
