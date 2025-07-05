@@ -225,12 +225,7 @@ export function ShoppingList({
     }
   }
 
-  const handleEditBlur = (e: React.FocusEvent) => {
-    // Only save if the blur event is not caused by clicking on the store selector
-    if (!e.relatedTarget || !e.relatedTarget.closest('.store-selector')) {
-      saveEdit()
-    }
-  }
+
 
   const deleteItem = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
@@ -400,7 +395,6 @@ export function ShoppingList({
                             type="text"
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
-                            onBlur={handleEditBlur}
                             onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
                             className={`px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
                             autoFocus
@@ -411,9 +405,31 @@ export function ShoppingList({
                               value={editStore}
                               onChange={(newStore) => {
                                 setEditStore(newStore)
+                                // Don't save immediately when store changes, let user finish editing
                               }}
                               storeOptions={storeOptions}
                             />
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                saveEdit()
+                              }}
+                              className={`px-3 py-1 bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity`}
+                            >
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setEditingItem(null)
+                                setEditText('')
+                              }}
+                              className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors"
+                            >
+                              Cancel
+                            </button>
                           </div>
                         </div>
                       ) : (
@@ -554,7 +570,7 @@ export function ShoppingList({
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
               className="fixed left-4 right-4 top-1/4 bg-white rounded-2xl shadow-xl p-4 z-50 max-w-md mx-auto max-h-[80vh] overflow-y-auto"
             >
-              <form onSubmit={addItem} className="flex flex-col gap-4">
+              <form onSubmit={addItem} className="flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -571,7 +587,7 @@ export function ShoppingList({
                     Add
                   </button>
                 </div>
-                <div className="flex gap-2 justify-between">
+                <div className="flex gap-2 justify-between" onClick={(e) => e.stopPropagation()}>
                   <AnimatedStoreSelector
                     className="grow"
                     value={selectedStore}

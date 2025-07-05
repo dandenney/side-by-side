@@ -375,7 +375,7 @@ export default function UpcomingList() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      deleteUpcomingEvent(selectedItem.id);
+                      handleDelete(selectedItem.id);
                       handleCloseModal();
                     }}
                     className="p-3 hover:bg-gray-100 rounded-full"
@@ -386,7 +386,6 @@ export default function UpcomingList() {
                     onClick={(e) => {
                       e.stopPropagation();
                       handleEdit(selectedItem);
-                      handleCloseModal();
                     }}
                     className="p-3 hover:bg-gray-100 rounded-full"
                   >

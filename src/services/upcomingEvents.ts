@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
 import { UpcomingItem, UpcomingItemForm } from '@/types/upcoming'
-import { SHARED_LIST_ID } from '@/lib/constants'
 
 // Helper function to map database row to UpcomingItem
 const mapDbRowToItem = (row: any): UpcomingItem => ({
@@ -13,7 +12,7 @@ const mapDbRowToItem = (row: any): UpcomingItem => ({
   startDate: row.start_date,
   endDate: row.end_date,
   status: row.status,
-  listId: row.list_id,
+  listId: '00000000-0000-0000-0000-000000000000', // Default value since table doesn't have list_id
   createdAt: new Date(row.created_at),
   updatedAt: new Date(row.updated_at)
 })
@@ -27,8 +26,7 @@ const mapFormToDbRow = (form: UpcomingItemForm) => ({
   location: form.location,
   start_date: form.startDate,
   end_date: form.endDate,
-  status: form.status,
-  list_id: SHARED_LIST_ID
+  status: form.status
 })
 
 export async function getUpcomingEvents(): Promise<UpcomingItem[]> {
