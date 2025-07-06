@@ -225,8 +225,6 @@ export function ShoppingList({
     }
   }
 
-
-
   const deleteItem = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
     if (!user) return
