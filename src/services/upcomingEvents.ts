@@ -20,13 +20,14 @@ const mapDbRowToItem = (row: any): UpcomingItem => ({
 // Helper function to map UpcomingItemForm to database row
 const mapFormToDbRow = (form: UpcomingItemForm) => ({
   title: form.title,
-  description: form.description,
-  url: form.url,
-  image_url: form.imageUrl,
-  location: form.location,
+  description: form.description || null,
+  url: form.url || null,
+  image_url: form.imageUrl || null,
+  location: form.location || null,
   start_date: form.startDate,
   end_date: form.endDate,
-  status: form.status
+  status: form.status,
+  list_id: '00000000-0000-0000-0000-000000000000' // Default list ID
 })
 
 export async function getUpcomingEvents(): Promise<UpcomingItem[]> {

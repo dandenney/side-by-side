@@ -142,7 +142,8 @@ describe('Upcoming Events Service', () => {
         location: mockFormData.location,
         start_date: mockFormData.startDate,
         end_date: mockFormData.endDate,
-        status: mockFormData.status
+        status: mockFormData.status,
+        list_id: '00000000-0000-0000-0000-000000000000'
       }])
     })
 
@@ -180,14 +181,42 @@ describe('Upcoming Events Service', () => {
 
       expect(mockSupabase.from().insert).toHaveBeenCalledWith([{
         title: minimalFormData.title,
-        description: undefined,
-        url: undefined,
-        image_url: undefined,
-        location: undefined,
+        description: null,
+        url: null,
+        image_url: null,
+        location: null,
         start_date: minimalFormData.startDate,
         end_date: minimalFormData.endDate,
-        status: minimalFormData.status
+        status: minimalFormData.status,
+        list_id: '00000000-0000-0000-0000-000000000000'
       }])
+    })
+
+    it('should always include list_id field to prevent NOT NULL constraint violations', async () => {
+      const formData: UpcomingItemForm = {
+        title: 'Test Event',
+        description: 'Test Description',
+        url: 'https://example.com',
+        imageUrl: 'https://example.com/image.jpg',
+        location: 'Test Location',
+        startDate: '2024-01-01',
+        endDate: '2024-01-02',
+        status: 'definitely'
+      }
+      
+      mockSupabase.from.mockReturnValue({
+        insert: jest.fn().mockReturnValue({
+          select: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({ data: mockDbRow, error: null })
+          })
+        })
+      })
+
+      await createUpcomingEvent(formData)
+
+      const insertCall = mockSupabase.from().insert.mock.calls[0][0]
+      expect(insertCall[0]).toHaveProperty('list_id')
+      expect(insertCall[0].list_id).toBe('00000000-0000-0000-0000-000000000000')
     })
   })
 
@@ -218,7 +247,8 @@ describe('Upcoming Events Service', () => {
         location: mockFormData.location,
         start_date: mockFormData.startDate,
         end_date: mockFormData.endDate,
-        status: mockFormData.status
+        status: mockFormData.status,
+        list_id: '00000000-0000-0000-0000-000000000000'
       })
       expect(mockSupabase.from().update().eq).toHaveBeenCalledWith('id', 'test-id-123')
     })
