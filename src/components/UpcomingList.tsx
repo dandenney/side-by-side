@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { getUpcomingEvents, createUpcomingEvent, updateUpcomingEvent, deleteUpcomingEvent } from '@/services/upcomingEvents'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import { DateRange } from 'react-day-picker'
 import AppDrawer from './AppDrawer'
@@ -67,6 +66,8 @@ export default function UpcomingList() {
   const [isFetchingMeta, setIsFetchingMeta] = useState(false)
   const [metaError, setMetaError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
+  const [calendarMonth, setCalendarMonth] = useState<Date>(new Date())
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -136,42 +137,44 @@ export default function UpcomingList() {
   }
 
   const handleDateSelect = (range: DateRange | undefined) => {
-    setDateRange(range)
-    if (range?.from && range?.to) {
-      const formatDateForDb = (date: Date) => {
-        const year = date.getFullYear()
-        const month = String(date.getMonth() + 1).padStart(2, '0')
-        const day = String(date.getDate()).padStart(2, '0')
-        return `${year}-${month}-${day}`
+    const formatDateForDb = (date: Date) => {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+
+    if (range?.from && !range?.to) {
+      // First click - set both start and end to the same date (single day event)
+      const singleDayRange = {
+        from: range.from,
+        to: range.from
       }
+      setDateRange(singleDayRange)
+      setFormData(prev => ({
+        ...prev,
+        startDate: formatDateForDb(range.from!),
+        endDate: formatDateForDb(range.from!),
+      }))
+    } else if (range?.from && range?.to) {
+      // Second click - user wants a date range
+      setDateRange(range)
       setFormData(prev => ({
         ...prev,
         startDate: formatDateForDb(range.from!),
         endDate: formatDateForDb(range.to!),
       }))
+    } else {
+      // Reset/clear
+      setDateRange(range)
     }
   }
 
-  // Helper to get today and tomorrow as date range
-  const getDefaultDateRange = () => {
-    const today = new Date()
-    const tomorrow = new Date()
-    tomorrow.setDate(today.getDate() + 1)
-    return {
-      from: today,
-      to: tomorrow
-    }
-  }
-
-  // When opening the add modal, set default date range and form data
+  // When opening the add modal, start with no date selected
   const openAddModal = () => {
-    const defaultRange = getDefaultDateRange()
-    setDateRange(defaultRange)
-    setFormData({
-      ...initialFormState,
-      startDate: defaultRange.from.toISOString().split('T')[0],
-      endDate: defaultRange.to.toISOString().split('T')[0],
-    })
+    setDateRange(undefined) // No default date
+    setCalendarMonth(new Date()) // Reset to current month
+    setFormData(initialFormState) // Reset form
     setEditingItem(null)
     setIsModalOpen(true)
   }
@@ -183,9 +186,10 @@ export default function UpcomingList() {
       let startDate = formData.startDate
       let endDate = formData.endDate
       if (!startDate || !endDate) {
-        const defaultRange = getDefaultDateRange()
-        startDate = defaultRange.from.toISOString().split('T')[0]
-        endDate = defaultRange.to.toISOString().split('T')[0]
+        // If no date selected, default to today for both
+        const today = new Date()
+        startDate = today.toISOString().split('T')[0]
+        endDate = today.toISOString().split('T')[0]
       }
       const submitData = { ...formData, startDate, endDate }
       if (editingItem) {
@@ -576,43 +580,104 @@ export default function UpcomingList() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date Range *
+                    Date *
                   </label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !dateRange?.from && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dateRange?.from ? (
-                          dateRange?.to ? (
-                            <>
-                              {formatDate(dateRange.from.toISOString().split('T')[0])} -{" "}
-                              {formatDate(dateRange.to.toISOString().split('T')[0])}
-                            </>
-                          ) : (
-                            formatDate(dateRange.from.toISOString().split('T')[0])
-                          )
-                        ) : (
-                          <span>Pick a date range</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        initialFocus
-                        mode="range"
-                        defaultMonth={dateRange?.from}
-                        selected={dateRange}
-                        onSelect={handleDateSelect}
-                        numberOfMonths={2}
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setIsCalendarOpen(true)}
+                    className="w-full px-3 py-2 border rounded-2xl text-left focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white hover:bg-gray-50"
+                  >
+                    <CalendarIcon className="inline mr-2 h-4 w-4" />
+                    {dateRange?.from ? (
+                      dateRange?.to && dateRange.from.getTime() !== dateRange.to.getTime() ? (
+                        <>
+                          {formatDate(dateRange.from.toISOString().split('T')[0])} -{" "}
+                          {formatDate(dateRange.to.toISOString().split('T')[0])}
+                        </>
+                      ) : (
+                        formatDate(dateRange.from.toISOString().split('T')[0])
+                      )
+                    ) : (
+                      <span className="text-gray-500">Click to select date</span>
+                    )}
+                  </button>
+
+                  {/* Calendar Modal */}
+                  {isCalendarOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                      <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+                        <div className="p-4 border-b bg-white">
+                          <div className="flex justify-between items-center mb-3">
+                            <h3 className="font-medium">Select Date</h3>
+                            <button
+                              type="button"
+                              onClick={() => setIsCalendarOpen(false)}
+                              className="p-1 hover:bg-gray-100 rounded"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-3">
+                            Click once to set date. Click a second date for a date range.
+                          </p>
+                          {/* Quick month jumps */}
+                          <div className="flex gap-1 text-xs">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const nextMonth = new Date(calendarMonth)
+                                nextMonth.setMonth(nextMonth.getMonth() + 1)
+                                setCalendarMonth(nextMonth)
+                              }}
+                              className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+                            >
+                              Next Month
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const nextQuarter = new Date(calendarMonth)
+                                nextQuarter.setMonth(nextQuarter.getMonth() + 3)
+                                setCalendarMonth(nextQuarter)
+                              }}
+                              className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+                            >
+                              +3 Months
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const nextYear = new Date(calendarMonth)
+                                nextYear.setFullYear(nextYear.getFullYear() + 1)
+                                setCalendarMonth(nextYear)
+                              }}
+                              className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+                            >
+                              Next Year
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4">
+                          <Calendar
+                            mode="range"
+                            month={calendarMonth}
+                            onMonthChange={setCalendarMonth}
+                            selected={dateRange}
+                            onSelect={(range) => {
+                              handleDateSelect(range)
+                              if (range?.from && (!range?.to || range.from.getTime() === range.to.getTime())) {
+                                // Auto-close for single date selection
+                                setTimeout(() => setIsCalendarOpen(false), 200)
+                              }
+                            }}
+                            numberOfMonths={1}
+                            className="w-full [&_thead_tr]:grid [&_thead_tr]:grid-cols-7 [&_tbody_tr]:grid [&_tbody_tr]:grid-cols-7 [&_table]:w-full"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
