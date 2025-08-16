@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 
 export async function POST() {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Update all url_items to use the shared list ID
     const { error: urlItemsError } = await supabase

@@ -4,7 +4,7 @@ import { Tables, TableName, TableRow, TableInsert, TableUpdate } from '@/types/s
 export async function getTable<T extends TableName>(
   table: T
 ): Promise<TableRow<T>[]> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase.from(table).select('*')
   
   if (error) throw error
@@ -15,7 +15,7 @@ export async function getById<T extends TableName>(
   table: T,
   id: string
 ): Promise<TableRow<T> | null> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from(table)
     .select('*')
@@ -30,7 +30,7 @@ export async function insert<T extends TableName>(
   table: T,
   values: TableInsert<T>
 ): Promise<TableRow<T>> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from(table)
     .insert(values)
@@ -46,7 +46,7 @@ export async function update<T extends TableName>(
   id: string,
   values: TableUpdate<T>
 ): Promise<TableRow<T>> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from(table)
     .update(values)
@@ -62,7 +62,7 @@ export async function remove<T extends TableName>(
   table: T,
   id: string
 ): Promise<void> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { error } = await supabase
     .from(table)
     .delete()

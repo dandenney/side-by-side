@@ -4,7 +4,7 @@ import fetch from 'node-fetch'
 
 export async function POST(req: NextRequest) {
   const { imageUrl, fileName } = await req.json()
-  const supabase = createClient()
+  const supabase = await createClient()
 
   // Download the image
   const response = await fetch(imageUrl)
