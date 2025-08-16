@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/client'
 import { UpcomingItem, UpcomingItemForm } from '@/types/upcoming'
+import { logServiceError } from '@/lib/logger'
 
 // Helper function to map database row to UpcomingItem
 const mapDbRowToItem = (row: any): UpcomingItem => ({
@@ -38,7 +39,7 @@ export async function getUpcomingEvents(): Promise<UpcomingItem[]> {
     .order('start_date', { ascending: true })
 
   if (error) {
-    console.error('Error fetching upcoming events:', error)
+    logServiceError('Failed to fetch upcoming events', 'upcomingEvents', 'getUpcomingEvents', error)
     throw error
   }
 
@@ -54,7 +55,7 @@ export async function createUpcomingEvent(formData: UpcomingItemForm): Promise<U
     .single()
 
   if (error) {
-    console.error('Error creating upcoming event:', error)
+    logServiceError('Failed to create upcoming event', 'upcomingEvents', 'createUpcomingEvent', error, { title: formData.title })
     throw error
   }
 
@@ -71,7 +72,7 @@ export async function updateUpcomingEvent(id: string, formData: UpcomingItemForm
     .single()
 
   if (error) {
-    console.error('Error updating upcoming event:', error)
+    logServiceError('Failed to update upcoming event', 'upcomingEvents', 'updateUpcomingEvent', error, { id, title: formData.title })
     throw error
   }
 
@@ -86,7 +87,7 @@ export async function deleteUpcomingEvent(id: string): Promise<void> {
     .eq('id', id)
 
   if (error) {
-    console.error('Error deleting upcoming event:', error)
+    logServiceError('Failed to delete upcoming event', 'upcomingEvents', 'deleteUpcomingEvent', error, { id })
     throw error
   }
 } 

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/contexts/AuthContext"
 import Migration from "@/components/Migration"
+import { PageErrorBoundary } from "@/components/ErrorBoundaries"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -21,11 +22,16 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body className={`${inter.className} overscroll-none`}>
-        <AuthProvider>
-          <Migration />
-          {children}
-        </AuthProvider>
+      <body 
+        className={`${inter.className} overscroll-none`}
+        suppressHydrationWarning={true}
+      >
+        <PageErrorBoundary>
+          <AuthProvider>
+            <Migration />
+            {children}
+          </AuthProvider>
+        </PageErrorBoundary>
       </body>
     </html>
   )

@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import UpcomingList from '@/components/UpcomingList'
 import { UpcomingItem } from '@/types/upcoming'
+import { logComponentError } from '@/lib/logger'
 
 // Mock the services
 jest.mock('@/services/upcomingEvents', () => ({
@@ -10,6 +11,13 @@ jest.mock('@/services/upcomingEvents', () => ({
   createUpcomingEvent: jest.fn(),
   updateUpcomingEvent: jest.fn(),
   deleteUpcomingEvent: jest.fn(),
+}))
+
+// Mock the logger
+jest.mock('@/lib/logger', () => ({
+  logComponentError: jest.fn(),
+  logServiceError: jest.fn(),
+  logApiError: jest.fn(),
 }))
 
 // Mock the AuthContext
@@ -86,16 +94,18 @@ describe('UpcomingList Component', () => {
     })
 
     it('should handle errors when loading events', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+      const mockLogComponentError = logComponentError as jest.MockedFunction<typeof logComponentError>
       mockServices.getUpcomingEvents.mockRejectedValue(new Error('Failed to load'))
 
       render(<UpcomingList />)
 
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalledWith('Error loading upcoming events:', expect.any(Error))
+        expect(mockLogComponentError).toHaveBeenCalledWith(
+          'Failed to load upcoming events',
+          'UpcomingList',
+          expect.any(Error)
+        )
       })
-
-      consoleSpy.mockRestore()
     })
   })
 
@@ -181,7 +191,7 @@ describe('UpcomingList Component', () => {
     })
 
     it('should handle creation errors', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+      const mockLogComponentError = logComponentError as jest.MockedFunction<typeof logComponentError>
       mockServices.createUpcomingEvent.mockRejectedValue(new Error('Creation failed'))
 
       render(<UpcomingList />)
@@ -202,10 +212,16 @@ describe('UpcomingList Component', () => {
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalledWith('Error saving event:', expect.any(Error))
+        expect(mockLogComponentError).toHaveBeenCalledWith(
+          'Failed to save event',
+          'UpcomingList',
+          expect.any(Error),
+          expect.objectContaining({
+            action: 'create',
+            title: 'New Event'
+          })
+        )
       })
-
-      consoleSpy.mockRestore()
     })
 
     it('should require title field', async () => {

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { validateSearchParams, apiSchemas, createValidationErrorResponse } from '@/lib/validation'
+import { logApiError } from '@/lib/logger'
 
 // List of blocked domains/patterns
 const BLOCKED_PATTERNS = [
@@ -31,12 +33,15 @@ const BLOCKED_PATTERNS = [
 const MAX_FILE_SIZE = 5 * 1024 * 1024
 
 export async function GET(request: Request) {
+  // Validate input parameters
   const { searchParams } = new URL(request.url)
-  const imageUrl = searchParams.get('url')
-
-  if (!imageUrl) {
-    return NextResponse.json({ error: 'Image URL is required' }, { status: 400 })
+  const validationResult = validateSearchParams(apiSchemas.imageFetch, searchParams)
+  
+  if (!validationResult.success) {
+    return createValidationErrorResponse(request, validationResult.error, validationResult.issues)
   }
+  
+  const { url: imageUrl } = validationResult.data
 
   try {
     // Validate URL
@@ -116,7 +121,9 @@ export async function GET(request: Request) {
       headers
     })
   } catch (error: unknown) {
-    console.error('Error fetching image:', error)
+    logApiError('Error fetching image', request, error as Error, {
+      requestData: validationResult.data
+    })
     
     // Handle specific error types
     if (error instanceof TypeError && error.message === 'Failed to fetch') {

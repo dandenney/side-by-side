@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
+import { ComponentErrorBoundary } from '@/components/ErrorBoundaries'
 
 type AuthContextType = {
   user: User | null
@@ -66,7 +67,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
   }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <ComponentErrorBoundary>
+      <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+    </ComponentErrorBoundary>
+  )
 }
 
 export function useAuth() {

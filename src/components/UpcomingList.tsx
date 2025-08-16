@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils'
 import { DateRange } from 'react-day-picker'
 import AppDrawer from './AppDrawer'
 import Image from 'next/image'
+import { logComponentError } from '@/lib/logger'
+import { FeatureErrorBoundary, ComponentErrorBoundary } from './ErrorBoundaries'
 
 const formatDate = (dateStr: string) => {
   const [year, month, day] = dateStr.split('-')
@@ -83,7 +85,7 @@ export default function UpcomingList() {
       })
       setItems(sortedEvents)
     } catch (error) {
-      console.error('Error loading upcoming events:', error)
+      logComponentError('Failed to load upcoming events', 'UpcomingList', error as Error)
     } finally {
       setIsLoading(false)
     }
@@ -107,7 +109,7 @@ export default function UpcomingList() {
       const data = await response.json()
       return data
     } catch (error) {
-      console.error('Error fetching metadata:', error)
+      logComponentError('Failed to fetch metadata', 'UpcomingList', error as Error, { url })
       setMetaError(error instanceof Error ? error.message : 'Failed to fetch metadata')
       return null
     }
@@ -206,7 +208,11 @@ export default function UpcomingList() {
       setFormData(initialFormState)
       setEditingItem(null)
     } catch (error) {
-      console.error('Error saving event:', error)
+      logComponentError('Failed to save event', 'UpcomingList', error as Error, { 
+        action: editingItem ? 'update' : 'create',
+        eventId: editingItem?.id,
+        title: formData.title 
+      })
     }
   }
 
@@ -237,7 +243,7 @@ export default function UpcomingList() {
       await deleteUpcomingEvent(id)
       setItems(prev => prev.filter(item => item.id !== id))
     } catch (error) {
-      console.error('Error deleting event:', error)
+      logComponentError('Failed to delete event', 'UpcomingList', error as Error, { eventId: id })
     }
   }
 
@@ -253,13 +259,15 @@ export default function UpcomingList() {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* List Items */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-lg mx-auto pt-4 lg:max-w-7xl">
-          <h1 className="mb-4 opacity-40 text-blue-900 text-center uppercase font-bold">Upcoming Events</h1>
+    <FeatureErrorBoundary featureName="Upcoming Events">
+      <div className="h-full flex flex-col">
+        {/* List Items */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-lg mx-auto pt-4 lg:max-w-7xl">
+            <h1 className="mb-4 opacity-40 text-blue-900 text-center uppercase font-bold">Upcoming Events</h1>
 
-          <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <ComponentErrorBoundary>
+              <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {isLoading ? (
               <div className="col-span-full flex justify-center" role="status" aria-live="polite">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" aria-label="Loading upcoming events"></div>
@@ -309,8 +317,9 @@ export default function UpcomingList() {
               ))
             )}
           </section>
+            </ComponentErrorBoundary>
+          </div>
         </div>
-      </div>
 
       {/* Add Item Button */}
       <div className="bg-white fixed bottom-0 left-0 mx-auto max-w-md py-1 right-0 rounded-t-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)]">
@@ -636,6 +645,7 @@ export default function UpcomingList() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+      </div>
+    </FeatureErrorBoundary>
   )
 } 

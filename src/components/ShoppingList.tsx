@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
 import { SHARED_LIST_ID } from '@/lib/constants'
 import AnimatedStoreSelector from './AnimatedStoreSelector'
+import { FeatureErrorBoundary, ComponentErrorBoundary } from './ErrorBoundaries'
 
 type ShoppingListProps = {
   title: string
@@ -355,7 +356,8 @@ export function ShoppingList({
   }
 
   return (
-    <div className={`bg-gradient-to-b ${gradientFrom} ${gradientTo} h-full flex flex-col min-h-[100dvh]`}>
+    <FeatureErrorBoundary featureName="Shopping List">
+      <div className={`bg-gradient-to-b ${gradientFrom} ${gradientTo} h-full flex flex-col min-h-[100dvh]`}>
       {/* List Items */}
       <div className="flex-1 overflow-y-auto px-4 pb-24">
         <div className="max-w-lg mx-auto space-y-2 pt-4">
@@ -605,6 +607,7 @@ export function ShoppingList({
           </>
         )}
       </AnimatePresence>
-    </div>
+      </div>
+    </FeatureErrorBoundary>
   )
 } 

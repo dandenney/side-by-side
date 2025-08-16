@@ -1,20 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { validateSearchParams, apiSchemas, createValidationErrorResponse } from '@/lib/validation'
 
 export const runtime = 'edge'
 
-export async function GET(request: NextRequest) {
-  const url = request.nextUrl.searchParams.get('url')
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
 
-  if (!url) {
-    return NextResponse.json({ error: 'URL is required' }, { 
-      status: 400,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      }
+export async function GET(request: NextRequest) {
+  // Validate input parameters
+  const validationResult = validateSearchParams(apiSchemas.metaFetch, request.nextUrl.searchParams)
+  
+  if (!validationResult.success) {
+    const errorResponse = createValidationErrorResponse(request, validationResult.error, validationResult.issues)
+    // Add CORS headers to error response
+    corsHeaders && Object.entries(corsHeaders).forEach(([key, value]) => {
+      errorResponse.headers.set(key, value)
     })
+    return errorResponse
   }
+  
+  const { url } = validationResult.data
 
   try {
     // Ensure the URL is properly formatted

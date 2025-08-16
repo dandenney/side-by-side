@@ -13,6 +13,7 @@ import { ImageIcon } from 'lucide-react'
 import { PlaceSearchResult } from '@/lib/google/places'
 import debounce from 'lodash/debounce'
 import { StarRating } from "@/components/ui/star-rating"
+import { FeatureErrorBoundary, ComponentErrorBoundary } from './ErrorBoundaries'
 
 type UrlListProps = {
   title: string
@@ -458,11 +459,12 @@ export function UrlList({
   }, [sortedItems, selectedTag])
 
   return (
-    <div className={`h-full flex flex-col`}>
-      {/* List Items */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-lg mx-auto space-y-2 pt-4 lg:max-w-7xl">
-          <h1 className={`opacity-40 text-center ${titleColor} uppercase font-bold`}>{title}</h1>
+    <FeatureErrorBoundary featureName="URL List">
+      <div className={`h-full flex flex-col`}>
+        {/* List Items */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-lg mx-auto space-y-2 pt-4 lg:max-w-7xl">
+            <h1 className={`opacity-40 text-center ${titleColor} uppercase font-bold`}>{title}</h1>
 
           {/* Tag Filter */}
           <div className="flex flex-wrap gap-2 px-4 justify-center">
@@ -972,6 +974,7 @@ export function UrlList({
           </>
         )}
       </AnimatePresence>
-    </div>
+      </div>
+    </FeatureErrorBoundary>
   )
 }

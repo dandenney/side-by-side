@@ -1,21 +1,33 @@
+/**
+ * Legacy migration functions - now deprecated in favor of the new migration system
+ * These are kept for backward compatibility but should not be used for new migrations
+ */
+
 import { createClient } from './client'
 import { SHARED_LIST_ID } from '@/lib/constants'
+import { logServiceError } from '@/lib/logger'
 
+/**
+ * @deprecated Use the new migration system in migration-registry.ts instead
+ */
 export async function removeUrlOrPlaceConstraint() {
   const supabase = createClient()
 
   try {
     const { error } = await supabase.rpc('remove_url_or_place_constraint')
     if (error) {
-      console.error('Error removing constraint:', error)
+      logServiceError('Error removing constraint', 'migrate', error)
       throw error
     }
   } catch (error) {
-    console.error('Error in removing constraint:', error)
+    logServiceError('Error in removing constraint', 'migrate', error as Error)
     throw error
   }
 }
 
+/**
+ * @deprecated Use migrateToSharedListMigration from migration-registry.ts instead
+ */
 export async function migrateToSharedList() {
   const supabase = createClient()
 
@@ -27,7 +39,7 @@ export async function migrateToSharedList() {
       .neq('list_id', SHARED_LIST_ID)
 
     if (checkError) {
-      console.error('Error checking existing items:', checkError)
+      logServiceError('Error checking existing items', 'migrate', checkError)
       throw checkError
     }
 
@@ -40,7 +52,7 @@ export async function migrateToSharedList() {
         .select()
 
       if (urlItemsError) {
-        console.error('Error updating url_items:', urlItemsError)
+        logServiceError('Error updating url_items', 'migrate', urlItemsError)
         throw urlItemsError
       }
     }
@@ -52,7 +64,7 @@ export async function migrateToSharedList() {
       .neq('list_id', SHARED_LIST_ID)
 
     if (checkTagsError) {
-      console.error('Error checking existing tags:', checkTagsError)
+      logServiceError('Error checking existing tags', 'migrate', checkTagsError)
       throw checkTagsError
     }
 
@@ -65,13 +77,13 @@ export async function migrateToSharedList() {
         .select()
 
       if (tagsError) {
-        console.error('Error updating tags:', tagsError)
+        logServiceError('Error updating tags', 'migrate', tagsError)
         throw tagsError
       }
     }
 
   } catch (error) {
-    console.error('Error in migration:', error)
+    logServiceError('Error in migration', 'migrate', error as Error)
     throw error
   }
 } 

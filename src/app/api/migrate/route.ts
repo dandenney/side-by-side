@@ -1,36 +1,64 @@
-import { createClient } from '@/lib/supabase/server'
-import { SHARED_LIST_ID } from '@/lib/constants'
 import { NextResponse } from 'next/server'
+import { initializeMigrationTracking, runPendingMigrations, getAppliedMigrations } from '@/lib/supabase/migrations'
+import { MIGRATION_REGISTRY } from '@/lib/supabase/migration-registry'
+import { logApiError } from '@/lib/logger'
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-
-    // Update all url_items to use the shared list ID
-    const { error: urlItemsError } = await supabase
-      .from('url_items')
-      .update({ list_id: SHARED_LIST_ID })
-      .neq('list_id', SHARED_LIST_ID)
-
-    if (urlItemsError) {
-      console.error('Error updating url_items:', urlItemsError)
-      return NextResponse.json({ error: urlItemsError.message }, { status: 500 })
-    }
-
-    // Update all tags to use the shared list ID
-    const { error: tagsError } = await supabase
-      .from('tags')
-      .update({ list_id: SHARED_LIST_ID })
-      .neq('list_id', SHARED_LIST_ID)
-
-    if (tagsError) {
-      console.error('Error updating tags:', tagsError)
-      return NextResponse.json({ error: tagsError.message }, { status: 500 })
-    }
-
-    return NextResponse.json({ success: true })
+    // Initialize migration tracking
+    await initializeMigrationTracking()
+    
+    // Run pending migrations
+    await runPendingMigrations(MIGRATION_REGISTRY)
+    
+    // Get applied migrations for response
+    const appliedMigrations = await getAppliedMigrations()
+    
+    return NextResponse.json({ 
+      success: true, 
+      appliedMigrations: appliedMigrations.length,
+      latest: appliedMigrations[appliedMigrations.length - 1]?.name || 'None'
+    })
   } catch (error) {
-    console.error('Migration failed:', error)
-    return NextResponse.json({ error: 'Migration failed' }, { status: 500 })
+    logApiError('Migration API failed', request, error as Error)
+    return NextResponse.json({ 
+      error: 'Migration failed', 
+      message: (error as Error).message 
+    }, { status: 500 })
+  }
+}
+
+export async function GET() {
+  try {
+    // Get migration status without running migrations
+    const appliedMigrations = await getAppliedMigrations()
+    const totalMigrations = MIGRATION_REGISTRY.length
+    const pendingMigrations = MIGRATION_REGISTRY.filter(
+      migration => !appliedMigrations.some(applied => applied.id === migration.id)
+    )
+    
+    return NextResponse.json({
+      status: 'success',
+      total: totalMigrations,
+      applied: appliedMigrations.length,
+      pending: pendingMigrations.length,
+      appliedMigrations: appliedMigrations.map(m => ({
+        id: m.id,
+        name: m.name,
+        version: m.version,
+        appliedAt: m.applied_at
+      })),
+      pendingMigrations: pendingMigrations.map(m => ({
+        id: m.id,
+        name: m.name,
+        version: m.version,
+        description: m.description
+      }))
+    })
+  } catch (error) {
+    return NextResponse.json({ 
+      error: 'Failed to get migration status',
+      message: (error as Error).message 
+    }, { status: 500 })
   }
 } 
