@@ -51,7 +51,7 @@ export class ErrorBoundary extends React.Component<
     // Log error using our structured logging
     logComponentError(
       `Error caught by ${this.props.level || 'component'} error boundary`,
-      undefined,
+      'ErrorBoundary',
       error,
       {
         errorInfo: {

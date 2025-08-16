@@ -39,7 +39,7 @@ export async function initializeMigrationTracking() {
       throw error
     }
   } catch (error) {
-    logServiceError('Failed to initialize migration tracking', 'migrations', error as Error)
+    logServiceError('Failed to initialize migration tracking', 'migrations', 'initializeMigrationTracking', error as Error)
     throw error
   }
 }
@@ -60,7 +60,7 @@ export async function getAppliedMigrations(): Promise<MigrationRecord[]> {
     
     return data || []
   } catch (error) {
-    logServiceError('Failed to get applied migrations', 'migrations', error as Error)
+    logServiceError('Failed to get applied migrations', 'migrations', 'getAppliedMigrations', error as Error)
     return []
   }
 }
@@ -86,7 +86,7 @@ export async function recordMigration(migration: Migration): Promise<void> {
     
     if (error) throw error
   } catch (error) {
-    logServiceError('Failed to record migration', 'migrations', error as Error, {
+    logServiceError('Failed to record migration', 'migrations', 'recordMigration', error as Error, {
       migrationId: migration.id,
       migrationName: migration.name
     })
@@ -108,7 +108,7 @@ export async function removeMigrationRecord(migrationId: string): Promise<void> 
     
     if (error) throw error
   } catch (error) {
-    logServiceError('Failed to remove migration record', 'migrations', error as Error, {
+    logServiceError('Failed to remove migration record', 'migrations', 'removeMigrationRecord', error as Error, {
       migrationId
     })
     throw error
@@ -146,7 +146,7 @@ export async function executeMigration(migration: Migration): Promise<boolean> {
     
     return true
   } catch (error) {
-    logServiceError('Migration execution failed', 'migrations', error as Error, {
+    logServiceError('Migration execution failed', 'migrations', 'executeMigration', error as Error, {
       migrationId: migration.id,
       migrationName: migration.name
     })
@@ -156,7 +156,7 @@ export async function executeMigration(migration: Migration): Promise<boolean> {
       try {
         await migration.rollback(supabase)
       } catch (rollbackError) {
-        logServiceError('Migration rollback failed', 'migrations', rollbackError as Error, {
+        logServiceError('Migration rollback failed', 'migrations', 'executeMigration.rollback', rollbackError as Error, {
           migrationId: migration.id,
           originalError: (error as Error).message
         })
@@ -186,7 +186,7 @@ export async function rollbackMigration(migration: Migration): Promise<boolean> 
     
     return true
   } catch (error) {
-    logServiceError('Migration rollback failed', 'migrations', error as Error, {
+    logServiceError('Migration rollback failed', 'migrations', 'rollbackMigration', error as Error, {
       migrationId: migration.id,
       migrationName: migration.name
     })

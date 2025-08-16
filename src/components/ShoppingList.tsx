@@ -5,11 +5,19 @@ import { GroceryItem } from '@/types/grocery'
 import { Plus, Trash2, Edit2, X, BadgeDollarSign, ShoppingBasket, MoreVertical} from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import AppDrawer from './AppDrawer'
-import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
-import { SHARED_LIST_ID } from '@/lib/constants'
 import AnimatedStoreSelector from './AnimatedStoreSelector'
 import { FeatureErrorBoundary, ComponentErrorBoundary } from './ErrorBoundaries'
+import { 
+  getGroceryItems, 
+  getArchivedGroceryItems, 
+  createGroceryItem, 
+  updateGroceryItem, 
+  deleteGroceryItem,
+  archiveGroceryItem,
+  ArchivedGroceryItem
+} from '@/services/groceryService'
+import { logComponentError } from '@/lib/logger'
 
 type ShoppingListProps = {
   title: string
@@ -37,7 +45,7 @@ export function ShoppingList({
   buttonAccentColor,
 }: ShoppingListProps) {
   const [items, setItems] = useState<GroceryItem[]>([])
-  const [archivedItems, setArchivedItems] = useState<GroceryItem[]>([])
+  const [archivedItems, setArchivedItems] = useState<ArchivedGroceryItem[]>([])
   const [newItem, setNewItem] = useState('')
   const [editingItem, setEditingItem] = useState<GroceryItem | null>(null)
   const [editText, setEditText] = useState('')
@@ -48,7 +56,6 @@ export function ShoppingList({
   const [loading, setLoading] = useState(true)
 
   const { user } = useAuth()
-  const supabase = useMemo(() => createClient(), [])
 
   const hasCheckedItems = useMemo(() => items.some(item => item.checked), [items])
 
@@ -77,87 +84,42 @@ export function ShoppingList({
 
   useEffect(() => {
     if (!user) return
+    loadGroceryData()
+  }, [user])
 
-    const initializeList = async () => {
-      try {
-        const { data: items, error: itemsError } = await supabase
-          .from('grocery_items')
-          .select('*')
-          .eq('list_id', SHARED_LIST_ID)
-
-        if (itemsError) {
-          console.error('Error fetching items:', itemsError)
-          throw itemsError
-        }
-
-        setItems(items?.map(item => ({
-          ...item,
-          checked: item.checked,
-          createdAt: new Date(item.created_at),
-          updatedAt: new Date(item.updated_at)
-        })) || [])
-
-        const { data: archived, error: archivedError } = await supabase
-          .from('archived_items')
-          .select('*')
-          .eq('list_id', SHARED_LIST_ID)
-
-        if (archivedError) {
-          console.error('Error fetching archived items:', archivedError)
-          throw archivedError
-        }
-
-        setArchivedItems(archived?.map(item => ({
-          ...item,
-          checked: false,
-          createdAt: new Date(item.created_at),
-          updatedAt: new Date(item.archived_at)
-        })) || [])
-      } catch (error) {
-        console.error('Error initializing list:', error)
-      } finally {
-        setLoading(false)
-      }
+  const loadGroceryData = async () => {
+    try {
+      setLoading(true)
+      const [groceryItems, archived] = await Promise.all([
+        getGroceryItems(),
+        getArchivedGroceryItems()
+      ])
+      
+      setItems(groceryItems)
+      setArchivedItems(archived)
+    } catch (error) {
+      logComponentError('Failed to load grocery data', 'ShoppingList', error as Error)
+    } finally {
+      setLoading(false)
     }
-
-    initializeList()
-  }, [user, supabase])
+  }
 
   const addItem = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newItem.trim() || !user) return
 
     try {
-      const itemToAdd = {
+      const newItemData = await createGroceryItem({
         name: newItem.trim(),
         store: selectedStore,
-        checked: false,
-        list_id: SHARED_LIST_ID
-      } as const
-      
-      const { data, error } = await supabase
-        .from('grocery_items')
-        .insert(itemToAdd)
-        .select()
-        .single()
+        checked: false
+      })
 
-      if (error) {
-        console.error('Error adding item to database:', error)
-        throw error
-      }
-
-      const newItemObj: GroceryItem = {
-        ...data,
-        checked: data.checked,
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at)
-      }
-
-      setItems(prev => [...prev, newItemObj])
+      setItems(prev => [...prev, newItemData])
       setNewItem('')
       setIsModalOpen(false)
     } catch (error) {
-      console.error('Error in addItem:', error)
+      logComponentError('Failed to add grocery item', 'ShoppingList', error as Error)
     }
   }
 
@@ -168,22 +130,13 @@ export function ShoppingList({
       const item = items.find(i => i.id === id)
       if (!item) return
 
-      const { error } = await supabase
-        .from('grocery_items')
-        .update({ checked: !item.checked })
-        .eq('id', id)
-        .eq('list_id', SHARED_LIST_ID)
-
-      if (error) {
-        console.error('Error toggling check in database:', error)
-        throw error
-      }
-
+      const updatedItem = await updateGroceryItem(id, { checked: !item.checked })
+      
       setItems(prev => prev.map(item =>
-        item.id === id ? { ...item, checked: !item.checked } : item
+        item.id === id ? updatedItem : item
       ))
     } catch (error) {
-      console.error('Error in toggleCheck:', error)
+      logComponentError('Failed to toggle grocery item', 'ShoppingList', error as Error)
     }
   }
 
@@ -198,31 +151,18 @@ export function ShoppingList({
     if (!editingItem || !editText.trim() || !user) return
 
     try {
-      const updates = {
+      const updatedItem = await updateGroceryItem(editingItem.id, {
         name: editText.trim(),
         store: editStore
-      }
-      
-      const { error } = await supabase
-        .from('grocery_items')
-        .update(updates)
-        .eq('id', editingItem.id)
-        .eq('list_id', SHARED_LIST_ID)
-
-      if (error) {
-        console.error('Error saving edit to database:', error)
-        throw error
-      }
+      })
 
       setItems(prev => prev.map(item =>
-        item.id === editingItem.id
-          ? { ...item, name: editText.trim(), store: editStore }
-          : item
+        item.id === editingItem.id ? updatedItem : item
       ))
       setEditingItem(null)
       setEditText('')
     } catch (error) {
-      console.error('Error in saveEdit:', error)
+      logComponentError('Failed to save grocery item edit', 'ShoppingList', error as Error)
     }
   }
 
@@ -231,20 +171,10 @@ export function ShoppingList({
     if (!user) return
 
     try {
-      const { error } = await supabase
-        .from('grocery_items')
-        .delete()
-        .eq('id', id)
-        .eq('list_id', SHARED_LIST_ID)
-
-      if (error) {
-        console.error('Error deleting item from database:', error)
-        throw error
-      }
-
+      await deleteGroceryItem(id)
       setItems(prev => prev.filter(item => item.id !== id))
     } catch (error) {
-      console.error('Error in deleteItem:', error)
+      logComponentError('Failed to delete grocery item', 'ShoppingList', error as Error)
     }
   }
 
@@ -255,38 +185,15 @@ export function ShoppingList({
     if (checkedItems.length === 0) return
 
     try {
-      const itemsToArchive = checkedItems.map(item => ({
-        name: item.name,
-        store: item.store,
-        list_id: SHARED_LIST_ID,
-        created_at: item.createdAt.toISOString()
-      }))
-      
-      const { error: archiveError } = await supabase
-        .from('archived_items')
-        .insert(itemsToArchive)
-
-      if (archiveError) {
-        console.error('Error archiving items:', archiveError)
-        throw archiveError
+      // Archive items one by one using the service
+      for (const item of checkedItems) {
+        await archiveGroceryItem(item)
       }
 
-      const itemIds = checkedItems.map(item => item.id)
-      const { error: deleteError } = await supabase
-        .from('grocery_items')
-        .delete()
-        .in('id', itemIds)
-        .eq('list_id', SHARED_LIST_ID)
-
-      if (deleteError) {
-        console.error('Error deleting archived items:', deleteError)
-        throw deleteError
-      }
-
-      setItems(prev => prev.filter(item => !item.checked))
-      setArchivedItems(prev => [...prev, ...checkedItems])
+      // Refresh data to get updated lists
+      await loadGroceryData()
     } catch (error) {
-      console.error('Error in archiveChecked:', error)
+      logComponentError('Failed to archive grocery items', 'ShoppingList', error as Error)
     }
   }
 

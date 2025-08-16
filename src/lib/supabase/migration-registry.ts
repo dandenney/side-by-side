@@ -36,7 +36,7 @@ export const migrateToSharedListMigration: Migration = {
         const batchSize = 100
         for (let i = 0; i < existingItems.length; i += batchSize) {
           const batch = existingItems.slice(i, i + batchSize)
-          const itemIds = batch.map(item => item.id)
+          const itemIds = batch.map((item: any) => item.id)
           
           const { error: updateError } = await supabase
             .from('url_items')
@@ -64,7 +64,7 @@ export const migrateToSharedListMigration: Migration = {
         const batchSize = 100
         for (let i = 0; i < existingTags.length; i += batchSize) {
           const batch = existingTags.slice(i, i + batchSize)
-          const tagIds = batch.map(tag => tag.id)
+          const tagIds = batch.map((tag: any) => tag.id)
           
           const { error: updateError } = await supabase
             .from('tags')
@@ -77,7 +77,7 @@ export const migrateToSharedListMigration: Migration = {
         }
       }
     } catch (error) {
-      logServiceError('Shared list migration failed', 'migrations', error as Error)
+      logServiceError('Shared list migration failed', 'migrations', 'migrateToSharedListMigration', error as Error)
       throw error
     }
   },
@@ -97,7 +97,7 @@ export const migrateToSharedListMigration: Migration = {
         .limit(1)
       
       if (error) {
-        logServiceError('Migration validation failed', 'migrations', error)
+        logServiceError('Migration validation failed', 'migrations', 'migrateToSharedListMigration.validate', error as Error)
         return false
       }
       
@@ -109,13 +109,13 @@ export const migrateToSharedListMigration: Migration = {
         .limit(1)
       
       if (tagError) {
-        logServiceError('Tag migration validation failed', 'migrations', tagError)
+        logServiceError('Tag migration validation failed', 'migrations', 'migrateToSharedListMigration.validate', tagError as Error)
         return false
       }
       
       return (!unmigrated || unmigrated.length === 0) && (!unmigratedTags || unmigratedTags.length === 0)
     } catch (error) {
-      logServiceError('Migration validation error', 'migrations', error as Error)
+      logServiceError('Migration validation error', 'migrations', 'migrateToSharedListMigration.validate', error as Error)
       return false
     }
   }
@@ -139,7 +139,7 @@ export const removeUrlOrPlaceConstraintMigration: Migration = {
         throw new Error(`Failed to remove constraint: ${error.message}`)
       }
     } catch (error) {
-      logServiceError('Constraint removal migration failed', 'migrations', error as Error)
+      logServiceError('Constraint removal migration failed', 'migrations', 'removeUrlOrPlaceConstraintMigration', error as Error)
       throw error
     }
   },
