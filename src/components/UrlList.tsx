@@ -632,7 +632,7 @@ export function UrlList({
               exit="exit"
               className="w-full max-w-4xl mx-auto bg-white rounded-2xl overflow-hidden max-h-[90vh] flex flex-col"
               layoutId={`card-${selectedItem.id}`}
-              style={{ width: '100%', maxWidth: '56rem' }}
+              style={{ width: '100%', maxWidth: '56rem', height: '90vh' }}
               onClick={(e) => e.stopPropagation()}
             >
               {editingItem?.id === selectedItem.id ? (
@@ -742,7 +742,7 @@ export function UrlList({
                     {selectedItem.imageUrl && (
                       <motion.div 
                         className="relative w-full" 
-                        style={{ aspectRatio: '16/9' }}
+                        style={{ aspectRatio: '16/9', maxHeight: '40vh' }}
                         layoutId={`image-${selectedItem.id}`}
                       >
                         <Image
@@ -755,7 +755,7 @@ export function UrlList({
                       </motion.div>
                     )}
                     
-                    <div className="p-6 space-y-4">
+                    <div className="p-6 space-y-4 pb-20">
                       <div className="space-y-4">
                         {selectedItem.description && (
                           <p className="text-gray-600">{selectedItem.description}</p>
