@@ -56,6 +56,7 @@ export function UrlList({
   const [mounted, setMounted] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
+  const [isCreatingNewItem, setIsCreatingNewItem] = useState(false)
 
   const inputTypeOptions = [
     { value: 'url', icon: Link, label: 'URL' },
@@ -209,32 +210,37 @@ export function UrlList({
           return
         }
 
-        const newItem = {
+        // Create a draft item instead of creating immediately
+        const draftItem: UrlListItem = {
+          id: 'new-item-' + Date.now(), // Temporary ID for new items
           url: newUrl.trim(),
           imageUrl: metaData.image || '',
           title: metaData.title || 'Untitled',
           description: metaData.description || '',
           listType,
           listId,
-          archived: false
+          archived: false,
+          tags: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
         }
 
-        const createdItem = await createUrlItem(newItem)
-        setItems([...items, createdItem])
+        setIsCreatingNewItem(true)
+        setEditingItem(draftItem)
+        setSelectedItem(draftItem)
+        setNewUrl('')
+        setSearchQuery('')
+        setSearchResults([])
+        setIsModalOpen(false)
       } else {
         // If we have search results and a selected place, use handlePlaceSelect
         if (searchResults.length > 0 && selectedPlace) {
-          await handlePlaceSelect(selectedPlace)
+          await handlePlaceSelectForForm(selectedPlace)
         } else {
           setError('Please select a place from the search results')
           return
         }
       }
-
-      setNewUrl('')
-      setSearchQuery('')
-      setSearchResults([])
-      setIsModalOpen(false)
     } catch (error) {
       console.error('Error in addItem:', error)
       setError('Failed to add item. Please try again.')
@@ -250,6 +256,7 @@ export function UrlList({
   const handleCloseModal = () => {
     setSelectedItem(null)
     setEditingItem(null)
+    setIsCreatingNewItem(false)
   }
 
   const startEdit = async (e: React.MouseEvent, item: UrlListItem) => {
@@ -270,31 +277,65 @@ export function UrlList({
   const handleSaveEdit = async () => {
     if (editingItem) {
       try {
-        const updatedItem = await updateUrlItem(editingItem) as UrlListItem
-        
-        // Refresh the items list to get the latest data with tags
-        const refreshedItems = await getUrlItems(listType, listId)
-        setItems(refreshedItems)
-        
-        // Update the selected item if it's the one being edited
-        const refreshedItem = refreshedItems.find(item => item.id === updatedItem.id)
-        if (refreshedItem) {
-          setSelectedItem(refreshedItem)
-        }
-        
-        setEditingItem(null)
-        
-        // If we're in a tag filter view and the item's tags changed,
-        // we need to close the modal to prevent the broken animation
-        const shouldCloseModal = selectedTag && 
-          ((selectedTag === 'untagged' && editingItem.tags?.length) ||
-          (selectedTag !== 'untagged' && !editingItem.tags?.some((tag: Tag) => tag.name === selectedTag)))
-        
-        if (shouldCloseModal) {
+        if (isCreatingNewItem) {
+          // Creating a new item
+          const itemToCreate = {
+            url: editingItem.url,
+            imageUrl: editingItem.imageUrl || '',
+            title: editingItem.title,
+            description: editingItem.description || '',
+            notes: editingItem.notes || '',
+            dateRange: editingItem.dateRange,
+            place: editingItem.place,
+            listType: editingItem.listType,
+            listId: editingItem.listId,
+            archived: editingItem.archived || false,
+          }
+
+          const createdItem = await createUrlItem(itemToCreate)
+          
+          // Add tags if any were selected
+          if (editingItem.tags && editingItem.tags.length > 0) {
+            for (const tag of editingItem.tags) {
+              await addTagToItem(createdItem.id, tag.id)
+            }
+          }
+
+          // Refresh the items list to get the latest data with tags
+          const refreshedItems = await getUrlItems(listType, listId)
+          setItems(refreshedItems)
+          
+          setIsCreatingNewItem(false)
+          setEditingItem(null)
           setSelectedItem(null)
+        } else {
+          // Updating an existing item
+          const updatedItem = await updateUrlItem(editingItem) as UrlListItem
+          
+          // Refresh the items list to get the latest data with tags
+          const refreshedItems = await getUrlItems(listType, listId)
+          setItems(refreshedItems)
+          
+          // Update the selected item if it's the one being edited
+          const refreshedItem = refreshedItems.find(item => item.id === updatedItem.id)
+          if (refreshedItem) {
+            setSelectedItem(refreshedItem)
+          }
+          
+          setEditingItem(null)
+          
+          // If we're in a tag filter view and the item's tags changed,
+          // we need to close the modal to prevent the broken animation
+          const shouldCloseModal = selectedTag && 
+            ((selectedTag === 'untagged' && editingItem.tags?.length) ||
+            (selectedTag !== 'untagged' && !editingItem.tags?.some((tag: Tag) => tag.name === selectedTag)))
+          
+          if (shouldCloseModal) {
+            setSelectedItem(null)
+          }
         }
       } catch (error) {
-        alert('Failed to update item. Please try again.')
+        alert('Failed to save item. Please try again.')
       }
     }
   }
@@ -332,6 +373,17 @@ export function UrlList({
 
   const handleTagSelect = async (tag: Tag) => {
     if (!editingItem) return;
+    
+    // If creating a new item, just update the state
+    if (isCreatingNewItem) {
+      const currentTags = editingItem.tags || [];
+      if (!currentTags.some(t => t.id === tag.id)) {
+        setEditingItem({ ...editingItem, tags: [...currentTags, tag] });
+      }
+      return;
+    }
+
+    // For existing items, update in the database
     try {
       await addTagToItem(editingItem.id, tag.id);
       const updatedItems = await getUrlItems(listType, listId);
@@ -350,6 +402,15 @@ export function UrlList({
 
   const handleTagRemove = async (tagId: string) => {
     if (!editingItem) return;
+    
+    // If creating a new item, just update the state
+    if (isCreatingNewItem) {
+      const currentTags = editingItem.tags || [];
+      setEditingItem({ ...editingItem, tags: currentTags.filter(t => t.id !== tagId) });
+      return;
+    }
+
+    // For existing items, update in the database
     try {
       await removeTagFromItem(editingItem.id, tagId);
       const updatedItems = await getUrlItems(listType, listId);
@@ -427,6 +488,61 @@ export function UrlList({
       setIsSearching(false)
     } catch (error) {
       console.error('Error in handlePlaceSelect:', error)
+      setError('Failed to add place. Please try again.')
+      setIsSearching(false)
+    }
+  }
+
+  const handlePlaceSelectForForm = async (place: PlaceSearchResult) => {
+    setIsSearching(true)
+    setError(null)
+    try {
+      const response = await fetch(`/api/places?placeId=${encodeURIComponent(place.placeId)}`)
+      if (!response.ok) throw new Error('Failed to get place details')
+      const placeDetails = await response.json()
+
+      // Generate Google Maps URL for the place
+      const placeUrl = `https://www.google.com/maps/place/?q=place_id:${place.placeId}`
+
+      // Create a draft item instead of creating immediately
+      const draftItem: UrlListItem = {
+        id: 'new-item-' + Date.now(), // Temporary ID for new items
+        url: placeUrl,
+        place: {
+          placeId: place.placeId,
+          name: place.name,
+          address: place.address,
+          lat: place.lat,
+          lng: place.lng,
+          types: place.types || [],
+          rating: place.rating,
+          userRatingsTotal: place.userRatingsTotal,
+          priceLevel: place.priceLevel,
+          website: placeDetails.website,
+          phoneNumber: placeDetails.phoneNumber,
+        },
+        title: place.name,
+        description: place.address,
+        listType,
+        listId,
+        archived: false,
+        imageUrl: placeDetails.photoUrl || '',
+        tags: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+
+      setIsCreatingNewItem(true)
+      setEditingItem(draftItem)
+      setSelectedItem(draftItem)
+      setNewUrl('')
+      setSearchQuery('')
+      setSearchResults([])
+      setSelectedPlace(null)
+      setIsModalOpen(false)
+      setIsSearching(false)
+    } catch (error) {
+      console.error('Error in handlePlaceSelectForForm:', error)
       setError('Failed to add place. Please try again.')
       setIsSearching(false)
     }
@@ -631,11 +747,11 @@ export function UrlList({
               animate="animate"
               exit="exit"
               className="w-full max-w-4xl mx-auto bg-white rounded-2xl overflow-hidden max-h-[90vh] flex flex-col"
-              layoutId={`card-${selectedItem.id}`}
+              layoutId={isCreatingNewItem ? 'new-item' : `card-${selectedItem.id}`}
               style={{ width: '100%', maxWidth: '56rem', height: '90vh' }}
               onClick={(e) => e.stopPropagation()}
             >
-              {editingItem?.id === selectedItem.id ? (
+              {editingItem && (editingItem.id === selectedItem.id || isCreatingNewItem) ? (
                 <div className="flex flex-col h-full">
                   <div className="flex-1 overflow-y-auto p-4 space-y-4">
                     <div>
@@ -913,7 +1029,7 @@ export function UrlList({
                             type="button"
                             onClick={() => {
                               setSelectedPlace(place)
-                              handlePlaceSelect(place)
+                              handlePlaceSelectForForm(place)
                             }}
                             className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex items-center gap-2"
                           >
