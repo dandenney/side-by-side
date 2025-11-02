@@ -40,6 +40,9 @@ export const commonSchemas = {
   // Google Place ID format
   placeId: z.string().regex(/^[A-Za-z0-9_-]+$/, { message: 'Invalid Place ID format' }),
   
+  // IMDb ID format (starts with tt followed by 7-8 digits)
+  imdbId: z.string().regex(/^tt\d{7,8}$/, { message: 'Invalid IMDb ID format' }),
+  
   // Pagination parameters
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
@@ -65,6 +68,15 @@ export const apiSchemas = {
   
   placesDetails: z.object({
     placeId: commonSchemas.placeId,
+  }),
+  
+  // Movies API
+  moviesSearch: z.object({
+    query: commonSchemas.nonEmptyString,
+  }),
+  
+  moviesDetails: z.object({
+    imdbId: commonSchemas.imdbId,
   }),
   
   // Meta API

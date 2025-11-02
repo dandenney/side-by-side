@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { UrlListItem, Tag } from '@/types/url-list'
-import { Plus, Trash2, Edit2, X, Link, Tag as TagIcon, StickyNote, Archive, Search, Calendar, MapPin, Phone } from 'lucide-react'
+import { Plus, Trash2, Edit2, X, Link, Tag as TagIcon, StickyNote, Archive, Search, Calendar, MapPin, Phone, Film } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import AppDrawer from './AppDrawer'
@@ -11,6 +11,7 @@ import { createUrlItem, getUrlItems, updateUrlItem, deleteUrlItem, archiveUrlIte
 import { getTags, createTag, deleteTag, addTagToItem, removeTagFromItem, getItemTags } from '@/lib/supabase/tags'
 import { ImageIcon } from 'lucide-react'
 import { PlaceSearchResult } from '@/lib/google/places'
+import { MovieSearchResult } from '@/lib/movies'
 import debounce from 'lodash/debounce'
 import { StarRating } from "@/components/ui/star-rating"
 import { FeatureErrorBoundary, ComponentErrorBoundary } from './ErrorBoundaries'
@@ -49,9 +50,11 @@ export function UrlList({
   const [editingItem, setEditingItem] = useState<UrlListItem | null>(null)
   const [editForm, setEditForm] = useState<Partial<UrlListItem>>({})
   const [error, setError] = useState<string | null>(null)
-  const [inputType, setInputType] = useState<'url' | 'place'>('url')
+  const [inputType, setInputType] = useState<'url' | 'place' | 'movie'>('url')
   const [searchResults, setSearchResults] = useState<PlaceSearchResult[]>([])
   const [selectedPlace, setSelectedPlace] = useState<PlaceSearchResult | null>(null)
+  const [movieSearchResults, setMovieSearchResults] = useState<MovieSearchResult[]>([])
+  const [selectedMovie, setSelectedMovie] = useState<MovieSearchResult | null>(null)
   const [isSearching, setIsSearching] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -60,7 +63,8 @@ export function UrlList({
 
   const inputTypeOptions = [
     { value: 'url', icon: Link, label: 'URL' },
-    { value: 'place', icon: MapPin, label: 'Place' }
+    { value: 'place', icon: MapPin, label: 'Place' },
+    { value: 'movie', icon: Film, label: 'Movie' }
   ] as const
 
   const InputTypeSelector = ({
@@ -68,8 +72,8 @@ export function UrlList({
     onChange,
     className,
   }: {
-    value: 'url' | 'place',
-    onChange: (value: 'url' | 'place') => void,
+    value: 'url' | 'place' | 'movie',
+    onChange: (value: 'url' | 'place' | 'movie') => void,
     className?: string
   }) => {
     return (
@@ -169,10 +173,28 @@ export function UrlList({
     setMounted(true)
   }, [])
 
+  // Clear search results when input type changes
+  useEffect(() => {
+    setSearchResults([])
+    setMovieSearchResults([])
+    setSelectedPlace(null)
+    setSelectedMovie(null)
+    setSearchQuery('')
+    setNewUrl('')
+  }, [inputType])
+
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setNewUrl(value)
     setSearchQuery(value)
+    // Clear search results when input changes
+    if (inputType === 'place') {
+      setSearchResults([])
+      setSelectedPlace(null)
+    } else if (inputType === 'movie') {
+      setMovieSearchResults([])
+      setSelectedMovie(null)
+    }
   }
 
   const handlePlaceSearch = async () => {
@@ -190,6 +212,26 @@ export function UrlList({
     } catch (error) {
       console.error('Error searching places:', error)
       setError('Failed to search places. Please try again.')
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const handleMovieSearch = async () => {
+    if (!searchQuery.trim() || searchQuery.length < 3) {
+      setMovieSearchResults([])
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      const response = await fetch(`/api/movies?query=${encodeURIComponent(searchQuery)}`)
+      if (!response.ok) throw new Error('Failed to search movies')
+      const results = await response.json()
+      setMovieSearchResults(results)
+    } catch (error) {
+      console.error('Error searching movies:', error)
+      setError('Failed to search movies. Please try again.')
     } finally {
       setIsSearching(false)
     }
@@ -231,13 +273,22 @@ export function UrlList({
         setNewUrl('')
         setSearchQuery('')
         setSearchResults([])
+        setMovieSearchResults([])
         setIsModalOpen(false)
-      } else {
+      } else if (inputType === 'place') {
         // If we have search results and a selected place, use handlePlaceSelect
         if (searchResults.length > 0 && selectedPlace) {
           await handlePlaceSelectForForm(selectedPlace)
         } else {
           setError('Please select a place from the search results')
+          return
+        }
+      } else if (inputType === 'movie') {
+        // If we have search results and a selected movie, use handleMovieSelect
+        if (movieSearchResults.length > 0 && selectedMovie) {
+          await handleMovieSelectForForm(selectedMovie)
+        } else {
+          setError('Please select a movie from the search results')
           return
         }
       }
@@ -544,6 +595,56 @@ export function UrlList({
     } catch (error) {
       console.error('Error in handlePlaceSelectForForm:', error)
       setError('Failed to add place. Please try again.')
+      setIsSearching(false)
+    }
+  }
+
+  const handleMovieSelectForForm = async (movie: MovieSearchResult) => {
+    setIsSearching(true)
+    setError(null)
+    try {
+      const response = await fetch(`/api/movies?imdbId=${encodeURIComponent(movie.imdbId)}`)
+      if (!response.ok) throw new Error('Failed to get movie details')
+      const movieDetails = await response.json()
+
+      // Find or create "movie" tag
+      let movieTag = tags.find(t => t.name.toLowerCase() === 'movie')
+      if (!movieTag) {
+        try {
+          movieTag = await handleCreateTag('movie')
+        } catch (error) {
+          console.error('Error creating movie tag:', error)
+          // Continue without the tag if creation fails
+        }
+      }
+
+      // Create a draft item instead of creating immediately
+      const draftItem: UrlListItem = {
+        id: 'new-item-' + Date.now(), // Temporary ID for new items
+        url: movieDetails.imdbUrl,
+        title: movieDetails.title,
+        description: movieDetails.plot || (movieDetails.year ? `${movieDetails.year}` : undefined),
+        listType,
+        listId,
+        archived: false,
+        tags: movieTag ? [movieTag] : [],
+        imageUrl: movieDetails.poster || '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+
+      setIsCreatingNewItem(true)
+      setEditingItem(draftItem)
+      setSelectedItem(draftItem)
+      setNewUrl('')
+      setSearchQuery('')
+      setMovieSearchResults([])
+      setSelectedMovie(null)
+      setIsModalOpen(false)
+      setIsSearching(false)
+    } catch (error) {
+      console.error('Error in handleMovieSelectForForm:', error)
+      setError('Failed to add movie. Please try again.')
       setIsSearching(false)
     }
   }
@@ -1006,7 +1107,11 @@ export function UrlList({
                       type={inputType === 'url' ? 'url' : 'text'}
                       value={newUrl}
                       onChange={handleSearchInputChange}
-                      placeholder={inputType === 'url' ? 'Add a URL...' : 'Search for a place...'}
+                      placeholder={
+                        inputType === 'url' ? 'Add a URL...' :
+                        inputType === 'place' ? 'Search for a place...' :
+                        'Search for a movie...'
+                      }
                       className={`w-full px-4 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
                       autoFocus
                       disabled={isLoading || isSearching}
@@ -1019,6 +1124,11 @@ export function UrlList({
                     {inputType === 'place' && newUrl.length < 4 && newUrl.length > 0 && (
                       <div className="absolute z-[60] w-full mt-1 bg-white border rounded-2xl shadow-lg p-3 text-sm text-gray-500">
                         Please enter at least 4 characters to search...
+                      </div>
+                    )}
+                    {inputType === 'movie' && newUrl.length < 3 && newUrl.length > 0 && (
+                      <div className="absolute z-[60] w-full mt-1 bg-white border rounded-2xl shadow-lg p-3 text-sm text-gray-500">
+                        Please enter at least 3 characters to search...
                       </div>
                     )}
                     {inputType === 'place' && searchResults.length > 0 && (
@@ -1042,12 +1152,56 @@ export function UrlList({
                         ))}
                       </div>
                     )}
+                    {inputType === 'movie' && movieSearchResults.length > 0 && (
+                      <div className="absolute z-[60] w-full mt-1 bg-white border rounded-2xl shadow-lg max-h-60 overflow-y-auto top-full">
+                        {movieSearchResults.map((movie) => (
+                          <button
+                            key={movie.imdbId}
+                            type="button"
+                            onClick={() => {
+                              setSelectedMovie(movie)
+                              handleMovieSelectForForm(movie)
+                            }}
+                            className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex items-center gap-2"
+                          >
+                            {movie.poster ? (
+                              <img
+                                src={movie.poster}
+                                alt={movie.title}
+                                className="w-10 h-14 object-cover rounded flex-shrink-0"
+                              />
+                            ) : (
+                              <Film className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium truncate">{movie.title}</div>
+                              {movie.year && (
+                                <div className="text-sm text-gray-500">{movie.year}</div>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   {inputType === 'place' ? (
                     <button
                       type="button"
                       onClick={handlePlaceSearch}
                       disabled={isLoading || isSearching || newUrl.length < 4}
+                      className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-2xl active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} disabled:opacity-50`}
+                    >
+                      {isSearching ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Search className="w-5 h-5" />
+                      )}
+                    </button>
+                  ) : inputType === 'movie' ? (
+                    <button
+                      type="button"
+                      onClick={handleMovieSearch}
+                      disabled={isLoading || isSearching || newUrl.length < 3}
                       className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-2xl active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} disabled:opacity-50`}
                     >
                       {isSearching ? (
