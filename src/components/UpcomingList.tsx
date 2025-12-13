@@ -428,7 +428,7 @@ export default function UpcomingList() {
                             href={selectedItem.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-500 hover:underline"
+                            className="flex items-center gap-2 text-blue-500 hover:underline"
                           >
                             Visit Website
                           </a>
