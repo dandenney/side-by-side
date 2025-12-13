@@ -74,6 +74,19 @@ export default function UpcomingList() {
     loadUpcomingEvents()
   }, [])
 
+  // Lock body scroll when modals are open
+  useEffect(() => {
+    if (selectedItem || isModalOpen || isCalendarOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [selectedItem, isModalOpen, isCalendarOpen])
+
   const loadUpcomingEvents = async () => {
     try {
       setIsLoading(true)
@@ -352,19 +365,21 @@ export default function UpcomingList() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            onClick={handleCloseModal}
           >
             <motion.div
               variants={modalContentVariants}
               initial="initial"
               animate="animate"
               exit="exit"
-              className="w-full max-w-4xl mx-auto bg-white rounded-2xl overflow-hidden max-h-[90vh] flex flex-col"
+              className="w-full max-w-4xl mx-auto bg-white rounded-2xl max-h-[90vh] flex flex-col"
               layoutId={`card-${selectedItem.id}`}
               style={{ width: '100%', maxWidth: '56rem' }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex flex-col h-full">
+              <div className="flex flex-col min-h-0 flex-1">
                 {selectedItem.imageUrl && (
-                  <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
+                  <div className="relative w-full overflow-hidden rounded-t-2xl" style={{ aspectRatio: '16/9' }}>
                     <Image
                       src={selectedItem.imageUrl}
                       alt={selectedItem.title}
@@ -374,7 +389,7 @@ export default function UpcomingList() {
                     />
                   </div>
                 )}
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
                   <div className="flex justify-between items-start">
                     <h2 className="text-xl font-semibold">{selectedItem.title}</h2>
                     <button
@@ -476,12 +491,14 @@ export default function UpcomingList() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            onClick={handleCloseModal}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               className="bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">
@@ -605,8 +622,8 @@ export default function UpcomingList() {
 
                   {/* Calendar Modal */}
                   {isCalendarOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                      <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setIsCalendarOpen(false)}>
+                      <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
                         <div className="p-4 border-b bg-white">
                           <div className="flex justify-between items-center mb-3">
                             <h3 className="font-medium">Select Date</h3>

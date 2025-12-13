@@ -975,7 +975,7 @@ export function UrlList({
                     <div className="p-6 space-y-4 pb-20">
                       <div className="space-y-4">
                         {selectedItem.description && (
-                          <p className="text-gray-600">{selectedItem.description}</p>
+                          <p className="text-gray-600 break-words overflow-wrap-anywhere">{selectedItem.description}</p>
                         )}
 
                         <motion.div 
@@ -1003,7 +1003,7 @@ export function UrlList({
                         {selectedItem.notes && (
                           <div>
                             <h3 className="text-sm font-medium text-gray-700 mb-1">Notes</h3>
-                            <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-2xl">
+                            <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-2xl break-words overflow-wrap-anywhere">
                               {selectedItem.notes}
                             </p>
                           </div>
@@ -1024,7 +1024,7 @@ export function UrlList({
                                 href={selectedItem.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-500 hover:underline"
+                                className="flex items-center gap-2 text-blue-500 hover:underline"
                               >
                                 Visit Website
                               </a>
