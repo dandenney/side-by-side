@@ -742,7 +742,7 @@ export function UrlList({
                     <motion.div
                       className="bg-gray-100 w-full overflow-hidden relative"
                       layoutId={`image-${item.id}`}
-                      style={{ aspectRatio: '1/1' }}
+                      style={{ aspectRatio: '16/9' }}
                     >
                       <Image
                         src={item.imageUrl}
@@ -756,7 +756,7 @@ export function UrlList({
                     <motion.div
                       className="bg-gray-100 w-full relative"
                       layoutId={`image-${item.id}`}
-                      style={{ aspectRatio: '1/1' }}
+                      style={{ aspectRatio: '16/9' }}
                     >
                       <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                         <ImageIcon className="w-12 h-12" />
