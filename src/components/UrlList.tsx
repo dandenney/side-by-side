@@ -723,7 +723,7 @@ export function UrlList({
             ))}
           </div>
 
-          <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <section className="grid grid-cols-2 gap-4 px-4">
             <AnimatePresence mode="popLayout">
               {filteredItems.filter(item => !item.archived).map(item => (
                 <motion.div
@@ -734,12 +734,13 @@ export function UrlList({
                   exit="exit"
                   whileTap="tap"
                   layout
-                  className={`flex gap-2 items-center bg-white rounded-2xl shadow-sm border overflow-hidden p-2 hover:bg-gray-50 ${selectedItem?.id === item.id ? 'opacity-0' : ''}`}
+                  className={`flex flex-col bg-white rounded-2xl shadow-sm border overflow-hidden hover:bg-gray-50 ${selectedItem?.id === item.id ? 'opacity-0' : ''}`}
                   layoutId={`card-${item.id}`}
+                  onClick={() => handleCardClick(item)}
                 >
                   {item.imageUrl ? (
                     <motion.div
-                      className="bg-gray-100 h-16 w-16 flex-shrink-0 overflow-hidden relative rounded-2xl"
+                      className="bg-gray-100 w-full overflow-hidden relative"
                       layoutId={`image-${item.id}`}
                       style={{ aspectRatio: '1/1' }}
                     >
@@ -748,64 +749,53 @@ export function UrlList({
                         alt={item.title}
                         fill
                         className="object-cover"
-                        sizes="80px"
+                        sizes="(max-width: 768px) 50vw, 33vw"
                       />
                     </motion.div>
                   ) : (
                     <motion.div
-                      className="bg-gray-100 h-16 w-16 flex-shrink-0 relative rounded-2xl"
+                      className="bg-gray-100 w-full relative"
                       layoutId={`image-${item.id}`}
                       style={{ aspectRatio: '1/1' }}
                     >
                       <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                        <ImageIcon className="w-6 h-6" />
+                        <ImageIcon className="w-12 h-12" />
                       </div>
                     </motion.div>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <div
-                      className="cursor-pointer"
-                      onClick={() => handleCardClick(item)}
+                  <div className="p-3 flex-1 flex flex-col">
+                    <motion.h3
+                      className={`font-bold text-lg ${textColor} line-clamp-2 mb-1`}
+                      layoutId={`title-${item.id}`}
                     >
-                      <motion.h3
-                        className={`font-semibold ${textColor} line-clamp-1 mb-1`}
-                        layoutId={`title-${item.id}`}
-                      >
-                        {item.title}
-                      </motion.h3>
-                      <motion.div
-                        className="flex flex-wrap gap-1"
-                        layoutId={`tags-${item.id}`}
-                      >
-                        {item.tags?.length ? (
-                          item.tags.map(tag => (
-                            <span
-                              key={tag.id}
-                              className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600"
-                            >
-                              <TagIcon className="w-3 h-3" />
-                              {tag.name}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-400">
+                      {item.title}
+                    </motion.h3>
+                    {item.description && (
+                      <p className="text-sm text-gray-500 line-clamp-2 mb-2">
+                        {item.description}
+                      </p>
+                    )}
+                    <motion.div
+                      className="flex flex-wrap gap-1 mt-auto"
+                      layoutId={`tags-${item.id}`}
+                    >
+                      {item.tags?.length ? (
+                        item.tags.slice(0, 2).map(tag => (
+                          <span
+                            key={tag.id}
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600"
+                          >
                             <TagIcon className="w-3 h-3" />
-                            Untagged
+                            {tag.name}
                           </span>
-                        )}
-                      </motion.div>
-                    </div>
-                  </div>
-                  <div className="flex">
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center h-10 w-10 hover:bg-gray-100 rounded-full"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Link className="w-5 h-5 text-gray-400" />
-                    </a>
+                        ))
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-400">
+                          <TagIcon className="w-3 h-3" />
+                          Untagged
+                        </span>
+                      )}
+                    </motion.div>
                   </div>
                 </motion.div>
               ))}
