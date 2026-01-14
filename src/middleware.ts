@@ -37,7 +37,10 @@ export async function middleware(request: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
 
   // If there's no session and the user is trying to access a protected route
-  if (!session && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/signup')) {
+  const publicRoutes = ['/login', '/signup', '/forgot-password', '/reset-password']
+  const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname.startsWith(route))
+
+  if (!session && !isPublicRoute) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
