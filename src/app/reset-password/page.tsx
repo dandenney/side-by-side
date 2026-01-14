@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 export default function ResetPasswordPage() {
@@ -11,12 +12,45 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [isValidSession, setIsValidSession] = useState(false)
+  const [checkingSession, setCheckingSession] = useState(true)
   const { updatePassword } = useAuth()
   const router = useRouter()
+
+  useEffect(() => {
+    const supabase = createClient()
+
+    // Listen for the PASSWORD_RECOVERY event which fires when user clicks reset link
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsValidSession(true)
+        setCheckingSession(false)
+      } else if (event === 'SIGNED_IN' && session) {
+        // User might already have a session from the recovery token
+        setIsValidSession(true)
+        setCheckingSession(false)
+      }
+    })
+
+    // Also check if there's already a valid session (in case the event already fired)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setIsValidSession(true)
+      }
+      setCheckingSession(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    if (!isValidSession) {
+      setError('Invalid or expired reset link. Please request a new password reset.')
+      return
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match')
@@ -40,6 +74,43 @@ export default function ResetPasswordPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-2xl shadow">
+          <div className="text-center">
+            <p className="text-gray-600">Verifying reset link...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isValidSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-2xl shadow">
+          <div>
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+              Invalid reset link
+            </h2>
+            <p className="mt-2 text-center text-sm text-gray-600">
+              This password reset link is invalid or has expired.
+            </p>
+          </div>
+          <div className="text-center">
+            <Link
+              href="/forgot-password"
+              className="font-medium text-indigo-600 hover:text-indigo-500 text-sm"
+            >
+              Request a new password reset
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (success) {
