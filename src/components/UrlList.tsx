@@ -723,7 +723,7 @@ export function UrlList({
             ))}
           </div>
 
-          <section className="grid grid-cols-2 gap-4 px-4">
+          <section className="grid grid-cols-2 gap-4">
             <AnimatePresence mode="popLayout">
               {filteredItems.filter(item => !item.archived).map(item => (
                 <motion.div
@@ -765,18 +765,13 @@ export function UrlList({
                   )}
                   <div className="p-3 flex-1 flex flex-col">
                     <motion.h3
-                      className={`font-bold text-lg ${textColor} line-clamp-2 mb-1`}
+                      className={`font-bold text-lg ${textColor} leading-6 mb-1`}
                       layoutId={`title-${item.id}`}
                     >
                       {item.title}
                     </motion.h3>
-                    {item.description && (
-                      <p className="text-sm text-gray-500 line-clamp-2 mb-2">
-                        {item.description}
-                      </p>
-                    )}
                     <motion.div
-                      className="flex flex-wrap gap-1 mt-auto"
+                      className="flex flex-wrap gap-1 mt-4"
                       layoutId={`tags-${item.id}`}
                     >
                       {item.tags?.length ? (
