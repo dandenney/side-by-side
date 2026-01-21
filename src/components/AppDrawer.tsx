@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { MapPin, Menu, X, ShoppingBasket, Link as LinkIcon, BellElectric } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext'
 export default function AppDrawer() {
   const [isOpen, setIsOpen] = useState(false)
   const { signOut } = useAuth()
+  const shouldReduceMotion = useReducedMotion()
 
   const menuItems = [
     { icon: ShoppingBasket, label: 'Groceries', href: '/groceries' },
@@ -21,6 +22,7 @@ export default function AppDrawer() {
     <>
       <button
         onClick={() => setIsOpen(true)}
+        aria-label="Open menu"
         className="p-2 hover:bg-gray-100 rounded-2xl"
       >
         <Menu className="w-6 h-6 text-gray-600" />
@@ -34,16 +36,17 @@ export default function AppDrawer() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
               onClick={() => setIsOpen(false)}
               className="fixed inset-0 bg-black/20 z-40"
             />
 
             {/* Drawer */}
             <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 20 }}
+              initial={{ y: shouldReduceMotion ? 0 : '100%', opacity: shouldReduceMotion ? 0 : 1 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: shouldReduceMotion ? 0 : '100%', opacity: shouldReduceMotion ? 0 : 1 }}
+              transition={shouldReduceMotion ? { duration: 0 } : { type: 'spring', damping: 20 }}
               className="fixed left-0 bottom-0 right-0 bg-white max-w-md mx-auto rounded-t-2xl shadow-xl z-50 max-h-[80vh] overflow-y-auto"
             >
               <div className="p-4 border-b">
@@ -57,6 +60,7 @@ export default function AppDrawer() {
                   <h2 className="text-lg font-semibold">Side by Side</h2>
                   <button
                     onClick={() => setIsOpen(false)}
+                    aria-label="Close menu"
                     className="p-2 hover:bg-gray-100 rounded-2xl"
                   >
                     <X className="w-5 h-5 text-gray-600" />

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Star } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from "@/lib/utils";
 
 interface StarRatingProps {
@@ -14,8 +14,8 @@ interface StarRatingProps {
   disabled?: boolean;
 }
 
-export function StarRating({ 
-  totalStars = 5, 
+export function StarRating({
+  totalStars = 5,
   defaultValue = 0,
   onRate,
   size = 'md',
@@ -24,6 +24,7 @@ export function StarRating({
 }: StarRatingProps) {
   const [rating, setRating] = useState(defaultValue);
   const [hover, setHover] = useState(0);
+  const shouldReduceMotion = useReducedMotion();
 
   const handleRating = (star: number) => {
     if (disabled) return;
@@ -55,23 +56,23 @@ export function StarRating({
           onClick={() => handleRating(star)}
           onMouseEnter={() => !disabled && setHover(star)}
           onMouseLeave={() => !disabled && setHover(0)}
-          whileHover={!disabled ? { scale: 1.3, rotate: -10 } : undefined}
-          whileTap={!disabled ? { scale: 0.9, rotate: 15 } : undefined}
+          whileHover={!disabled && !shouldReduceMotion ? { scale: 1.3, rotate: -10 } : undefined}
+          whileTap={!disabled && !shouldReduceMotion ? { scale: 0.9, rotate: 15 } : undefined}
           disabled={disabled}
         >
           <motion.div
             className={cn(
               "transition-colors duration-300",
-              (hover || rating) >= star 
-                ? "text-yellow-400 dark:text-yellow-300" 
+              (hover || rating) >= star
+                ? "text-yellow-400 dark:text-yellow-300"
                 : "text-muted"
             )}
             initial={{ scale: 1 }}
             animate={{
-              scale: (hover || rating) >= star ? 1.2 : 1,
+              scale: shouldReduceMotion ? 1 : ((hover || rating) >= star ? 1.2 : 1),
             }}
-            transition={{ 
-              duration: 0.3,
+            transition={{
+              duration: shouldReduceMotion ? 0 : 0.3,
               ease: "easeOut"
             }}
           >

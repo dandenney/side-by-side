@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { UrlListItem, Tag } from '@/types/url-list'
 import { Plus, Trash2, Edit2, X, Link, Tag as TagIcon, StickyNote, Archive, Search, Calendar, MapPin, Phone, Film } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
 import AppDrawer from './AppDrawer'
 import TagInput from './TagInput'
@@ -60,6 +60,7 @@ export function UrlList({
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [isCreatingNewItem, setIsCreatingNewItem] = useState(false)
+  const shouldReduceMotion = useReducedMotion()
 
   const inputTypeOptions = [
     { value: 'url', icon: Link, label: 'URL' },
@@ -82,7 +83,7 @@ export function UrlList({
           <button
             key={option.value}
             onClick={() => onChange(option.value)}
-            className={`relative z-10 flex-1 px-3 py-1.5 rounded-md text-gray-400 transition-all ease-in-out hover:text-gray-700 ${value === option.value ? 'bg-gray-200 text-gray-700' : ''
+            className={`relative z-10 flex-1 px-3 py-1.5 rounded-md text-gray-400 transition-colors ease-in-out hover:text-gray-700 ${value === option.value ? 'bg-gray-200 text-gray-700' : ''
               }`}
           >
             <div className="flex items-center justify-center gap-1">
@@ -107,16 +108,14 @@ export function UrlList({
   }, [items])
 
   const itemVariants = {
-    initial: { opacity: 0, y: 20, scale: 0.95 },
-    animate: { opacity: 1, y: 0, scale: 1 },
+    initial: shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.95 },
+    animate: shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 },
     exit: {
       opacity: 0,
-      y: -10,
-      scale: 0.95,
-      filter: "blur(2px)",
+      ...(shouldReduceMotion ? {} : { y: -10, scale: 0.95 }),
       transition: { duration: 0 }
     },
-    tap: {
+    tap: shouldReduceMotion ? {} : {
       scale: 0.98,
       transition: {
         type: "spring",
@@ -128,9 +127,19 @@ export function UrlList({
 
   const modalContentVariants = {
     initial: { opacity: 0 },
-    animate: { opacity: 1, transition: { duration: 0.2 } },
-    exit: { opacity: 0, transition: { duration: 0.4 } },
+    animate: { opacity: 1, transition: { duration: shouldReduceMotion ? 0 : 0.2 } },
+    exit: { opacity: 0, transition: { duration: shouldReduceMotion ? 0 : 0.4 } },
   }
+
+  // Shared layout transition for card-to-modal animation
+  const layoutTransition = shouldReduceMotion
+    ? { duration: 0 }
+    : {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+        mass: 1,
+      }
 
   const fetchMetaData = async (url: string) => {
     try {
@@ -734,14 +743,17 @@ export function UrlList({
                   exit="exit"
                   whileTap="tap"
                   layout
-                  className={`flex flex-col bg-white rounded-2xl shadow-sm border overflow-hidden hover:bg-gray-50 ${selectedItem?.id === item.id ? 'opacity-0' : ''}`}
+                  transition={layoutTransition}
+                  className={`flex flex-col bg-white rounded-2xl shadow-sm border overflow-hidden hover:bg-gray-50 ${selectedItem?.id === item.id ? 'pointer-events-none opacity-0' : ''}`}
                   layoutId={`card-${item.id}`}
                   onClick={() => handleCardClick(item)}
+                  style={{ originX: 0.5, originY: 0.5 }}
                 >
                   {item.imageUrl ? (
                     <motion.div
                       className="bg-gray-100 w-full overflow-hidden relative"
                       layoutId={`image-${item.id}`}
+                      transition={layoutTransition}
                       style={{ aspectRatio: '16/9' }}
                     >
                       <Image
@@ -756,6 +768,7 @@ export function UrlList({
                     <motion.div
                       className="bg-gray-100 w-full relative"
                       layoutId={`image-${item.id}`}
+                      transition={layoutTransition}
                       style={{ aspectRatio: '16/9' }}
                     >
                       <div className="absolute inset-0 flex items-center justify-center text-gray-400">
@@ -767,12 +780,14 @@ export function UrlList({
                     <motion.h3
                       className={`font-bold text-lg ${textColor} leading-6 mb-1`}
                       layoutId={`title-${item.id}`}
+                      transition={layoutTransition}
                     >
                       {item.title}
                     </motion.h3>
                     <motion.div
                       className="flex flex-wrap gap-1 mt-4"
                       layoutId={`tags-${item.id}`}
+                      transition={layoutTransition}
                     >
                       {item.tags?.length ? (
                         item.tags.slice(0, 2).map(tag => (
@@ -808,7 +823,8 @@ export function UrlList({
           <div>
             <motion.button
               onClick={() => setIsModalOpen(true)}
-              whileTap={{ y: 4 }}
+              whileTap={shouldReduceMotion ? undefined : { y: 4 }}
+              aria-label="Add new item"
               className={`w-20 h-20 bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} border-8 border-white -mt-12 text-white rounded-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)] active:${buttonGradientTo} active:${buttonGradientFrom} active:-translate-y-2 focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} flex items-center justify-center`}
             >
               <Plus className="w-8 h-8" />
@@ -824,17 +840,16 @@ export function UrlList({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
             onClick={handleCloseModal}
           >
             <motion.div
-              variants={modalContentVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
+              layout
+              transition={layoutTransition}
               className="w-full max-w-4xl mx-auto bg-white rounded-2xl overflow-hidden max-h-[90vh] flex flex-col"
               layoutId={isCreatingNewItem ? 'new-item' : `card-${selectedItem.id}`}
-              style={{ width: '100%', maxWidth: '56rem', height: '90vh' }}
+              style={{ width: '100%', maxWidth: '56rem', height: '90vh', originX: 0.5, originY: 0.5 }}
               onClick={(e) => e.stopPropagation()}
             >
               {editingItem && (editingItem.id === selectedItem.id || isCreatingNewItem) ? (
@@ -925,14 +940,16 @@ export function UrlList({
                 <div className="flex flex-col h-full">
                   {/* Header with close button - always visible */}
                   <div className="flex justify-between items-start p-4 border-b border-gray-200 flex-shrink-0">
-                    <motion.h2 
+                    <motion.h2
                       className="text-xl font-semibold pr-4"
                       layoutId={`title-${selectedItem.id}`}
+                      transition={layoutTransition}
                     >
                       {selectedItem.title}
                     </motion.h2>
                     <button
                       onClick={handleCloseModal}
+                      aria-label="Close"
                       className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full flex-shrink-0"
                     >
                       <X className="w-5 h-5" />
@@ -942,10 +959,11 @@ export function UrlList({
                   {/* Scrollable content area */}
                   <div className="flex-1 overflow-y-auto">
                     {selectedItem.imageUrl && (
-                      <motion.div 
-                        className="relative w-full" 
+                      <motion.div
+                        className="relative w-full"
                         style={{ aspectRatio: '16/9', maxHeight: '40vh' }}
                         layoutId={`image-${selectedItem.id}`}
+                        transition={layoutTransition}
                       >
                         <Image
                           src={selectedItem.imageUrl}
@@ -963,9 +981,10 @@ export function UrlList({
                           <p className="text-gray-600 break-words overflow-wrap-anywhere">{selectedItem.description}</p>
                         )}
 
-                        <motion.div 
+                        <motion.div
                           className="flex flex-wrap gap-2"
                           layoutId={`tags-${selectedItem.id}`}
+                          transition={layoutTransition}
                         >
                           {selectedItem.tags && selectedItem.tags.length > 0 ? (
                             selectedItem.tags.map(tag => (
@@ -1027,6 +1046,7 @@ export function UrlList({
                         e.stopPropagation();
                         deleteItem(e, selectedItem.id);
                       }}
+                      aria-label="Delete item"
                       className="p-3 hover:bg-gray-100 rounded-full"
                     >
                       <Trash2 className="w-5 h-5 text-gray-400" />
@@ -1036,6 +1056,7 @@ export function UrlList({
                         e.stopPropagation();
                         startEdit(e, selectedItem);
                       }}
+                      aria-label="Edit item"
                       className="p-3 hover:bg-gray-100 rounded-full"
                     >
                       <Edit2 className="w-5 h-5 text-gray-400" />
@@ -1045,6 +1066,7 @@ export function UrlList({
                         href={selectedItem.url}
                         target="_blank"
                         rel="noopener noreferrer"
+                        aria-label="Visit website"
                         className="text-blue-500 hover:underline inline-flex items-center gap-2 p-3"
                       >
                         <Link className="w-4 h-4" />
@@ -1052,6 +1074,7 @@ export function UrlList({
                     )}
                     <button
                       onClick={handleCloseModal}
+                      aria-label="Close modal"
                       className="p-3"
                     >
                       <X className="w-5 h-5 text-gray-400" />
@@ -1073,15 +1096,17 @@ export function UrlList({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
               onClick={() => setIsModalOpen(false)}
               className="fixed inset-0 bg-black bg-opacity-50 z-40"
             />
 
             {/* Modal */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: -20 }}
+              animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+              exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: -20 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
               className="fixed left-4 right-4 top-1/4 w-[calc(100%-2rem)] lg:max-w-md lg:left-1/2 lg:-translate-x-1/2 bg-white rounded-2xl shadow-xl p-4 z-50 max-h-[80vh] overflow-y-auto"
               style={{ maxWidth: '28rem' }}
             >
@@ -1214,6 +1239,7 @@ export function UrlList({
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
+                    aria-label="Close"
                     className="px-5 py-2 text-gray-600 shrink-0 hover:text-gray-800 focus:outline-none"
                   >
                     <X className="w-5 h-5" />

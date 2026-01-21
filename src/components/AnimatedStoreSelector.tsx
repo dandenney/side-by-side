@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 
 interface AnimatedStoreSelectorProps {
   value: 'Publix' | 'Costco' | 'Aldi'
@@ -23,6 +23,7 @@ const AnimatedStoreSelector = ({
   // Track position of the active element
   const [activeButtonData, setActiveButtonData] = useState<{ left: number; width: number } | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
+  const shouldReduceMotion = useReducedMotion()
 
   // Create refs for measuring button positions
   const containerRef = useRef<HTMLDivElement>(null)
@@ -70,7 +71,7 @@ const AnimatedStoreSelector = ({
             x: activeButtonData.left,
             width: activeButtonData.width
           }}
-          transition={{
+          transition={shouldReduceMotion ? { duration: 0 } : {
             type: "spring",
             stiffness: 500,
             damping: 40,

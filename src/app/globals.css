@@ -124,4 +124,28 @@
       min-width: 44px;
     }
   }
+
+  /* Disable hover effects on touch devices */
+  @media (hover: none) {
+    .hover\:bg-gray-50:hover,
+    .hover\:bg-gray-100:hover,
+    .hover\:bg-gray-200:hover,
+    .hover\:text-gray-500:hover,
+    .hover\:text-gray-700:hover,
+    .hover\:text-gray-800:hover {
+      background-color: inherit;
+      color: inherit;
+    }
+  }
+
+  /* Respect reduced motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 } 
