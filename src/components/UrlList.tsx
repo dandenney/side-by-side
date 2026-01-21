@@ -938,44 +938,49 @@ export function UrlList({
                 </div>
               ) : (
                 <div className="flex flex-col h-full">
-                  {/* Header with close button - always visible */}
-                  <div className="flex justify-between items-start p-4 border-b border-gray-200 flex-shrink-0">
-                    <motion.h2
-                      className="text-xl font-semibold pr-4"
-                      layoutId={`title-${selectedItem.id}`}
-                      transition={layoutTransition}
-                    >
-                      {selectedItem.title}
-                    </motion.h2>
-                    <button
-                      onClick={handleCloseModal}
-                      aria-label="Close"
-                      className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full flex-shrink-0"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-
                   {/* Scrollable content area */}
                   <div className="flex-1 overflow-y-auto">
-                    {selectedItem.imageUrl && (
-                      <motion.div
-                        className="bg-gray-100 w-full overflow-hidden relative"
-                        style={{ aspectRatio: '16/9' }}
-                        layoutId={`image-${selectedItem.id}`}
+                    {/* Image with overlaid close button */}
+                    <div className="relative">
+                      {selectedItem.imageUrl ? (
+                        <motion.div
+                          className="bg-gray-100 w-full overflow-hidden relative"
+                          style={{ aspectRatio: '16/9' }}
+                          layoutId={`image-${selectedItem.id}`}
+                          transition={layoutTransition}
+                        >
+                          <Image
+                            src={selectedItem.imageUrl}
+                            alt={selectedItem.title}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 100vw, 56rem"
+                          />
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          className="bg-gray-100 w-full overflow-hidden relative"
+                          style={{ aspectRatio: '16/9' }}
+                          layoutId={`image-${selectedItem.id}`}
+                          transition={layoutTransition}
+                        >
+                          <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                            <ImageIcon className="w-12 h-12" />
+                          </div>
+                        </motion.div>
+                      )}
+                    </div>
+
+                    <div className="p-6 space-y-4 pb-20">
+                      {/* Title */}
+                      <motion.h2
+                        className="text-xl font-semibold"
+                        layoutId={`title-${selectedItem.id}`}
                         transition={layoutTransition}
                       >
-                        <Image
-                          src={selectedItem.imageUrl}
-                          alt={selectedItem.title}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 100vw, 56rem"
-                        />
-                      </motion.div>
-                    )}
-                    
-                    <div className="p-6 space-y-4 pb-20">
+                        {selectedItem.title}
+                      </motion.h2>
+
                       <div className="space-y-4">
                         {selectedItem.description && (
                           <p className="text-gray-600 break-words overflow-wrap-anywhere">{selectedItem.description}</p>
