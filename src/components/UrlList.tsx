@@ -761,12 +761,12 @@ export function UrlList({
                         alt={item.title}
                         fill
                         className="object-cover"
-                        sizes="(max-width: 768px) 50vw, 33vw"
+                        sizes="(max-width: 768px) 100vw, 56rem"
                       />
                     </motion.div>
                   ) : (
                     <motion.div
-                      className="bg-gray-100 w-full relative"
+                      className="bg-gray-100 w-full overflow-hidden relative"
                       layoutId={`image-${item.id}`}
                       transition={layoutTransition}
                       style={{ aspectRatio: '16/9' }}
@@ -960,8 +960,8 @@ export function UrlList({
                   <div className="flex-1 overflow-y-auto">
                     {selectedItem.imageUrl && (
                       <motion.div
-                        className="relative w-full"
-                        style={{ aspectRatio: '16/9', maxHeight: '40vh' }}
+                        className="bg-gray-100 w-full overflow-hidden relative"
+                        style={{ aspectRatio: '16/9' }}
                         layoutId={`image-${selectedItem.id}`}
                         transition={layoutTransition}
                       >
@@ -970,7 +970,7 @@ export function UrlList({
                           alt={selectedItem.title}
                           fill
                           className="object-cover"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          sizes="(max-width: 768px) 100vw, 56rem"
                         />
                       </motion.div>
                     )}
