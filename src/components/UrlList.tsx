@@ -116,7 +116,7 @@ export function UrlList({
       transition: { duration: 0 }
     },
     tap: shouldReduceMotion ? {} : {
-      scale: 0.98,
+      scale: 0.96,
       transition: {
         type: "spring",
         stiffness: 400,
@@ -760,7 +760,7 @@ export function UrlList({
                         src={item.imageUrl}
                         alt={item.title}
                         fill
-                        className="object-cover"
+                        className="object-cover ring-1 ring-inset ring-black/10"
                         sizes="(max-width: 768px) 100vw, 56rem"
                       />
                     </motion.div>
@@ -953,7 +953,7 @@ export function UrlList({
                             src={selectedItem.imageUrl}
                             alt={selectedItem.title}
                             fill
-                            className="object-cover"
+                            className="object-cover ring-1 ring-inset ring-black/10"
                             sizes="(max-width: 768px) 100vw, 56rem"
                           />
                         </motion.div>

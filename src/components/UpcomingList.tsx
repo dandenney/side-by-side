@@ -384,7 +384,7 @@ export default function UpcomingList() {
                       src={selectedItem.imageUrl}
                       alt={selectedItem.title}
                       fill
-                      className="object-cover"
+                      className="object-cover ring-1 ring-inset ring-black/10"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   </div>

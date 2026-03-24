@@ -212,7 +212,7 @@ export function ShoppingList({
           <button
             key={option.value}
             onClick={() => onChange(option.value)}
-            className={`relative z-10 flex-1 px-3 py-1.5 rounded-md text-gray-400 transition-all ease-in-out hover:text-gray-700 ${
+            className={`relative z-10 flex-1 px-3 py-1.5 rounded-md text-gray-400 transition-colors ease-in-out hover:text-gray-700 ${
               value === option.value ? 'bg-gray-200 text-gray-700' : ''
             }`}
           >
@@ -227,9 +227,9 @@ export function ShoppingList({
     initial: { opacity: 0, y: 20, scale: 0.95 },
     animate: { opacity: 1, y: 0, scale: 1 },
     exit: { opacity: 0, x: -100, scale: 0.95 },
-    tap: { 
-      scale: 0.98,
-      transition: { 
+    tap: {
+      scale: 0.96,
+      transition: {
         type: "spring",
         stiffness: 400,
         damping: 17
