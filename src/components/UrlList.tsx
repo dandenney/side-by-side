@@ -690,49 +690,27 @@ export function UrlList({
         {/* List Items */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-lg mx-auto space-y-2 pt-4 lg:max-w-7xl">
-            <h1 className={`opacity-40 text-center ${titleColor} uppercase font-bold`}>{title}</h1>
+            <h1 className="mb-1 text-center text-sm font-semibold text-gray-400">{title}</h1>
 
           {/* Tag Filter */}
           <div className="flex flex-wrap gap-2 px-4 justify-center">
-            <button
-              onClick={() => setSelectedTag(null)}
-              className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm ${
-                selectedTag === null
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'bg-white/50 text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <TagIcon className="w-3 h-3" />
-              <span>All</span>
-            </button>
-            <button
-              onClick={() => setSelectedTag('untagged')}
-              className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm ${
-                selectedTag === 'untagged'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'bg-white/50 text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <TagIcon className="w-3 h-3" />
-              <span>Untagged</span>
-            </button>
-            {existingTags.map(tag => (
+            {[null, 'untagged', ...existingTags].map((tag) => (
               <button
-                key={tag}
+                key={tag ?? '__all__'}
                 onClick={() => setSelectedTag(tag)}
-                className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm ${
+                className={`flex items-center gap-1 py-1 pr-2 pl-1.5 rounded-full text-sm font-medium ${
                   selectedTag === tag
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-white/50 text-gray-600 hover:bg-gray-100'
+                    ? 'bg-purple-50 text-purple-700 ring-1 ring-purple-600/20'
+                    : 'bg-white/70 text-gray-500 ring-1 ring-gray-950/5'
                 }`}
               >
-                <TagIcon className="w-3 h-3" />
-                <span>{tag}</span>
+                <TagIcon className="size-3" />
+                <span>{tag === null ? 'All' : tag === 'untagged' ? 'Untagged' : tag}</span>
               </button>
             ))}
           </div>
 
-          <section className="grid grid-cols-2 gap-4">
+          <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <AnimatePresence mode="popLayout">
               {filteredItems.filter(item => !item.archived).map(item => (
                 <motion.div
@@ -744,48 +722,41 @@ export function UrlList({
                   whileTap="tap"
                   layout
                   transition={layoutTransition}
-                  className={`flex flex-col bg-white rounded-2xl shadow-sm border overflow-hidden hover:bg-gray-50 ${selectedItem?.id === item.id ? 'pointer-events-none opacity-0' : ''}`}
+                  className={`flex flex-col bg-white rounded-2xl border border-gray-950/10 overflow-hidden hover:bg-gray-50/80 cursor-pointer ${selectedItem?.id === item.id ? 'pointer-events-none opacity-0' : ''}`}
                   layoutId={`card-${item.id}`}
                   onClick={() => handleCardClick(item)}
                   style={{ originX: 0.5, originY: 0.5 }}
                 >
-                  {item.imageUrl ? (
-                    <motion.div
-                      className="bg-gray-100 w-full overflow-hidden relative"
-                      layoutId={`image-${item.id}`}
-                      transition={layoutTransition}
-                      style={{ aspectRatio: '16/9' }}
-                    >
+                  <motion.div
+                    className="bg-gray-100 w-full overflow-hidden relative"
+                    layoutId={`image-${item.id}`}
+                    transition={layoutTransition}
+                    style={{ aspectRatio: '16/9' }}
+                  >
+                    {item.imageUrl ? (
                       <Image
                         src={item.imageUrl}
                         alt={item.title}
                         fill
                         className="object-cover ring-1 ring-inset ring-black/10"
-                        sizes="(max-width: 768px) 100vw, 56rem"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 20vw"
                       />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      className="bg-gray-100 w-full overflow-hidden relative"
-                      layoutId={`image-${item.id}`}
-                      transition={layoutTransition}
-                      style={{ aspectRatio: '16/9' }}
-                    >
-                      <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                        <ImageIcon className="w-12 h-12" />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center text-gray-300">
+                        <ImageIcon className="size-8" />
                       </div>
-                    </motion.div>
-                  )}
-                  <div className="p-3 flex-1 flex flex-col">
+                    )}
+                  </motion.div>
+                  <div className="p-3 flex-1 flex flex-col gap-2">
                     <motion.h3
-                      className={`font-bold text-lg ${textColor} leading-6 mb-1`}
+                      className={`font-semibold text-sm text-balance ${textColor}`}
                       layoutId={`title-${item.id}`}
                       transition={layoutTransition}
                     >
                       {item.title}
                     </motion.h3>
                     <motion.div
-                      className="flex flex-wrap gap-1 mt-4"
+                      className="flex flex-wrap gap-1"
                       layoutId={`tags-${item.id}`}
                       transition={layoutTransition}
                     >
@@ -793,15 +764,15 @@ export function UrlList({
                         item.tags.slice(0, 2).map(tag => (
                           <span
                             key={tag.id}
-                            className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600"
+                            className="inline-flex items-center gap-1 py-0.5 pr-2 pl-1.5 bg-gray-100 rounded-full text-xs text-gray-500"
                           >
-                            <TagIcon className="w-3 h-3" />
+                            <TagIcon className="size-3" />
                             {tag.name}
                           </span>
                         ))
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-400">
-                          <TagIcon className="w-3 h-3" />
+                        <span className="inline-flex items-center gap-1 py-0.5 pr-2 pl-1.5 bg-gray-50 rounded-full text-xs text-gray-400">
+                          <TagIcon className="size-3" />
                           Untagged
                         </span>
                       )}
@@ -923,13 +894,13 @@ export function UrlList({
                     <div className="flex gap-2 pt-4">
                       <button
                         onClick={handleSaveEdit}
-                        className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-2xl hover:bg-blue-600 transition-colors"
+                        className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-2xl font-medium text-sm hover:bg-blue-600"
                       >
                         Save
                       </button>
                       <button
                         onClick={handleCloseModal}
-                        className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-2xl hover:bg-gray-300 transition-colors"
+                        className="flex-1 bg-gray-100 text-gray-600 px-4 py-2 rounded-2xl font-medium text-sm hover:bg-gray-200"
                       >
                         Cancel
                       </button>
@@ -974,7 +945,7 @@ export function UrlList({
                     <div className="p-6 space-y-4 pb-20">
                       {/* Title */}
                       <motion.h2
-                        className="text-xl font-semibold"
+                        className="text-xl font-semibold text-balance"
                         layoutId={`title-${selectedItem.id}`}
                         transition={layoutTransition}
                       >
@@ -983,11 +954,11 @@ export function UrlList({
 
                       <div className="space-y-4">
                         {selectedItem.description && (
-                          <p className="text-gray-600 break-words overflow-wrap-anywhere">{selectedItem.description}</p>
+                          <p className="text-sm text-gray-600 text-pretty break-words overflow-wrap-anywhere">{selectedItem.description}</p>
                         )}
 
                         <motion.div
-                          className="flex flex-wrap gap-2"
+                          className="flex flex-wrap gap-1.5"
                           layoutId={`tags-${selectedItem.id}`}
                           transition={layoutTransition}
                         >
@@ -995,49 +966,47 @@ export function UrlList({
                             selectedItem.tags.map(tag => (
                               <span
                                 key={tag.id}
-                                className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600"
+                                className="inline-flex items-center gap-1 py-0.5 pr-2 pl-1.5 bg-gray-100 rounded-full text-xs text-gray-500"
                               >
-                                <TagIcon className="w-3 h-3" />
+                                <TagIcon className="size-3" />
                                 {tag.name}
                               </span>
                             ))
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-400">
-                              <TagIcon className="w-3 h-3" />
+                            <span className="inline-flex items-center gap-1 py-0.5 pr-2 pl-1.5 bg-gray-50 rounded-full text-xs text-gray-400">
+                              <TagIcon className="size-3" />
                               Untagged
                             </span>
                           )}
                         </motion.div>
 
                         {selectedItem.notes && (
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-700 mb-1">Notes</h3>
-                            <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-2xl break-words overflow-wrap-anywhere">
+                          <div className="space-y-1">
+                            <h3 className="text-xs font-semibold text-gray-400">Notes</h3>
+                            <p className="text-sm text-gray-600 text-pretty bg-gray-50 p-3 rounded-xl break-words overflow-wrap-anywhere">
                               {selectedItem.notes}
                             </p>
                           </div>
                         )}
 
-                        <div className="space-y-2 text-sm text-gray-500">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            <span>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-gray-400">
+                            <Calendar className="size-4 shrink-0" />
+                            <span className="tabular-nums">
                               Added {formatDate(selectedItem.createdAt.toISOString().split('T')[0])}
                             </span>
                           </div>
 
                           {selectedItem.url && (
-                            <div className="flex items-center gap-2">
-                              <Link className="w-4 h-4" />
-                              <a
-                                href={selectedItem.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 text-blue-500 hover:underline"
-                              >
-                                Visit Website
-                              </a>
-                            </div>
+                            <a
+                              href={selectedItem.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-sm text-blue-500 hover:underline"
+                            >
+                              <Link className="size-4 shrink-0 text-gray-400" />
+                              Visit Website
+                            </a>
                           )}
                         </div>
                       </div>
@@ -1045,16 +1014,16 @@ export function UrlList({
                   </div>
 
                   {/* Footer navigation - always visible */}
-                  <nav className="bg-slate-100 border-t border-slate-200 flex justify-between rounded-b-2xl p-2 flex-shrink-0">
+                  <nav className="flex items-center justify-between border-t border-gray-950/5 bg-gray-50/80 rounded-b-2xl p-3 shrink-0">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         deleteItem(e, selectedItem.id);
                       }}
                       aria-label="Delete item"
-                      className="p-3 hover:bg-gray-100 rounded-full"
+                      className="size-10 flex items-center justify-center rounded-full hover:bg-gray-100"
                     >
-                      <Trash2 className="w-5 h-5 text-gray-400" />
+                      <Trash2 className="size-4 text-gray-400" />
                     </button>
                     <button
                       onClick={(e) => {
@@ -1062,9 +1031,9 @@ export function UrlList({
                         startEdit(e, selectedItem);
                       }}
                       aria-label="Edit item"
-                      className="p-3 hover:bg-gray-100 rounded-full"
+                      className="size-10 flex items-center justify-center rounded-full hover:bg-gray-100"
                     >
-                      <Edit2 className="w-5 h-5 text-gray-400" />
+                      <Edit2 className="size-4 text-gray-400" />
                     </button>
                     {selectedItem.url && (
                       <a
@@ -1072,17 +1041,17 @@ export function UrlList({
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Visit website"
-                        className="text-blue-500 hover:underline inline-flex items-center gap-2 p-3"
+                        className="size-10 flex items-center justify-center rounded-full hover:bg-gray-100"
                       >
-                        <Link className="w-4 h-4" />
+                        <Link className="size-4 text-blue-400" />
                       </a>
                     )}
                     <button
                       onClick={handleCloseModal}
                       aria-label="Close modal"
-                      className="p-3"
+                      className="size-10 flex items-center justify-center rounded-full hover:bg-gray-100"
                     >
-                      <X className="w-5 h-5 text-gray-400" />
+                      <X className="size-4 text-gray-400" />
                     </button>
                   </nav>
                 </div>

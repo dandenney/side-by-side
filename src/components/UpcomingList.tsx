@@ -280,57 +280,81 @@ export default function UpcomingList() {
       <div className="h-full flex flex-col">
         {/* List Items */}
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-lg mx-auto pt-4 lg:max-w-7xl">
-            <h1 className="mb-4 opacity-40 text-blue-900 text-center uppercase font-bold">Upcoming Events</h1>
+          <div className="max-w-lg mx-auto pt-4 pb-28 lg:max-w-7xl">
+            <h1 className="mb-5 text-center text-sm font-semibold text-gray-400">Upcoming Events</h1>
 
             <ComponentErrorBoundary>
-              <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <section className="grid grid-cols-1 lg:grid-cols-3 gap-3" role="list">
             {isLoading ? (
-              <div className="col-span-full flex justify-center" role="status" aria-live="polite">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" aria-label="Loading upcoming events"></div>
-              </div>
-            ) : items.length === 0 ? (
-              <div className="col-span-full text-center text-gray-500">
-                No upcoming events found. Add your first event!
-              </div>  
-            ) : (
-              items.map((item, index) => (
-                <div key={index}>
-                  <div className="bg-blue-100 -mb-2 pb-4 pt-2 px-4 rounded-t-2xl shadow-sm">
-                    <div className="flex items-center gap-2 text-blue-800">
-                      <CalendarIcon className="w-4 h-4" />
-                      <span className="text-blue-800 text-xs font-semibold uppercase">{formatDateDifference(item.startDate)}</span>
+              <div className="col-span-full space-y-3" role="status" aria-live="polite" aria-label="Loading upcoming events">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-2xl border border-gray-950/10 overflow-hidden animate-pulse">
+                    <div className="p-4 space-y-3">
+                      <div className="flex justify-between">
+                        <div className="h-3.5 w-20 bg-gray-100 rounded-full" />
+                        <div className="h-5 w-16 bg-gray-100 rounded-full" />
+                      </div>
+                      <div className="h-5 w-3/4 bg-gray-100 rounded-lg" />
+                      <div className="h-3.5 w-1/2 bg-gray-100 rounded-full" />
                     </div>
                   </div>
+                ))}
+              </div>
+            ) : items.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center gap-3 py-16 text-center">
+                <div className="size-12 rounded-full bg-blue-50 flex items-center justify-center">
+                  <CalendarIcon className="size-5 text-blue-400" />
+                </div>
+                <p className="text-sm font-medium text-gray-500">No upcoming events yet</p>
+                <p className="text-sm text-gray-400">Tap the + button below to add your first event.</p>
+              </div>
+            ) : (
+              items.map((item) => (
                 <motion.div
                   key={item.id}
+                  role="listitem"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-2xl shadow-sm border p-4 hover:bg-gray-50 cursor-pointer"
+                  className="bg-white rounded-2xl border border-gray-950/10 overflow-hidden cursor-pointer hover:bg-gray-50/80"
                   onClick={() => handleCardClick(item)}
                 >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-medium text-gray-900">{item.title}</h3>
-                      <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
-                        <span>{formatDate(item.startDate)}</span>
+                  <div className="flex items-start gap-3 p-4">
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <CalendarIcon className="size-3.5 text-blue-400 shrink-0" />
+                          <span className="text-xs font-semibold text-blue-500">{formatDateDifference(item.startDate)}</span>
+                        </div>
+                        <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
+                          item.status === 'tickets' ? 'bg-green-50 text-green-700 ring-1 ring-green-600/20' :
+                          item.status === 'definitely' ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/20' :
+                          'bg-amber-50 text-amber-700 ring-1 ring-amber-600/20'
+                        }`}>
+                          {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                        </span>
                       </div>
+                      <h3 className="font-semibold text-gray-900 text-balance leading-snug">{item.title}</h3>
+                      <p className="text-sm text-gray-400 tabular-nums">{formatDate(item.startDate)}</p>
                       {item.location && (
-                        <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                          <MapPin className="w-3 h-3" />
-                          <span>{item.location}</span>
+                        <div className="flex items-center gap-1.5 text-sm text-gray-400">
+                          <MapPin className="size-3.5 shrink-0" />
+                          <span className="truncate">{item.location}</span>
                         </div>
                       )}
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      item.status === 'tickets' ? 'bg-green-100 text-green-800' :
-                      item.status === 'definitely' ? 'bg-blue-100 text-blue-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                    </span>
+                    {item.imageUrl && (
+                      <div className="relative size-16 rounded-xl overflow-hidden shrink-0 ring-1 ring-black/10">
+                        <Image
+                          src={item.imageUrl}
+                          alt={item.title}
+                          fill
+                          className="object-cover"
+                          sizes="64px"
+                        />
+                      </div>
+                    )}
                   </div>
-                </motion.div></div>
+                </motion.div>
               ))
             )}
           </section>
@@ -390,45 +414,53 @@ export default function UpcomingList() {
                   </div>
                 )}
                 <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
-                  <div className="flex justify-between items-start">
-                    <h2 className="text-xl font-semibold">{selectedItem.title}</h2>
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5">
+                        <CalendarIcon className="size-3.5 text-blue-400 shrink-0" />
+                        <span className="text-xs font-semibold text-blue-500">{formatDateDifference(selectedItem.startDate)}</span>
+                      </div>
+                      <h2 className="text-xl font-semibold text-gray-900 text-balance">{selectedItem.title}</h2>
+                    </div>
                     <button
                       onClick={handleCloseModal}
-                      className="text-gray-500 hover:text-gray-700 p-2"
+                      className="shrink-0 size-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600"
                     >
-                      <X className="w-5 h-5" />
+                      <X className="size-4" />
                     </button>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {selectedItem.description && (
-                      <p className="text-gray-600">{selectedItem.description}</p>
+                      <p className="text-sm text-gray-600 text-pretty">{selectedItem.description}</p>
                     )}
 
-                    <div className="space-y-2 text-sm text-gray-500">
-                      <div className="flex items-center gap-2">
-                        <CalendarIcon className="w-4 h-4" />
-                        <span>
-                          {formatDate(selectedItem.startDate)} -{' '}
-                          {formatDate(selectedItem.endDate)}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <CalendarIcon className="size-4 shrink-0" />
+                        <span className="tabular-nums">
+                          {formatDate(selectedItem.startDate)}
+                          {selectedItem.startDate !== selectedItem.endDate && (
+                            <> – {formatDate(selectedItem.endDate)}</>
+                          )}
                         </span>
                       </div>
 
                       {selectedItem.location && (
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4" />
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <MapPin className="size-4 shrink-0" />
                           <span>{selectedItem.location}</span>
                         </div>
                       )}
 
                       {selectedItem.url && (
-                        <div className="flex items-center gap-2">
-                          <Link className="w-4 h-4" />
+                        <div className="flex items-center gap-2 text-sm">
+                          <Link className="size-4 shrink-0 text-gray-500" />
                           <a
                             href={selectedItem.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-blue-500 hover:underline"
+                            className="text-blue-500 hover:underline"
                           >
                             Visit Website
                           </a>
@@ -438,43 +470,45 @@ export default function UpcomingList() {
                   </div>
                 </div>
 
-                <nav className="bg-slate-100 border-t border-slate-200 flex justify-between rounded-b-2xl p-2">
+                <nav className="flex items-center justify-between border-t border-gray-950/5 rounded-b-2xl p-3 bg-gray-50/80">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete(selectedItem.id);
                       handleCloseModal();
                     }}
-                    className="p-3 hover:bg-gray-100 rounded-full"
+                    className="size-10 flex items-center justify-center rounded-full hover:bg-gray-100"
                     aria-label="Delete"
                   >
-                    <Trash2 className="w-5 h-5 text-gray-400" />
+                    <Trash2 className="size-4 text-gray-400" />
                   </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleEdit(selectedItem);
                     }}
-                    className="p-3 hover:bg-gray-100 rounded-full"
+                    className="size-10 flex items-center justify-center rounded-full hover:bg-gray-100"
                     aria-label="Edit"
                   >
-                    <Edit2 className="w-5 h-5 text-gray-400" />
+                    <Edit2 className="size-4 text-gray-400" />
                   </button>
                   {selectedItem.url && (
                     <a
                       href={selectedItem.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-500 hover:underline inline-flex items-center gap-2 p-3"
+                      className="size-10 flex items-center justify-center rounded-full hover:bg-gray-100"
+                      aria-label="Visit website"
                     >
-                      <Link className="w-4 h-4" />
+                      <Link className="size-4 text-blue-400" />
                     </a>
                   )}
                   <button
                     onClick={handleCloseModal}
-                    className="p-3"
+                    className="size-10 flex items-center justify-center rounded-full hover:bg-gray-100"
+                    aria-label="Close"
                   >
-                    <X className="w-5 h-5 text-gray-400" />
+                    <X className="size-4 text-gray-400" />
                   </button>
                 </nav>
               </div>

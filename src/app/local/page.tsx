@@ -9,7 +9,6 @@ import { PlaceMap } from '@/components/PlaceMap'
 import { Place } from '@/types/url-list'
 import { getUrlItems } from '@/lib/supabase/url-items'
 import { Map, List } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 export default function LocalList() {
   const { user, loading } = useAuth()
@@ -46,26 +45,32 @@ export default function LocalList() {
   }
 
   return (
-    <main className="bg-purple-100 min-h-[100dvh] pb-24">
+    <main className="antialiased bg-purple-50 min-h-dvh pb-24">
       <div className="p-4 space-y-4">
-        <div className="flex justify-between items-center">
-          <div className="flex gap-2">
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
+        <div className="flex justify-center">
+          <div className="flex rounded-2xl bg-white/80 p-1 gap-1 shadow-sm border border-gray-950/5">
+            <button
               onClick={() => setViewMode('list')}
-              className="flex items-center gap-2"
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium ${
+                viewMode === 'list'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-400'
+              }`}
             >
-              <List className="w-4 h-4" />
-              List View
-            </Button>
-            <Button
-              variant={viewMode === 'map' ? 'default' : 'outline'}
+              <List className="size-4" />
+              List
+            </button>
+            <button
               onClick={() => setViewMode('map')}
-              className="flex items-center gap-2"
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium ${
+                viewMode === 'map'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-400'
+              }`}
             >
-              <Map className="w-4 h-4" />
-              Map View
-            </Button>
+              <Map className="size-4" />
+              Map
+            </button>
           </div>
         </div>
 
@@ -88,7 +93,7 @@ export default function LocalList() {
               <PlaceMap places={places} />
             ) : (
               <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500">No places with coordinates found</p>
+                <p className="text-sm text-gray-500">No places with coordinates found</p>
               </div>
             )}
           </div>
@@ -96,4 +101,4 @@ export default function LocalList() {
       </div>
     </main>
   )
-} 
+}
