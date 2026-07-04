@@ -2,8 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Link2, Loader2 } from 'lucide-react'
-import { createRecipe, updateRecipe } from '@/lib/supabase/recipes'
+import {
+  createRecipe,
+  updateRecipe,
+  getRecipeBySourceUrl,
+} from '@/lib/supabase/recipes'
 import { Recipe, RECIPE_TAGS } from '@/types/recipe'
 
 const linesToText = (lines: string[]) => lines.join('\n')
@@ -35,11 +40,14 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
 
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  // An existing recipe sharing this source URL (create mode only).
+  const [duplicate, setDuplicate] = useState<Recipe | null>(null)
 
   const handleFetch = async () => {
     if (!url.trim()) return
     setFetching(true)
     setFetchError(null)
+    setDuplicate(null)
     try {
       const res = await fetch(`/api/recipe-preview?url=${encodeURIComponent(url.trim())}`)
       const data = await res.json()
@@ -50,7 +58,12 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
       setInstructions(linesToText(data.instructions ?? []))
       setServings(data.servings ?? '')
       setImageUrl(data.imageUrl ?? '')
-      setSourceUrl(data.sourceUrl ?? url.trim())
+      const resolvedSource = data.sourceUrl ?? url.trim()
+      setSourceUrl(resolvedSource)
+
+      // Warn early if we've already added this source.
+      const existing = await getRecipeBySourceUrl(resolvedSource)
+      if (existing) setDuplicate(existing)
     } catch (err) {
       setFetchError(err instanceof Error ? err.message : 'Could not read that URL')
     } finally {
@@ -72,17 +85,28 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
     setSaving(true)
     setSaveError(null)
 
+    const trimmedSource = sourceUrl.trim()
     const payload = {
       title: title.trim(),
       ingredients: textToLines(ingredients),
       instructions: textToLines(instructions),
       servings: servings.trim() || undefined,
-      sourceUrl: sourceUrl.trim() || undefined,
+      sourceUrl: trimmedSource || undefined,
       imageUrl: imageUrl.trim() || undefined,
       tags,
     }
 
     try {
+      // Block duplicate adds by source URL (create mode only).
+      if (!isEdit && trimmedSource) {
+        const existing = await getRecipeBySourceUrl(trimmedSource)
+        if (existing) {
+          setDuplicate(existing)
+          setSaving(false)
+          return
+        }
+      }
+
       const saved =
         isEdit && recipe
           ? await updateRecipe(recipe.id, payload)
@@ -165,7 +189,10 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
           <input
             type="url"
             value={sourceUrl}
-            onChange={(e) => setSourceUrl(e.target.value)}
+            onChange={(e) => {
+              setSourceUrl(e.target.value)
+              setDuplicate(null)
+            }}
             placeholder="https://…"
             className={inputClass}
           />
@@ -213,12 +240,25 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
         />
       </Field>
 
+      {duplicate && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          This URL is already saved as{' '}
+          <Link
+            href={`/recipes/${duplicate.id}`}
+            className="font-medium underline"
+          >
+            {duplicate.title}
+          </Link>
+          . Saving is disabled to avoid a duplicate.
+        </div>
+      )}
+
       {saveError && <p className="text-sm text-rose-500">{saveError}</p>}
 
       <div className="flex gap-3 pt-1">
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || Boolean(duplicate && !isEdit)}
           className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-purple-600 py-2.5 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
         >
           {saving && <Loader2 className="size-4 animate-spin" />}

@@ -97,6 +97,22 @@ export async function getRecipes(): Promise<Recipe[]> {
   return (data as SupabaseRecipe[]).map(mapRecipe)
 }
 
+// Find an existing recipe by its source URL — used to prevent duplicate adds
+// (mirrors the import script's idempotency).
+export async function getRecipeBySourceUrl(
+  sourceUrl: string
+): Promise<Recipe | null> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('recipes')
+    .select('*')
+    .eq('source_url', sourceUrl)
+    .maybeSingle()
+
+  if (error) throw error
+  return data ? mapRecipe(data as SupabaseRecipe) : null
+}
+
 export async function getRecipe(id: string): Promise<Recipe | null> {
   const supabase = createClient()
   const { data, error } = await supabase

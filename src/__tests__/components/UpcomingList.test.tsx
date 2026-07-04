@@ -89,7 +89,7 @@ describe('UpcomingList Component', () => {
       render(<UpcomingList />)
 
       await waitFor(() => {
-        expect(screen.getByText('No upcoming events found. Add your first event!')).toBeInTheDocument()
+        expect(screen.getByText('No upcoming events yet')).toBeInTheDocument()
       })
     })
 
@@ -410,7 +410,7 @@ describe('UpcomingList Component', () => {
 
       await waitFor(() => {
         const statusBadge = screen.getByText('Definitely')
-        expect(statusBadge).toHaveClass('bg-blue-100', 'text-blue-800')
+        expect(statusBadge).toHaveClass('bg-blue-50', 'text-blue-700')
       })
     })
   })
