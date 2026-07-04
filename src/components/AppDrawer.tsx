@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { MapPin, Menu, X, ShoppingBasket, Link as LinkIcon, BellElectric } from 'lucide-react'
+import { MapPin, Menu, X, ShoppingBasket, Link as LinkIcon, BellElectric, ChefHat } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -16,6 +16,7 @@ export default function AppDrawer() {
     { icon: BellElectric, label: 'Upcoming', href: '/' },
     { icon: MapPin, label: 'Local', href: '/local' },
     { icon: LinkIcon, label: 'Shares', href: '/shares' },
+    { icon: ChefHat, label: 'Recipes', href: '/recipes' },
   ]
 
   return (
