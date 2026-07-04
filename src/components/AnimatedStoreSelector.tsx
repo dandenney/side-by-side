@@ -59,14 +59,14 @@ const AnimatedStoreSelector = ({
   return (
     <div
       ref={containerRef}
-      className={`relative flex justify-between font-medium rounded-2xl bg-gray-100 overflow-hidden ${className}`}
+      className={`relative flex justify-between overflow-hidden rounded-full bg-surface-2 p-1 font-medium ${className}`}
     >
       {/* Background indicator - using layout animation instead of entry/exit */}
       {activeButtonData && (
         <motion.div
           layout
           initial={false}
-          className="absolute top-0 bottom-0 bg-gray-200 rounded-md z-0"
+          className="absolute bottom-1 top-1 z-0 rounded-full bg-tint"
           animate={{
             x: activeButtonData.left,
             width: activeButtonData.width
@@ -86,8 +86,9 @@ const AnimatedStoreSelector = ({
           key={option.value}
           ref={el => { buttonRefs.current[option.value] = el }}
           onClick={() => onChange(option.value)}
-          className={`relative z-10 flex-1 px-3 py-1.5 rounded-md transition-colors duration-200 ${value === option.value ? 'text-gray-700' : 'text-gray-400 hover:text-gray-500'
-            }`}
+          className={`relative z-10 flex-1 rounded-full px-3 py-1.5 text-sm transition-colors duration-200 ${
+            value === option.value ? 'font-semibold text-tint-ink' : 'text-ink-faint hover:text-ink-soft'
+          }`}
         >
           {option.value}
         </button>

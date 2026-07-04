@@ -6,10 +6,7 @@ import { Plus, Trash2, Edit2, X, Link, Calendar as CalendarIcon, MapPin } from '
 import { motion, AnimatePresence } from 'framer-motion'
 import { getUpcomingEvents, createUpcomingEvent, updateUpcomingEvent, deleteUpcomingEvent } from '@/services/upcomingEvents'
 import { Calendar } from '@/components/ui/calendar'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import { DateRange } from 'react-day-picker'
-import AppDrawer from './AppDrawer'
 import Image from 'next/image'
 import { logComponentError } from '@/lib/logger'
 import { FeatureErrorBoundary, ComponentErrorBoundary } from './ErrorBoundaries'
@@ -277,36 +274,33 @@ export default function UpcomingList() {
 
   return (
     <FeatureErrorBoundary featureName="Upcoming Events">
-      <div className="h-full flex flex-col">
-        {/* List Items */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-lg mx-auto pt-4 pb-28 lg:max-w-7xl">
-            <h1 className="mb-5 text-center text-sm font-semibold text-gray-400">Upcoming Events</h1>
-
-            <ComponentErrorBoundary>
-              <section className="grid grid-cols-1 lg:grid-cols-3 gap-3" role="list">
+      <div className="mx-auto w-full max-w-md pb-32 md:max-w-2xl">
+        <ComponentErrorBoundary>
+          <section className="grid grid-cols-1 gap-3" role="list">
             {isLoading ? (
               <div className="col-span-full space-y-3" role="status" aria-live="polite" aria-label="Loading upcoming events">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-2xl border border-gray-950/10 overflow-hidden animate-pulse">
+                  <div key={i} className="card animate-pulse overflow-hidden">
                     <div className="p-4 space-y-3">
                       <div className="flex justify-between">
-                        <div className="h-3.5 w-20 bg-gray-100 rounded-full" />
-                        <div className="h-5 w-16 bg-gray-100 rounded-full" />
+                        <div className="h-3.5 w-20 bg-surface-2 rounded-full" />
+                        <div className="h-5 w-16 bg-surface-2 rounded-full" />
                       </div>
-                      <div className="h-5 w-3/4 bg-gray-100 rounded-lg" />
-                      <div className="h-3.5 w-1/2 bg-gray-100 rounded-full" />
+                      <div className="h-5 w-3/4 bg-surface-2 rounded-lg" />
+                      <div className="h-3.5 w-1/2 bg-surface-2 rounded-full" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : items.length === 0 ? (
-              <div className="col-span-full flex flex-col items-center gap-3 py-16 text-center">
-                <div className="size-12 rounded-full bg-blue-50 flex items-center justify-center">
-                  <CalendarIcon className="size-5 text-blue-400" />
+              <div className="col-span-full flex flex-col items-center gap-4 py-20 text-center">
+                <div className="flex size-16 items-center justify-center rounded-full bg-tint">
+                  <CalendarIcon className="size-7 text-tint-ink" />
                 </div>
-                <p className="text-sm font-medium text-gray-500">No upcoming events yet</p>
-                <p className="text-sm text-gray-400">Tap the + button below to add your first event.</p>
+                <div className="space-y-1">
+                  <p className="font-display text-lg font-semibold text-ink">Nothing on the calendar</p>
+                  <p className="text-sm text-ink-soft">Add the next thing you two are excited about.</p>
+                </div>
               </div>
             ) : (
               items.map((item) => (
@@ -315,41 +309,44 @@ export default function UpcomingList() {
                   role="listitem"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-2xl border border-gray-950/10 overflow-hidden cursor-pointer hover:bg-gray-50/80"
+                  className="card cursor-pointer overflow-hidden transition-shadow duration-150 hover:shadow-pop"
                   onClick={() => handleCardClick(item)}
                 >
                   <div className="flex items-start gap-3 p-4">
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5">
-                          <CalendarIcon className="size-3.5 text-blue-400 shrink-0" />
-                          <span className="text-xs font-semibold text-blue-500">{formatDateDifference(item.startDate)}</span>
-                        </div>
-                        <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
-                          item.status === 'tickets' ? 'bg-green-50 text-green-700 ring-1 ring-green-600/20' :
-                          item.status === 'definitely' ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/20' :
-                          'bg-amber-50 text-amber-700 ring-1 ring-amber-600/20'
-                        }`}>
-                          {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                        <span className="text-xs font-bold uppercase tracking-wide text-hue">
+                          {formatDateDifference(item.startDate)}
+                        </span>
+                        <span
+                          className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                            item.status === 'tickets'
+                              ? 'bg-hue-strong text-on-hue'
+                              : item.status === 'definitely'
+                                ? 'bg-tint text-tint-ink'
+                                : 'border border-line bg-surface-2 text-ink-soft'
+                          }`}
+                        >
+                          {item.status === 'tickets' ? 'Tickets!' : item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                         </span>
                       </div>
-                      <h3 className="font-semibold text-gray-900 text-balance leading-snug">{item.title}</h3>
-                      <p className="text-sm text-gray-400 tabular-nums">{formatDate(item.startDate)}</p>
+                      <h3 className="font-display text-lg font-semibold leading-snug text-ink text-balance">{item.title}</h3>
+                      <p className="text-sm text-ink-faint tabular-nums">{formatDate(item.startDate)}</p>
                       {item.location && (
-                        <div className="flex items-center gap-1.5 text-sm text-gray-400">
+                        <div className="flex items-center gap-1.5 text-sm text-ink-faint">
                           <MapPin className="size-3.5 shrink-0" />
                           <span className="truncate">{item.location}</span>
                         </div>
                       )}
                     </div>
                     {item.imageUrl && (
-                      <div className="relative size-16 rounded-xl overflow-hidden shrink-0 ring-1 ring-black/10">
+                      <div className="relative size-20 shrink-0 overflow-hidden rounded-xl ring-1 ring-line">
                         <Image
                           src={item.imageUrl}
                           alt={item.title}
                           fill
                           className="object-cover"
-                          sizes="64px"
+                          sizes="80px"
                         />
                       </div>
                     )}
@@ -358,28 +355,17 @@ export default function UpcomingList() {
               ))
             )}
           </section>
-            </ComponentErrorBoundary>
-          </div>
-        </div>
+        </ComponentErrorBoundary>
 
       {/* Add Item Button */}
-      <div className="bg-white fixed bottom-0 left-0 mx-auto max-w-md py-1 right-0 rounded-t-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)]">
-        <div className="grid grid-cols-3 gap-8 px-4 items-center justify-items-center">
-          <div className="justify-self-end">
-            <AppDrawer />
-          </div>
-          <div>
-            <motion.button
-              onClick={openAddModal}
-              whileTap={{ y: 4 }}
-              className="w-20 h-20 bg-gradient-to-b from-blue-500 to-blue-600 border-8 border-white -mt-12 text-white rounded-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)] active:from-blue-600 active:to-blue-500 active:-translate-y-2 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center"
-              aria-label="Add new event"
-            >
-              <Plus className="w-8 h-8" />
-            </motion.button>
-          </div>
-        </div>
-      </div>
+      <motion.button
+        onClick={openAddModal}
+        whileTap={{ scale: 0.92 }}
+        className="fixed bottom-24 right-4 z-30 flex size-14 items-center justify-center rounded-full bg-hue-strong text-on-hue shadow-pop md:bottom-8 md:right-8"
+        aria-label="Add new event"
+      >
+        <Plus className="size-6" />
+      </motion.button>
 
       {/* Event Detail Modal */}
       <AnimatePresence>
@@ -388,7 +374,7 @@ export default function UpcomingList() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
             onClick={handleCloseModal}
           >
             <motion.div
@@ -396,14 +382,14 @@ export default function UpcomingList() {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="w-full max-w-4xl mx-auto bg-white rounded-2xl max-h-[90vh] flex flex-col"
+              className="mx-auto flex max-h-[90vh] w-full max-w-4xl flex-col rounded-3xl bg-surface shadow-pop"
               layoutId={`card-${selectedItem.id}`}
               style={{ width: '100%', maxWidth: '56rem' }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex flex-col min-h-0 flex-1">
                 {selectedItem.imageUrl && (
-                  <div className="relative w-full overflow-hidden rounded-t-2xl" style={{ aspectRatio: '16/9' }}>
+                  <div className="relative w-full overflow-hidden rounded-t-3xl" style={{ aspectRatio: '16/9' }}>
                     <Image
                       src={selectedItem.imageUrl}
                       alt={selectedItem.title}
@@ -416,15 +402,13 @@ export default function UpcomingList() {
                 <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
                   <div className="flex justify-between items-start gap-4">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-1.5">
-                        <CalendarIcon className="size-3.5 text-blue-400 shrink-0" />
-                        <span className="text-xs font-semibold text-blue-500">{formatDateDifference(selectedItem.startDate)}</span>
-                      </div>
-                      <h2 className="text-xl font-semibold text-gray-900 text-balance">{selectedItem.title}</h2>
+                      <span className="text-xs font-bold uppercase tracking-wide text-hue">{formatDateDifference(selectedItem.startDate)}</span>
+                      <h2 className="font-display text-2xl font-semibold text-ink text-balance">{selectedItem.title}</h2>
                     </div>
                     <button
                       onClick={handleCloseModal}
-                      className="shrink-0 size-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                      className="flex size-10 shrink-0 items-center justify-center rounded-full text-ink-faint hover:bg-surface-2 hover:text-ink-soft"
+                      aria-label="Close"
                     >
                       <X className="size-4" />
                     </button>
@@ -432,12 +416,12 @@ export default function UpcomingList() {
 
                   <div className="space-y-3">
                     {selectedItem.description && (
-                      <p className="text-sm text-gray-600 text-pretty">{selectedItem.description}</p>
+                      <p className="text-sm text-ink-soft text-pretty">{selectedItem.description}</p>
                     )}
 
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <CalendarIcon className="size-4 shrink-0" />
+                      <div className="flex items-center gap-2 text-sm text-ink-soft">
+                        <CalendarIcon className="size-4 shrink-0 text-hue" />
                         <span className="tabular-nums">
                           {formatDate(selectedItem.startDate)}
                           {selectedItem.startDate !== selectedItem.endDate && (
@@ -447,22 +431,22 @@ export default function UpcomingList() {
                       </div>
 
                       {selectedItem.location && (
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <MapPin className="size-4 shrink-0" />
+                        <div className="flex items-center gap-2 text-sm text-ink-soft">
+                          <MapPin className="size-4 shrink-0 text-hue" />
                           <span>{selectedItem.location}</span>
                         </div>
                       )}
 
                       {selectedItem.url && (
                         <div className="flex items-center gap-2 text-sm">
-                          <Link className="size-4 shrink-0 text-gray-500" />
+                          <Link className="size-4 shrink-0 text-hue" />
                           <a
                             href={selectedItem.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-500 hover:underline"
+                            className="font-medium text-hue hover:underline"
                           >
-                            Visit Website
+                            Visit website
                           </a>
                         </div>
                       )}
@@ -470,45 +454,45 @@ export default function UpcomingList() {
                   </div>
                 </div>
 
-                <nav className="flex items-center justify-between border-t border-gray-950/5 rounded-b-2xl p-3 bg-gray-50/80">
+                <nav className="flex items-center justify-between rounded-b-3xl border-t border-line-soft bg-surface-2/60 p-3">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete(selectedItem.id);
                       handleCloseModal();
                     }}
-                    className="size-10 flex items-center justify-center rounded-full hover:bg-gray-100"
+                    className="flex size-11 items-center justify-center rounded-full text-ink-faint hover:bg-surface-2 hover:text-red-600"
                     aria-label="Delete"
                   >
-                    <Trash2 className="size-4 text-gray-400" />
+                    <Trash2 className="size-4" />
                   </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleEdit(selectedItem);
                     }}
-                    className="size-10 flex items-center justify-center rounded-full hover:bg-gray-100"
+                    className="flex size-11 items-center justify-center rounded-full text-ink-faint hover:bg-surface-2 hover:text-ink"
                     aria-label="Edit"
                   >
-                    <Edit2 className="size-4 text-gray-400" />
+                    <Edit2 className="size-4" />
                   </button>
                   {selectedItem.url && (
                     <a
                       href={selectedItem.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="size-10 flex items-center justify-center rounded-full hover:bg-gray-100"
+                      className="flex size-11 items-center justify-center rounded-full text-hue hover:bg-surface-2"
                       aria-label="Visit website"
                     >
-                      <Link className="size-4 text-blue-400" />
+                      <Link className="size-4" />
                     </a>
                   )}
                   <button
                     onClick={handleCloseModal}
-                    className="size-10 flex items-center justify-center rounded-full hover:bg-gray-100"
+                    className="flex size-11 items-center justify-center rounded-full text-ink-faint hover:bg-surface-2 hover:text-ink"
                     aria-label="Close"
                   >
-                    <X className="size-4 text-gray-400" />
+                    <X className="size-4" />
                   </button>
                 </nav>
               </div>
@@ -524,31 +508,32 @@ export default function UpcomingList() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
             onClick={handleCloseModal}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+              className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl bg-surface p-6 shadow-pop"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">
-                  {editingItem ? 'Edit Event' : 'Add Event'}
+              <div className="mb-5 flex items-center justify-between">
+                <h2 className="font-display text-xl font-semibold text-ink">
+                  {editingItem ? 'Edit event' : 'Add an event'}
                 </h2>
                 <button
                   onClick={handleCloseModal}
-                  className="text-gray-500 hover:text-gray-700"
+                  aria-label="Close"
+                  className="flex size-10 items-center justify-center rounded-full text-ink-faint hover:bg-surface-2 hover:text-ink-soft"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="size-5" />
                 </button>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="title" className="field-label">
                     Title *
                   </label>
                   <input
@@ -558,12 +543,12 @@ export default function UpcomingList() {
                     value={formData.title}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="field"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="description" className="field-label">
                     Description
                   </label>
                   <textarea
@@ -571,13 +556,13 @@ export default function UpcomingList() {
                     name="description"
                     value={formData.description}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="field"
                     rows={3}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="url" className="field-label">
                     URL
                   </label>
                   <div className="relative">
@@ -587,12 +572,12 @@ export default function UpcomingList() {
                       name="url"
                       value={formData.url}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="field"
                       placeholder="https://example.com"
                     />
                     {isFetchingMeta && (
                       <div className="absolute right-3 top-2">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                        <div className="size-5 animate-spin rounded-full border-b-2 border-hue"></div>
                       </div>
                     )}
                   </div>
@@ -602,7 +587,7 @@ export default function UpcomingList() {
                 </div>
 
                 <div>
-                  <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="imageUrl" className="field-label">
                     Image URL
                   </label>
                   <input
@@ -611,12 +596,12 @@ export default function UpcomingList() {
                     name="imageUrl"
                     value={formData.imageUrl}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="field"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="location" className="field-label">
                     Location
                   </label>
                   <input
@@ -625,19 +610,19 @@ export default function UpcomingList() {
                     name="location"
                     value={formData.location}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="field"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="field-label">
                     Date *
                   </label>
                   
                   <button
                     type="button"
                     onClick={() => setIsCalendarOpen(true)}
-                    className="w-full px-3 py-2 border rounded-2xl text-left focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white hover:bg-gray-50"
+                    className="field text-left"
                   >
                     <CalendarIcon className="inline mr-2 h-4 w-4" />
                     {dateRange?.from ? (
@@ -650,27 +635,28 @@ export default function UpcomingList() {
                         formatDate(dateRange.from.toISOString().split('T')[0])
                       )
                     ) : (
-                      <span className="text-gray-500">Click to select date</span>
+                      <span className="text-ink-faint">Tap to pick a date</span>
                     )}
                   </button>
 
                   {/* Calendar Modal */}
                   {isCalendarOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => setIsCalendarOpen(false)}>
-                      <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-                        <div className="p-4 border-b bg-white">
-                          <div className="flex justify-between items-center mb-3">
-                            <h3 className="font-medium">Select Date</h3>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setIsCalendarOpen(false)}>
+                      <div className="flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-3xl bg-surface shadow-pop" onClick={(e) => e.stopPropagation()}>
+                        <div className="border-b border-line-soft p-4">
+                          <div className="mb-3 flex items-center justify-between">
+                            <h3 className="font-display font-semibold text-ink">Pick a date</h3>
                             <button
                               type="button"
                               onClick={() => setIsCalendarOpen(false)}
-                              className="p-1 hover:bg-gray-100 rounded"
+                              aria-label="Close calendar"
+                              className="flex size-10 items-center justify-center rounded-full text-ink-faint hover:bg-surface-2"
                             >
-                              <X className="w-4 h-4" />
+                              <X className="size-4" />
                             </button>
                           </div>
-                          <p className="text-sm text-gray-600 mb-3">
-                            Click once to set date. Click a second date for a date range.
+                          <p className="mb-3 text-sm text-ink-soft">
+                            Tap once for a single day, tap a second date for a range.
                           </p>
                           {/* Quick month jumps */}
                           <div className="flex gap-1 text-xs">
@@ -681,7 +667,7 @@ export default function UpcomingList() {
                                 nextMonth.setMonth(nextMonth.getMonth() + 1)
                                 setCalendarMonth(nextMonth)
                               }}
-                              className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+                              className="rounded-full bg-surface-2 px-3 py-1.5 font-medium text-ink-soft hover:text-ink"
                             >
                               Next Month
                             </button>
@@ -692,7 +678,7 @@ export default function UpcomingList() {
                                 nextQuarter.setMonth(nextQuarter.getMonth() + 3)
                                 setCalendarMonth(nextQuarter)
                               }}
-                              className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+                              className="rounded-full bg-surface-2 px-3 py-1.5 font-medium text-ink-soft hover:text-ink"
                             >
                               +3 Months
                             </button>
@@ -703,7 +689,7 @@ export default function UpcomingList() {
                                 nextYear.setFullYear(nextYear.getFullYear() + 1)
                                 setCalendarMonth(nextYear)
                               }}
-                              className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+                              className="rounded-full bg-surface-2 px-3 py-1.5 font-medium text-ink-soft hover:text-ink"
                             >
                               Next Year
                             </button>
@@ -732,7 +718,7 @@ export default function UpcomingList() {
                 </div>
 
                 <div>
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="status" className="field-label">
                     Status
                   </label>
                   <select
@@ -740,7 +726,7 @@ export default function UpcomingList() {
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border rounded-2xl focus:ring-2 focus:ring-blue-500"
+                    className="field"
                   >
                     <option value="tickets">Tickets</option>
                     <option value="definitely">Definitely</option>
@@ -751,7 +737,7 @@ export default function UpcomingList() {
                 <div className="flex justify-end">
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-500 text-white rounded-2xl hover:bg-blue-600 transition-colors"
+                    className="btn-primary"
                   >
                     {editingItem ? 'Update' : 'Add'} Event
                   </button>

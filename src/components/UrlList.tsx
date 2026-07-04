@@ -5,7 +5,6 @@ import { UrlListItem, Tag } from '@/types/url-list'
 import { Plus, Trash2, Edit2, X, Link, Tag as TagIcon, StickyNote, Archive, Search, Calendar, MapPin, Phone, Film } from 'lucide-react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
-import AppDrawer from './AppDrawer'
 import TagInput from './TagInput'
 import { createUrlItem, getUrlItems, updateUrlItem, deleteUrlItem, archiveUrlItem } from '@/lib/supabase/url-items'
 import { getTags, createTag, deleteTag, addTagToItem, removeTagFromItem, getItemTags } from '@/lib/supabase/tags'
@@ -17,30 +16,11 @@ import { StarRating } from "@/components/ui/star-rating"
 import { FeatureErrorBoundary, ComponentErrorBoundary } from './ErrorBoundaries'
 
 type UrlListProps = {
-  title: string
-  textColor: string
-  titleColor: string
-  accentColor: string
-  iconColor: string
-  buttonGradientFrom: string
-  buttonGradientTo: string
-  buttonAccentColor: string
   listType: 'local' | 'shared'
   listId: string
 }
 
-export function UrlList({
-  title,
-  textColor,
-  titleColor,
-  accentColor,
-  iconColor,
-  buttonGradientFrom,
-  buttonGradientTo,
-  buttonAccentColor,
-  listType,
-  listId,
-}: UrlListProps) {
+export function UrlList({ listType, listId }: UrlListProps) {
   const [items, setItems] = useState<UrlListItem[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [newUrl, setNewUrl] = useState('')
@@ -78,13 +58,14 @@ export function UrlList({
     className?: string
   }) => {
     return (
-      <div className={`relative flex justify-end font-medium rounded-2xl bg-gray-100 ${className}`}>
+      <div className={`relative flex justify-end rounded-full bg-surface-2 p-1 font-medium ${className}`}>
         {inputTypeOptions.map((option) => (
           <button
             key={option.value}
             onClick={() => onChange(option.value)}
-            className={`relative z-10 flex-1 px-3 py-1.5 rounded-md text-gray-400 transition-colors ease-in-out hover:text-gray-700 ${value === option.value ? 'bg-gray-200 text-gray-700' : ''
-              }`}
+            className={`relative z-10 flex-1 rounded-full px-3 py-1.5 text-sm transition-colors ease-in-out ${
+              value === option.value ? 'bg-tint font-semibold text-tint-ink' : 'text-ink-faint hover:text-ink-soft'
+            }`}
           >
             <div className="flex items-center justify-center gap-1">
               <option.icon className="w-4 h-4" />
@@ -684,24 +665,22 @@ export function UrlList({
     )
   }, [sortedItems, selectedTag])
 
+  const visibleItems = filteredItems.filter(item => !item.archived)
+
   return (
     <FeatureErrorBoundary featureName="URL List">
-      <div className={`h-full flex flex-col`}>
-        {/* List Items */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-lg mx-auto space-y-2 pt-4 lg:max-w-7xl">
-            <h1 className="mb-1 text-center text-sm font-semibold text-gray-400">{title}</h1>
-
+      <div>
+        <div className="mx-auto w-full max-w-md space-y-4 pb-32 md:max-w-2xl lg:max-w-4xl">
           {/* Tag Filter */}
-          <div className="flex flex-wrap gap-2 px-4 justify-center">
+          <div className="flex flex-wrap gap-2">
             {[null, 'untagged', ...existingTags].map((tag) => (
               <button
                 key={tag ?? '__all__'}
                 onClick={() => setSelectedTag(tag)}
-                className={`flex items-center gap-1 py-1 pr-2 pl-1.5 rounded-full text-sm font-medium ${
+                className={`flex min-h-[36px] items-center gap-1 rounded-full py-1 pl-2 pr-2.5 text-sm transition-colors duration-150 ${
                   selectedTag === tag
-                    ? 'bg-purple-50 text-purple-700 ring-1 ring-purple-600/20'
-                    : 'bg-white/70 text-gray-500 ring-1 ring-gray-950/5'
+                    ? 'bg-hue-strong font-semibold text-on-hue'
+                    : 'border border-line bg-surface font-medium text-ink-soft hover:text-ink'
                 }`}
               >
                 <TagIcon className="size-3" />
@@ -710,9 +689,33 @@ export function UrlList({
             ))}
           </div>
 
+          {mounted && visibleItems.length === 0 && (
+            <div className="flex flex-col items-center gap-4 py-20 text-center">
+              <div className="flex size-16 items-center justify-center rounded-full bg-tint">
+                {listType === 'local' ? (
+                  <MapPin className="size-7 text-tint-ink" />
+                ) : (
+                  <Link className="size-7 text-tint-ink" />
+                )}
+              </div>
+              <div className="space-y-1">
+                <p className="font-display text-lg font-semibold text-ink">
+                  {listType === 'local' ? 'No spots saved yet' : 'Nothing shared yet'}
+                </p>
+                <p className="text-sm text-ink-soft">
+                  {selectedTag
+                    ? 'Nothing matches this tag.'
+                    : listType === 'local'
+                      ? 'Save the places you two want to check out.'
+                      : 'Drop links, movies, and posts for each other here.'}
+                </p>
+              </div>
+            </div>
+          )}
+
           <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <AnimatePresence mode="popLayout">
-              {filteredItems.filter(item => !item.archived).map(item => (
+              {visibleItems.map(item => (
                 <motion.div
                   key={item.id}
                   variants={itemVariants}
@@ -722,13 +725,13 @@ export function UrlList({
                   whileTap="tap"
                   layout
                   transition={layoutTransition}
-                  className={`flex flex-col bg-white rounded-2xl border border-gray-950/10 overflow-hidden hover:bg-gray-50/80 cursor-pointer ${selectedItem?.id === item.id ? 'pointer-events-none opacity-0' : ''}`}
+                  className={`card flex cursor-pointer flex-col overflow-hidden transition-shadow duration-150 hover:shadow-pop ${selectedItem?.id === item.id ? 'pointer-events-none opacity-0' : ''}`}
                   layoutId={`card-${item.id}`}
                   onClick={() => handleCardClick(item)}
                   style={{ originX: 0.5, originY: 0.5 }}
                 >
                   <motion.div
-                    className="bg-gray-100 w-full overflow-hidden relative"
+                    className="relative w-full overflow-hidden bg-surface-2"
                     layoutId={`image-${item.id}`}
                     transition={layoutTransition}
                     style={{ aspectRatio: '16/9' }}
@@ -742,14 +745,14 @@ export function UrlList({
                         sizes="(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 20vw"
                       />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center text-gray-300">
+                      <div className="absolute inset-0 flex items-center justify-center text-ink-faint/50">
                         <ImageIcon className="size-8" />
                       </div>
                     )}
                   </motion.div>
                   <div className="p-3 flex-1 flex flex-col gap-2">
                     <motion.h3
-                      className={`font-semibold text-sm text-balance ${textColor}`}
+                      className="text-sm font-semibold text-ink text-balance"
                       layoutId={`title-${item.id}`}
                       transition={layoutTransition}
                     >
@@ -764,14 +767,14 @@ export function UrlList({
                         item.tags.slice(0, 2).map(tag => (
                           <span
                             key={tag.id}
-                            className="inline-flex items-center gap-1 py-0.5 pr-2 pl-1.5 bg-gray-100 rounded-full text-xs text-gray-500"
+                            className="inline-flex items-center gap-1 rounded-full bg-tint py-0.5 pl-1.5 pr-2 text-xs font-medium text-tint-ink"
                           >
                             <TagIcon className="size-3" />
                             {tag.name}
                           </span>
                         ))
                       ) : (
-                        <span className="inline-flex items-center gap-1 py-0.5 pr-2 pl-1.5 bg-gray-50 rounded-full text-xs text-gray-400">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-surface-2 py-0.5 pl-1.5 pr-2 text-xs text-ink-faint">
                           <TagIcon className="size-3" />
                           Untagged
                         </span>
@@ -783,26 +786,16 @@ export function UrlList({
             </AnimatePresence>
           </section>
         </div>
-      </div>
 
       {/* Add Item Button */}
-      <div className="bg-white fixed bottom-0 left-0 mx-auto max-w-md py-1 right-0 rounded-t-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)]">
-        <div className="grid grid-cols-3 gap-8 px-4 items-center justify-items-center">
-          <div className="justify-self-end">
-            <AppDrawer />
-          </div>
-          <div>
-            <motion.button
-              onClick={() => setIsModalOpen(true)}
-              whileTap={shouldReduceMotion ? undefined : { y: 4 }}
-              aria-label="Add new item"
-              className={`w-20 h-20 bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} border-8 border-white -mt-12 text-white rounded-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)] active:${buttonGradientTo} active:${buttonGradientFrom} active:-translate-y-2 focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} flex items-center justify-center`}
-            >
-              <Plus className="w-8 h-8" />
-            </motion.button>
-          </div>
-        </div>
-      </div>
+      <motion.button
+        onClick={() => setIsModalOpen(true)}
+        whileTap={shouldReduceMotion ? undefined : { scale: 0.92 }}
+        aria-label="Add new item"
+        className="fixed bottom-24 right-4 z-30 flex size-14 items-center justify-center rounded-full bg-hue-strong text-on-hue shadow-pop md:bottom-8 md:right-8"
+      >
+        <Plus className="size-6" />
+      </motion.button>
 
       {/* Item Detail Modal */}
       <AnimatePresence>
@@ -812,13 +805,13 @@ export function UrlList({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
             onClick={handleCloseModal}
           >
             <motion.div
               layout
               transition={layoutTransition}
-              className="w-full max-w-4xl mx-auto bg-white rounded-2xl overflow-hidden max-h-[90vh] flex flex-col"
+              className="mx-auto flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl bg-surface shadow-pop"
               layoutId={isCreatingNewItem ? 'new-item' : `card-${selectedItem.id}`}
               style={{ width: '100%', maxWidth: '56rem', height: '90vh', originX: 0.5, originY: 0.5 }}
               onClick={(e) => e.stopPropagation()}
@@ -827,46 +820,46 @@ export function UrlList({
                 <div className="flex flex-col h-full">
                   <div className="flex-1 overflow-y-auto p-4 space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="field-label">
                         Image URL
                       </label>
                       <input
                         type="url"
                         value={editingItem.imageUrl}
                         onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="field"
                         placeholder="Image URL"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="field-label">
                         Title
                       </label>
                       <input
                         type="text"
                         value={editingItem.title}
                         onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="field"
                         placeholder="Title"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="field-label">
                         Description
                       </label>
                       <input
                         type="text"
                         value={editingItem.description}
                         onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="field"
                         placeholder="Description"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Tags</label>
+                      <label className="field-label">Tags</label>
                       <TagInput
                         existingTags={tags}
                         selectedTags={editingItem.tags}
@@ -879,29 +872,23 @@ export function UrlList({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="field-label">
                         Notes
                       </label>
                       <textarea
                         value={editingItem.notes || ''}
                         onChange={(e) => setEditingItem({ ...editingItem, notes: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="field"
                         rows={3}
                         placeholder="Notes (optional)"
                       />
                     </div>
 
                     <div className="flex gap-2 pt-4">
-                      <button
-                        onClick={handleSaveEdit}
-                        className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-2xl font-medium text-sm hover:bg-blue-600"
-                      >
+                      <button onClick={handleSaveEdit} className="btn-primary flex-1 text-sm">
                         Save
                       </button>
-                      <button
-                        onClick={handleCloseModal}
-                        className="flex-1 bg-gray-100 text-gray-600 px-4 py-2 rounded-2xl font-medium text-sm hover:bg-gray-200"
-                      >
+                      <button onClick={handleCloseModal} className="btn-quiet flex-1 text-sm">
                         Cancel
                       </button>
                     </div>
@@ -915,7 +902,7 @@ export function UrlList({
                     <div className="relative">
                       {selectedItem.imageUrl ? (
                         <motion.div
-                          className="bg-gray-100 w-full overflow-hidden relative"
+                          className="relative w-full overflow-hidden bg-surface-2"
                           style={{ aspectRatio: '16/9' }}
                           layoutId={`image-${selectedItem.id}`}
                           transition={layoutTransition}
@@ -930,13 +917,13 @@ export function UrlList({
                         </motion.div>
                       ) : (
                         <motion.div
-                          className="bg-gray-100 w-full overflow-hidden relative"
+                          className="relative w-full overflow-hidden bg-surface-2"
                           style={{ aspectRatio: '16/9' }}
                           layoutId={`image-${selectedItem.id}`}
                           transition={layoutTransition}
                         >
-                          <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                            <ImageIcon className="w-12 h-12" />
+                          <div className="absolute inset-0 flex items-center justify-center text-ink-faint/50">
+                            <ImageIcon className="size-12" />
                           </div>
                         </motion.div>
                       )}
@@ -945,7 +932,7 @@ export function UrlList({
                     <div className="p-6 space-y-4 pb-20">
                       {/* Title */}
                       <motion.h2
-                        className="text-xl font-semibold text-balance"
+                        className="font-display text-2xl font-semibold text-ink text-balance"
                         layoutId={`title-${selectedItem.id}`}
                         transition={layoutTransition}
                       >
@@ -954,7 +941,7 @@ export function UrlList({
 
                       <div className="space-y-4">
                         {selectedItem.description && (
-                          <p className="text-sm text-gray-600 text-pretty break-words overflow-wrap-anywhere">{selectedItem.description}</p>
+                          <p className="text-sm text-ink-soft text-pretty break-words overflow-wrap-anywhere">{selectedItem.description}</p>
                         )}
 
                         <motion.div
@@ -966,14 +953,14 @@ export function UrlList({
                             selectedItem.tags.map(tag => (
                               <span
                                 key={tag.id}
-                                className="inline-flex items-center gap-1 py-0.5 pr-2 pl-1.5 bg-gray-100 rounded-full text-xs text-gray-500"
+                                className="inline-flex items-center gap-1 rounded-full bg-tint py-0.5 pl-1.5 pr-2 text-xs font-medium text-tint-ink"
                               >
                                 <TagIcon className="size-3" />
                                 {tag.name}
                               </span>
                             ))
                           ) : (
-                            <span className="inline-flex items-center gap-1 py-0.5 pr-2 pl-1.5 bg-gray-50 rounded-full text-xs text-gray-400">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-surface-2 py-0.5 pl-1.5 pr-2 text-xs text-ink-faint">
                               <TagIcon className="size-3" />
                               Untagged
                             </span>
@@ -982,15 +969,15 @@ export function UrlList({
 
                         {selectedItem.notes && (
                           <div className="space-y-1">
-                            <h3 className="text-xs font-semibold text-gray-400">Notes</h3>
-                            <p className="text-sm text-gray-600 text-pretty bg-gray-50 p-3 rounded-xl break-words overflow-wrap-anywhere">
+                            <h3 className="text-xs font-bold uppercase tracking-wide text-hue">Notes</h3>
+                            <p className="rounded-xl bg-wash p-3 text-sm text-ink-soft text-pretty break-words overflow-wrap-anywhere">
                               {selectedItem.notes}
                             </p>
                           </div>
                         )}
 
                         <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-sm text-gray-400">
+                          <div className="flex items-center gap-2 text-sm text-ink-faint">
                             <Calendar className="size-4 shrink-0" />
                             <span className="tabular-nums">
                               Added {formatDate(selectedItem.createdAt.toISOString().split('T')[0])}
@@ -1002,10 +989,10 @@ export function UrlList({
                               href={selectedItem.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2 text-sm text-blue-500 hover:underline"
+                              className="flex items-center gap-2 text-sm font-medium text-hue hover:underline"
                             >
-                              <Link className="size-4 shrink-0 text-gray-400" />
-                              Visit Website
+                              <Link className="size-4 shrink-0" />
+                              Visit website
                             </a>
                           )}
                         </div>
@@ -1014,16 +1001,16 @@ export function UrlList({
                   </div>
 
                   {/* Footer navigation - always visible */}
-                  <nav className="flex items-center justify-between border-t border-gray-950/5 bg-gray-50/80 rounded-b-2xl p-3 shrink-0">
+                  <nav className="flex shrink-0 items-center justify-between rounded-b-3xl border-t border-line-soft bg-surface-2/60 p-3">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         deleteItem(e, selectedItem.id);
                       }}
                       aria-label="Delete item"
-                      className="size-10 flex items-center justify-center rounded-full hover:bg-gray-100"
+                      className="flex size-11 items-center justify-center rounded-full text-ink-faint hover:bg-surface-2 hover:text-red-600"
                     >
-                      <Trash2 className="size-4 text-gray-400" />
+                      <Trash2 className="size-4" />
                     </button>
                     <button
                       onClick={(e) => {
@@ -1031,9 +1018,9 @@ export function UrlList({
                         startEdit(e, selectedItem);
                       }}
                       aria-label="Edit item"
-                      className="size-10 flex items-center justify-center rounded-full hover:bg-gray-100"
+                      className="flex size-11 items-center justify-center rounded-full text-ink-faint hover:bg-surface-2 hover:text-ink"
                     >
-                      <Edit2 className="size-4 text-gray-400" />
+                      <Edit2 className="size-4" />
                     </button>
                     {selectedItem.url && (
                       <a
@@ -1041,17 +1028,17 @@ export function UrlList({
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Visit website"
-                        className="size-10 flex items-center justify-center rounded-full hover:bg-gray-100"
+                        className="flex size-11 items-center justify-center rounded-full text-hue hover:bg-surface-2"
                       >
-                        <Link className="size-4 text-blue-400" />
+                        <Link className="size-4" />
                       </a>
                     )}
                     <button
                       onClick={handleCloseModal}
                       aria-label="Close modal"
-                      className="size-10 flex items-center justify-center rounded-full hover:bg-gray-100"
+                      className="flex size-11 items-center justify-center rounded-full text-ink-faint hover:bg-surface-2 hover:text-ink"
                     >
-                      <X className="size-4 text-gray-400" />
+                      <X className="size-4" />
                     </button>
                   </nav>
                 </div>
@@ -1072,7 +1059,7 @@ export function UrlList({
               exit={{ opacity: 0 }}
               transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
               onClick={() => setIsModalOpen(false)}
-              className="fixed inset-0 bg-black bg-opacity-50 z-40"
+              className="fixed inset-0 z-40 bg-black/50"
             />
 
             {/* Modal */}
@@ -1081,7 +1068,7 @@ export function UrlList({
               animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
               exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: -20 }}
               transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
-              className="fixed left-4 right-4 top-1/4 w-[calc(100%-2rem)] lg:max-w-md lg:left-1/2 lg:-translate-x-1/2 bg-white rounded-2xl shadow-xl p-4 z-50 max-h-[80vh] overflow-y-auto"
+              className="fixed left-4 right-4 top-1/4 z-50 max-h-[80vh] w-[calc(100%-2rem)] overflow-y-auto rounded-3xl bg-surface p-4 shadow-pop lg:left-1/2 lg:max-w-md lg:-translate-x-1/2"
               style={{ maxWidth: '28rem' }}
             >
               <form onSubmit={addItem} className="flex flex-col gap-4 relative">
@@ -1096,27 +1083,27 @@ export function UrlList({
                         inputType === 'place' ? 'Search for a place...' :
                         'Search for a movie...'
                       }
-                      className={`w-full px-4 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
+                      className="field"
                       autoFocus
                       disabled={isLoading || isSearching}
                     />
                     {isSearching && (
                       <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                        <div className="size-5 animate-spin rounded-full border-2 border-line border-t-hue" />
                       </div>
                     )}
                     {inputType === 'place' && newUrl.length < 4 && newUrl.length > 0 && (
-                      <div className="absolute z-[60] w-full mt-1 bg-white border rounded-2xl shadow-lg p-3 text-sm text-gray-500">
-                        Please enter at least 4 characters to search...
+                      <div className="absolute z-[60] mt-1 w-full rounded-2xl border border-line bg-surface p-3 text-sm text-ink-soft shadow-soft">
+                        Keep typing, at least 4 letters to search
                       </div>
                     )}
                     {inputType === 'movie' && newUrl.length < 3 && newUrl.length > 0 && (
-                      <div className="absolute z-[60] w-full mt-1 bg-white border rounded-2xl shadow-lg p-3 text-sm text-gray-500">
-                        Please enter at least 3 characters to search...
+                      <div className="absolute z-[60] mt-1 w-full rounded-2xl border border-line bg-surface p-3 text-sm text-ink-soft shadow-soft">
+                        Keep typing, at least 3 letters to search
                       </div>
                     )}
                     {inputType === 'place' && searchResults.length > 0 && (
-                      <div className="absolute z-[60] w-full mt-1 bg-white border rounded-2xl shadow-lg max-h-60 overflow-y-auto top-full">
+                      <div className="absolute top-full z-[60] mt-1 max-h-60 w-full overflow-y-auto rounded-2xl border border-line bg-surface shadow-soft">
                         {searchResults.map((place) => (
                           <button
                             key={place.placeId}
@@ -1125,19 +1112,19 @@ export function UrlList({
                               setSelectedPlace(place)
                               handlePlaceSelectForForm(place)
                             }}
-                            className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex items-center gap-2"
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left hover:bg-surface-2 focus:bg-surface-2 focus:outline-none"
                           >
-                            <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                            <MapPin className="size-4 flex-shrink-0 text-hue" />
                             <div>
-                              <div className="font-medium">{place.name}</div>
-                              <div className="text-sm text-gray-500 truncate">{place.address}</div>
+                              <div className="font-medium text-ink">{place.name}</div>
+                              <div className="truncate text-sm text-ink-faint">{place.address}</div>
                             </div>
                           </button>
                         ))}
                       </div>
                     )}
                     {inputType === 'movie' && movieSearchResults.length > 0 && (
-                      <div className="absolute z-[60] w-full mt-1 bg-white border rounded-2xl shadow-lg max-h-60 overflow-y-auto top-full">
+                      <div className="absolute top-full z-[60] mt-1 max-h-60 w-full overflow-y-auto rounded-2xl border border-line bg-surface shadow-soft">
                         {movieSearchResults.map((movie) => (
                           <button
                             key={movie.imdbId}
@@ -1146,7 +1133,7 @@ export function UrlList({
                               setSelectedMovie(movie)
                               handleMovieSelectForForm(movie)
                             }}
-                            className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:outline-none focus:bg-gray-100 flex items-center gap-2"
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left hover:bg-surface-2 focus:bg-surface-2 focus:outline-none"
                           >
                             {movie.poster ? (
                               <img
@@ -1155,12 +1142,12 @@ export function UrlList({
                                 className="w-10 h-14 object-cover rounded flex-shrink-0"
                               />
                             ) : (
-                              <Film className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                              <Film className="size-4 flex-shrink-0 text-hue" />
                             )}
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium truncate">{movie.title}</div>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate font-medium text-ink">{movie.title}</div>
                               {movie.year && (
-                                <div className="text-sm text-gray-500">{movie.year}</div>
+                                <div className="text-sm text-ink-faint">{movie.year}</div>
                               )}
                             </div>
                           </button>
@@ -1173,10 +1160,10 @@ export function UrlList({
                       type="button"
                       onClick={handlePlaceSearch}
                       disabled={isLoading || isSearching || newUrl.length < 4}
-                      className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-2xl active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} disabled:opacity-50`}
+                      className="btn-primary shrink-0 disabled:opacity-50"
                     >
                       {isSearching ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <div className="size-4 animate-spin rounded-full border-2 border-on-hue/60 border-t-on-hue" />
                       ) : (
                         <Search className="w-5 h-5" />
                       )}
@@ -1186,10 +1173,10 @@ export function UrlList({
                       type="button"
                       onClick={handleMovieSearch}
                       disabled={isLoading || isSearching || newUrl.length < 3}
-                      className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-2xl active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} disabled:opacity-50`}
+                      className="btn-primary shrink-0 disabled:opacity-50"
                     >
                       {isSearching ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <div className="size-4 animate-spin rounded-full border-2 border-on-hue/60 border-t-on-hue" />
                       ) : (
                         <Search className="w-5 h-5" />
                       )}
@@ -1198,10 +1185,10 @@ export function UrlList({
                     <button
                       type="submit"
                       disabled={isLoading || !newUrl.trim()}
-                      className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-2xl active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} disabled:opacity-50`}
+                      className="btn-primary shrink-0 disabled:opacity-50"
                     >
                       {isLoading ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <div className="size-4 animate-spin rounded-full border-2 border-on-hue/60 border-t-on-hue" />
                       ) : (
                         'Add'
                       )}
@@ -1214,13 +1201,13 @@ export function UrlList({
                     type="button"
                     onClick={() => setIsModalOpen(false)}
                     aria-label="Close"
-                    className="px-5 py-2 text-gray-600 shrink-0 hover:text-gray-800 focus:outline-none"
+                    className="flex size-11 shrink-0 items-center justify-center rounded-full text-ink-faint hover:bg-surface-2 hover:text-ink"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="size-5" />
                   </button>
                 </div>
                 {error && (
-                  <div className="text-red-500 text-sm">
+                  <div className="text-sm font-medium text-red-600">
                     {error}
                   </div>
                 )}

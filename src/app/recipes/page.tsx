@@ -9,6 +9,7 @@ import { getRecipes } from '@/lib/supabase/recipes'
 import { filterRecipes } from '@/lib/recipe-search'
 import { Recipe, RecipeStatus, RECIPE_TAGS } from '@/types/recipe'
 import { RecipeCard } from '@/components/RecipeCard'
+import PageHeader from '@/components/PageHeader'
 
 export default function RecipesPage() {
   const { user, loading } = useAuth()
@@ -45,42 +46,43 @@ export default function RecipesPage() {
   if (loading || !user) return null
 
   return (
-    <main className="antialiased bg-purple-50 min-h-dvh pb-24">
-      <div className="p-4 space-y-4 max-w-md mx-auto">
+    <main data-section="recipes" className="min-h-dvh bg-wash px-4 pb-32">
+      <PageHeader title="Recipes" note="To try, and tried and true" />
+
+      <div className="mx-auto w-full max-w-md space-y-4 md:max-w-2xl lg:max-w-4xl">
         {/* Stage toggle */}
-        <div className="flex justify-center">
-          <div className="flex rounded-2xl bg-white/80 p-1 gap-1 shadow-sm border border-gray-950/5">
-            {(
-              [
-                { key: 'to_try', label: 'To Try', icon: UtensilsCrossed },
-                { key: 'tried', label: 'Tried', icon: ChefHat },
-              ] as const
-            ).map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                onClick={() => setStage(key)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium ${
-                  stage === key
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-400'
-                }`}
-              >
-                <Icon className="size-4" />
-                {label}
-              </button>
-            ))}
-          </div>
+        <div className="flex rounded-full bg-surface-2 p-1">
+          {(
+            [
+              { key: 'to_try', label: 'To Try', icon: UtensilsCrossed },
+              { key: 'tried', label: 'Tried', icon: ChefHat },
+            ] as const
+          ).map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setStage(key)}
+              aria-pressed={stage === key}
+              className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm transition-colors duration-150 ${
+                stage === key
+                  ? 'bg-tint font-semibold text-tint-ink'
+                  : 'font-medium text-ink-faint hover:text-ink-soft'
+              }`}
+            >
+              <Icon className="size-4" />
+              {label}
+            </button>
+          ))}
         </div>
 
         {/* Search */}
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-ink-faint" />
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search title, ingredients, notes…"
-            className="w-full rounded-2xl border border-gray-950/5 bg-white py-2.5 pl-9 pr-3 text-sm shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-300"
+            className="field pl-10"
           />
         </div>
 
@@ -92,10 +94,11 @@ export default function RecipesPage() {
               <button
                 key={tag}
                 onClick={() => toggleTag(tag)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                aria-pressed={active}
+                className={`min-h-[36px] rounded-full px-3.5 py-1 text-sm transition-colors duration-150 ${
                   active
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-white text-purple-600 border border-purple-100'
+                    ? 'bg-hue-strong font-semibold text-on-hue'
+                    : 'border border-line bg-surface font-medium text-ink-soft hover:text-ink'
                 }`}
               >
                 {tag}
@@ -106,15 +109,40 @@ export default function RecipesPage() {
 
         {/* Results */}
         {isLoading ? (
-          <p className="py-12 text-center text-sm text-gray-400">Loading…</p>
+          <div
+            className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4"
+            role="status"
+            aria-live="polite"
+            aria-label="Loading recipes"
+          >
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="card animate-pulse overflow-hidden">
+                <div className="aspect-square bg-surface-2" />
+                <div className="space-y-2 p-3">
+                  <div className="h-4 w-4/5 rounded-full bg-surface-2" />
+                  <div className="h-3 w-2/5 rounded-full bg-surface-2" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : visible.length === 0 ? (
-          <p className="py-12 text-center text-sm text-gray-400">
-            {recipes.length === 0
-              ? 'No recipes yet.'
-              : 'No recipes match these filters.'}
-          </p>
+          <div className="flex flex-col items-center gap-4 py-16 text-center">
+            <div className="flex size-16 items-center justify-center rounded-full bg-tint">
+              <UtensilsCrossed className="size-7 text-tint-ink" />
+            </div>
+            <div className="space-y-1">
+              <p className="font-display text-lg font-semibold text-ink">
+                {recipes.length === 0 ? 'No recipes yet' : 'Nothing matches'}
+              </p>
+              <p className="text-sm text-ink-soft">
+                {recipes.length === 0
+                  ? 'Paste a link or add one by hand, then cook your way through.'
+                  : 'Try loosening the search or the tags.'}
+              </p>
+            </div>
+          </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
             {visible.map((recipe) => (
               <RecipeCard key={recipe.id} recipe={recipe} />
             ))}
@@ -125,7 +153,7 @@ export default function RecipesPage() {
       <Link
         href="/recipes/new"
         aria-label="Add a recipe"
-        className="fixed bottom-6 right-6 flex size-14 items-center justify-center rounded-full bg-purple-600 text-white shadow-lg hover:bg-purple-700"
+        className="fixed bottom-24 right-4 z-30 flex size-14 items-center justify-center rounded-full bg-hue-strong text-on-hue shadow-pop md:bottom-8 md:right-8"
       >
         <Plus className="size-6" />
       </Link>

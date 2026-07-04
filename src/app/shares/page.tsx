@@ -1,6 +1,7 @@
 'use client'
 
 import { UrlList } from '@/components/UrlList'
+import PageHeader from '@/components/PageHeader'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
@@ -21,19 +22,9 @@ export default function SharesList() {
   }
 
   return (
-    <main className="bg-gray-100 min-h-[100dvh] px-4 pb-24">
-      <UrlList
-        title="Shares"
-        textColor="text-purple-900"
-        titleColor="text-purple-900"
-        accentColor="text-purple-500"
-        iconColor="text-purple-500"
-        buttonGradientFrom="from-purple-500"
-        buttonGradientTo="to-purple-600"
-        buttonAccentColor="text-purple-500"
-        listType="shared"
-        listId={SHARED_LIST_ID}
-      />
+    <main data-section="shares" className="min-h-[100dvh] bg-wash px-4">
+      <PageHeader title="Shares" note="Movies, links, and finds for each other" />
+      <UrlList listType="shared" listId={SHARED_LIST_ID} />
     </main>
   )
-} 
+}

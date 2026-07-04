@@ -1,92 +1,250 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
+/* ---------------------------------------------------------------------------
+   Side by Side design tokens
+
+   Two layers:
+   1. Warm-tinted neutrals (paper / surface / ink / line) shared everywhere.
+   2. A section hue slot (--hue-*) that [data-section] rebinds per feature:
+      upcoming = marigold, groceries = green, local = teal,
+      shares = violet, recipes = tomato.
+   Components style themselves with the slot tokens and inherit the right
+   color from whatever section they render inside.
+--------------------------------------------------------------------------- */
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    /* neutrals (warm, hue ~60-80, never pure black/white) */
+    --paper: oklch(0.977 0.007 80);
+    --surface: oklch(0.995 0.004 85);
+    --surface-2: oklch(0.955 0.009 80);
+    --ink: oklch(0.25 0.018 60);
+    --ink-soft: oklch(0.47 0.02 60);
+    --ink-faint: oklch(0.62 0.018 65);
+    --line: oklch(0.895 0.014 75);
+    --line-soft: oklch(0.935 0.011 78);
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
- 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
- 
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
- 
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
- 
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
- 
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
- 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    /* section hue slot — defaults to Upcoming (home) */
+    --hue: oklch(0.545 0.125 72);
+    --hue-strong: oklch(0.78 0.155 78);
+    --on-hue: oklch(0.26 0.045 72);
+    --hue-deep: oklch(0.33 0.062 66);
+    --wash: oklch(0.963 0.03 86);
+    --tint: oklch(0.912 0.068 86);
+    --tint-ink: oklch(0.40 0.085 70);
 
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
- 
-    --radius: 0.5rem;
- 
-    --chart-1: 12 76% 61%;
- 
-    --chart-2: 173 58% 39%;
- 
-    --chart-3: 197 37% 24%;
- 
-    --chart-4: 43 74% 66%;
- 
-    --chart-5: 27 87% 67%;
+    --shadow-soft: 0 1px 2px oklch(0.3 0.03 60 / 0.06), 0 4px 16px -6px oklch(0.3 0.03 60 / 0.1);
+    --shadow-pop: 0 2px 4px -2px color-mix(in oklab, var(--hue-strong) 35%, transparent),
+      0 10px 28px -10px color-mix(in oklab, var(--hue-strong) 55%, transparent);
+
+    /* legacy shadcn slots (calendar, dialog, popover, button) retinted warm */
+    --background: 40 25% 97%;
+    --foreground: 30 10% 12%;
+    --card: 40 30% 99%;
+    --card-foreground: 30 10% 12%;
+    --popover: 40 30% 99%;
+    --popover-foreground: 30 10% 12%;
+    --primary: 30 10% 15%;
+    --primary-foreground: 40 25% 98%;
+    --secondary: 40 15% 93%;
+    --secondary-foreground: 30 10% 15%;
+    --muted: 40 15% 93%;
+    --muted-foreground: 30 6% 42%;
+    --accent: 40 15% 93%;
+    --accent-foreground: 30 10% 15%;
+    --destructive: 12 84% 47%;
+    --destructive-foreground: 40 25% 98%;
+    --border: 40 12% 88%;
+    --input: 40 12% 88%;
+    --ring: 30 10% 15%;
+    --radius: 1rem;
   }
- 
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
- 
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
- 
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
- 
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
- 
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
- 
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
- 
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
- 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
- 
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: oklch(0.17 0.012 55);
+      --surface: oklch(0.218 0.014 58);
+      --surface-2: oklch(0.262 0.015 58);
+      --ink: oklch(0.93 0.01 80);
+      --ink-soft: oklch(0.73 0.015 72);
+      --ink-faint: oklch(0.575 0.015 66);
+      --line: oklch(0.305 0.016 60);
+      --line-soft: oklch(0.262 0.014 58);
+
+      --hue: oklch(0.80 0.115 80);
+      --hue-strong: oklch(0.75 0.14 78);
+      --on-hue: oklch(0.19 0.04 70);
+      --hue-deep: oklch(0.88 0.075 84);
+      --wash: oklch(0.196 0.016 70);
+      --tint: oklch(0.29 0.045 76);
+      --tint-ink: oklch(0.85 0.08 82);
+
+      --shadow-soft: 0 1px 2px oklch(0.05 0.01 60 / 0.4), 0 4px 16px -6px oklch(0.05 0.01 60 / 0.5);
+      --shadow-pop: 0 2px 4px -2px oklch(0.05 0.01 60 / 0.5),
+        0 10px 28px -10px color-mix(in oklab, var(--hue-strong) 40%, transparent);
+
+      --background: 40 8% 10%;
+      --foreground: 40 15% 92%;
+      --card: 40 7% 14%;
+      --card-foreground: 40 15% 92%;
+      --popover: 40 7% 14%;
+      --popover-foreground: 40 15% 92%;
+      --primary: 40 15% 92%;
+      --primary-foreground: 30 8% 12%;
+      --secondary: 38 6% 20%;
+      --secondary-foreground: 40 15% 92%;
+      --muted: 38 6% 20%;
+      --muted-foreground: 40 6% 65%;
+      --accent: 38 6% 20%;
+      --accent-foreground: 40 15% 92%;
+      --destructive: 12 70% 42%;
+      --destructive-foreground: 40 15% 92%;
+      --border: 38 6% 22%;
+      --input: 38 6% 22%;
+      --ring: 40 10% 70%;
+    }
   }
-}
- 
-@layer base {
+
+  /* --- section hue bindings ------------------------------------------- */
+
+  [data-section='upcoming'] {
+    --hue: oklch(0.545 0.125 72);
+    --hue-strong: oklch(0.78 0.155 78);
+    --on-hue: oklch(0.26 0.045 72);
+    --hue-deep: oklch(0.33 0.062 66);
+    --wash: oklch(0.963 0.03 86);
+    --tint: oklch(0.912 0.068 86);
+    --tint-ink: oklch(0.40 0.085 70);
+  }
+
+  [data-section='groceries'] {
+    --hue: oklch(0.52 0.125 150);
+    --hue-strong: oklch(0.545 0.145 150);
+    --on-hue: oklch(0.985 0.008 150);
+    --hue-deep: oklch(0.31 0.06 150);
+    --wash: oklch(0.963 0.026 150);
+    --tint: oklch(0.917 0.058 150);
+    --tint-ink: oklch(0.36 0.08 150);
+  }
+
+  [data-section='local'] {
+    --hue: oklch(0.515 0.105 222);
+    --hue-strong: oklch(0.54 0.125 230);
+    --on-hue: oklch(0.985 0.006 220);
+    --hue-deep: oklch(0.31 0.06 225);
+    --wash: oklch(0.963 0.02 220);
+    --tint: oklch(0.917 0.048 222);
+    --tint-ink: oklch(0.365 0.072 226);
+  }
+
+  [data-section='shares'] {
+    --hue: oklch(0.52 0.155 300);
+    --hue-strong: oklch(0.545 0.185 300);
+    --on-hue: oklch(0.985 0.006 300);
+    --hue-deep: oklch(0.325 0.09 300);
+    --wash: oklch(0.963 0.02 308);
+    --tint: oklch(0.917 0.05 304);
+    --tint-ink: oklch(0.39 0.11 300);
+  }
+
+  [data-section='recipes'] {
+    --hue: oklch(0.535 0.155 30);
+    --hue-strong: oklch(0.55 0.185 30);
+    --on-hue: oklch(0.985 0.008 40);
+    --hue-deep: oklch(0.325 0.082 30);
+    --wash: oklch(0.966 0.022 42);
+    --tint: oklch(0.917 0.052 42);
+    --tint-ink: oklch(0.41 0.12 30);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    [data-section='upcoming'] {
+      --hue: oklch(0.80 0.115 80);
+      --hue-strong: oklch(0.75 0.14 78);
+      --on-hue: oklch(0.19 0.04 70);
+      --hue-deep: oklch(0.88 0.075 84);
+      --wash: oklch(0.196 0.016 70);
+      --tint: oklch(0.29 0.045 76);
+      --tint-ink: oklch(0.85 0.08 82);
+    }
+
+    [data-section='groceries'] {
+      --hue: oklch(0.78 0.13 152);
+      --hue-strong: oklch(0.72 0.155 152);
+      --on-hue: oklch(0.17 0.04 152);
+      --hue-deep: oklch(0.87 0.09 152);
+      --wash: oklch(0.194 0.016 155);
+      --tint: oklch(0.285 0.05 152);
+      --tint-ink: oklch(0.84 0.1 152);
+    }
+
+    [data-section='local'] {
+      --hue: oklch(0.78 0.09 222);
+      --hue-strong: oklch(0.72 0.115 226);
+      --on-hue: oklch(0.17 0.035 224);
+      --hue-deep: oklch(0.87 0.06 220);
+      --wash: oklch(0.194 0.015 226);
+      --tint: oklch(0.285 0.045 224);
+      --tint-ink: oklch(0.84 0.07 220);
+    }
+
+    [data-section='shares'] {
+      --hue: oklch(0.78 0.11 302);
+      --hue-strong: oklch(0.72 0.14 300);
+      --on-hue: oklch(0.17 0.04 300);
+      --hue-deep: oklch(0.87 0.07 304);
+      --wash: oklch(0.196 0.018 304);
+      --tint: oklch(0.29 0.05 302);
+      --tint-ink: oklch(0.85 0.08 304);
+    }
+
+    [data-section='recipes'] {
+      --hue: oklch(0.78 0.115 38);
+      --hue-strong: oklch(0.72 0.145 34);
+      --on-hue: oklch(0.17 0.04 32);
+      --hue-deep: oklch(0.87 0.07 42);
+      --wash: oklch(0.198 0.016 38);
+      --tint: oklch(0.29 0.05 38);
+      --tint-ink: oklch(0.85 0.08 40);
+    }
+  }
+
+  /* --- base styles ------------------------------------------------------ */
+
+  /* shared control vocabulary: identical across all five sections */
+  .field {
+    @apply w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-ink shadow-none placeholder:text-ink-faint focus:border-transparent focus:outline-none focus:ring-2 focus:ring-hue-strong;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-ink-soft;
+  }
+
+  .btn-primary {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-hue-strong px-5 py-2.5 font-semibold text-on-hue shadow-pop transition-transform duration-150 ease-out-quart active:scale-[0.97];
+  }
+
+  .btn-quiet {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-surface-2 px-5 py-2.5 font-medium text-ink-soft transition-colors duration-150 hover:text-ink;
+  }
+
+  .card {
+    @apply rounded-2xl border border-line-soft bg-surface shadow-soft;
+  }
+
   * {
     @apply border-border;
   }
+
+  html {
+    color-scheme: light dark;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--paper);
+    color: var(--ink);
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -96,57 +254,37 @@
   p {
     text-wrap: pretty;
   }
-  
-  /* Prevent mobile auto-zoom on inputs */
-  input[type="text"],
-  input[type="url"],
-  input[type="email"],
-  input[type="password"],
-  input[type="search"],
-  input[type="tel"],
-  input[type="number"],
-  textarea,
-  select {
-    font-size: 16px !important;
-    -webkit-appearance: none;
-    border-radius: 0;
+
+  ::selection {
+    background-color: var(--tint);
+    color: var(--tint-ink);
   }
-  
-  /* Ensure modals are properly sized for mobile */
+
+  :focus-visible {
+    outline: 2px solid var(--hue-strong);
+    outline-offset: 2px;
+  }
+
+  /* Prevent mobile auto-zoom without fighting utility classes */
+  :where(input[type='text'], input[type='url'], input[type='email'],
+    input[type='password'], input[type='search'], input[type='tel'],
+    input[type='number'], input[type='date'], textarea, select) {
+    font-size: 16px;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
   @media (max-width: 640px) {
-    .modal-content {
-      max-height: 90vh;
-      overflow-y: auto;
-      margin: 1rem;
-      width: calc(100% - 2rem);
-    }
-    
-    /* Prevent horizontal scrolling on mobile */
     body {
       overflow-x: hidden;
     }
-    
-    /* Improve touch targets */
+
     button, a {
       min-height: 44px;
       min-width: 44px;
     }
   }
 
-  /* Disable hover effects on touch devices */
-  @media (hover: none) {
-    .hover\:bg-gray-50:hover,
-    .hover\:bg-gray-100:hover,
-    .hover\:bg-gray-200:hover,
-    .hover\:text-gray-500:hover,
-    .hover\:text-gray-700:hover,
-    .hover\:text-gray-800:hover {
-      background-color: inherit;
-      color: inherit;
-    }
-  }
-
-  /* Respect reduced motion preferences */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -156,4 +294,4 @@
       transition-duration: 0.01ms !important;
     }
   }
-} 
+}

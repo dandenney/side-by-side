@@ -1,6 +1,7 @@
 'use client'
 
 import { UrlList } from '@/components/UrlList'
+import PageHeader from '@/components/PageHeader'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -44,61 +45,50 @@ export default function LocalList() {
     return null
   }
 
-  return (
-    <main className="antialiased bg-purple-50 min-h-dvh pb-24">
-      <div className="p-4 space-y-4">
-        <div className="flex justify-center">
-          <div className="flex rounded-2xl bg-white/80 p-1 gap-1 shadow-sm border border-gray-950/5">
-            <button
-              onClick={() => setViewMode('list')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium ${
-                viewMode === 'list'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-400'
-              }`}
-            >
-              <List className="size-4" />
-              List
-            </button>
-            <button
-              onClick={() => setViewMode('map')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium ${
-                viewMode === 'map'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-400'
-              }`}
-            >
-              <Map className="size-4" />
-              Map
-            </button>
-          </div>
-        </div>
+  const viewOptions = [
+    { key: 'list', label: 'List', icon: List },
+    { key: 'map', label: 'Map', icon: Map },
+  ] as const
 
-        {viewMode === 'list' ? (
-          <UrlList
-            title="Local"
-            textColor="text-purple-900"
-            titleColor="text-purple-900"
-            accentColor="text-purple-500"
-            iconColor="text-purple-500"
-            buttonGradientFrom="from-purple-500"
-            buttonGradientTo="to-purple-600"
-            buttonAccentColor="text-purple-500"
-            listType="local"
-            listId={SHARED_LIST_ID}
-          />
-        ) : (
-          <div className="h-[calc(100dvh-8rem)]">
-            {places.length > 0 ? (
-              <PlaceMap places={places} />
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-sm text-gray-500">No places with coordinates found</p>
-              </div>
-            )}
+  return (
+    <main data-section="local" className="min-h-[100dvh] bg-wash px-4 pb-24">
+      <PageHeader
+        title="Local"
+        note="Places we want to check out"
+        actions={
+          <div className="flex rounded-full bg-surface-2 p-1" role="group" aria-label="View mode">
+            {viewOptions.map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setViewMode(key)}
+                aria-pressed={viewMode === key}
+                className={`flex min-h-[36px] items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm transition-colors duration-150 ${
+                  viewMode === key
+                    ? 'bg-tint font-semibold text-tint-ink'
+                    : 'font-medium text-ink-faint hover:text-ink-soft'
+                }`}
+              >
+                <Icon className="size-4" />
+                {label}
+              </button>
+            ))}
           </div>
-        )}
-      </div>
+        }
+      />
+
+      {viewMode === 'list' ? (
+        <UrlList listType="local" listId={SHARED_LIST_ID} />
+      ) : (
+        <div className="mx-auto h-[calc(100dvh-14rem)] w-full max-w-md overflow-hidden rounded-3xl border border-line-soft shadow-soft md:max-w-2xl lg:max-w-4xl">
+          {places.length > 0 ? (
+            <PlaceMap places={places} />
+          ) : (
+            <div className="flex h-full items-center justify-center bg-surface">
+              <p className="text-sm text-ink-soft">No places with map pins yet</p>
+            </div>
+          )}
+        </div>
+      )}
     </main>
   )
 }

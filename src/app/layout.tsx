@@ -1,15 +1,26 @@
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import type { Metadata, Viewport } from "next"
+import { Inter, Bricolage_Grotesque } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/contexts/AuthContext"
 import Migration from "@/components/Migration"
 import { PageErrorBoundary } from "@/components/ErrorBoundaries"
+import TabBar from "@/components/TabBar"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
+const bricolage = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-display",
+})
 
 export const metadata: Metadata = {
   title: "Side by Side",
-  description: "A collection of useful links and resources",
+  description: "Our shared lists: groceries, recipes, places, and things worth sharing",
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 }
 
 export default function RootLayout({
@@ -18,18 +29,16 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html className="overscroll-none"  lang="en">
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </head>
+    <html className="overscroll-none" lang="en">
       <body
-        className={`${inter.className} overscroll-none antialiased`}
+        className={`${inter.variable} ${bricolage.variable} font-sans overscroll-none antialiased`}
         suppressHydrationWarning={true}
       >
         <PageErrorBoundary>
           <AuthProvider>
             <Migration />
             {children}
+            <TabBar />
           </AuthProvider>
         </PageErrorBoundary>
       </body>

@@ -83,12 +83,13 @@ export default function TagInput({
           {selectedTags.map(tag => (
             <div
               key={tag.id}
-              className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-sm"
+              className="flex items-center gap-1 rounded-full bg-tint py-1 pl-2.5 pr-1.5 text-sm font-medium text-tint-ink"
             >
               <span>{tag.name}</span>
               <button
                 onClick={() => onTagRemove(tag.id)}
-                className="text-gray-500 hover:text-gray-700"
+                aria-label={`Remove ${tag.name}`}
+                className="flex size-6 items-center justify-center rounded-full text-tint-ink/70 hover:text-tint-ink"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -100,7 +101,7 @@ export default function TagInput({
       {/* Tag Input */}
       <div className="relative">
         <div className="flex items-center gap-2">
-          <TagIcon className="w-4 h-4 text-gray-400" />
+          <TagIcon className="size-4 text-ink-faint" />
           <input
             ref={inputRef}
             type="text"
@@ -108,7 +109,7 @@ export default function TagInput({
             onChange={(e) => setInputValue(e.target.value)}
             onFocus={() => setIsOpen(true)}
             placeholder={placeholder}
-            className="flex-1 bg-transparent border-none outline-none text-base"
+            className="flex-1 border-none bg-transparent text-base text-ink outline-none placeholder:text-ink-faint"
           />
         </div>
 
@@ -118,7 +119,7 @@ export default function TagInput({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute z-10 w-full mt-2 bg-white rounded-2xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto"
+              className="absolute z-10 mt-2 max-h-60 w-full overflow-y-auto rounded-2xl border border-line bg-surface shadow-soft"
             >
               <div className="p-2">
                 {filteredTags.length > 0 ? (
@@ -126,18 +127,18 @@ export default function TagInput({
                     <div
                       key={tag.id}
                       onClick={() => handleSelectTag(tag)}
-                      className="flex items-center justify-between p-3 hover:bg-gray-100 rounded-2xl cursor-pointer"
+                      className="flex cursor-pointer items-center justify-between rounded-2xl p-3 hover:bg-surface-2"
                     >
-                      <span className="text-base">{tag.name}</span>
-                      <Check className="w-4 h-4 text-green-500" />
+                      <span className="text-base text-ink">{tag.name}</span>
+                      <Check className="size-4 text-hue" />
                     </div>
                   ))
                 ) : (
                   <div
                     onClick={handleCreateTag}
-                    className="p-3 hover:bg-gray-100 rounded-2xl cursor-pointer"
+                    className="cursor-pointer rounded-2xl p-3 hover:bg-surface-2"
                   >
-                    <span className="text-base text-gray-500">
+                    <span className="text-base text-ink-soft">
                       Create &ldquo;{inputValue}&rdquo;
                     </span>
                   </div>

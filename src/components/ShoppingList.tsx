@@ -2,48 +2,25 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { GroceryItem } from '@/types/grocery'
-import { Plus, Trash2, Edit2, X, BadgeDollarSign, ShoppingBasket, MoreVertical} from 'lucide-react'
+import { Plus, Trash2, Edit2, X, Check, ShoppingBasket, MoreVertical } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import AppDrawer from './AppDrawer'
 import { useAuth } from '@/contexts/AuthContext'
 import AnimatedStoreSelector from './AnimatedStoreSelector'
 import { FeatureErrorBoundary, ComponentErrorBoundary } from './ErrorBoundaries'
-import { 
-  getGroceryItems, 
-  getArchivedGroceryItems, 
-  createGroceryItem, 
-  updateGroceryItem, 
+import {
+  getGroceryItems,
+  getArchivedGroceryItems,
+  createGroceryItem,
+  updateGroceryItem,
   deleteGroceryItem,
   archiveGroceryItem,
   ArchivedGroceryItem
 } from '@/services/groceryService'
 import { logComponentError } from '@/lib/logger'
 
-type ShoppingListProps = {
-  title: string
-  gradientFrom: string
-  gradientTo: string
-  textColor: string
-  titleColor: string
-  accentColor: string
-  iconColor: string
-  buttonGradientFrom: string
-  buttonGradientTo: string
-  buttonAccentColor: string
-}
+const STORE_ORDER = ['Publix', 'Costco', 'Aldi'] as const
 
-export function ShoppingList({
-  title,
-  gradientFrom,
-  gradientTo,
-  textColor,
-  titleColor,
-  accentColor,
-  iconColor,
-  buttonGradientFrom,
-  buttonGradientTo,
-  buttonAccentColor,
-}: ShoppingListProps) {
+export function ShoppingList() {
   const [items, setItems] = useState<GroceryItem[]>([])
   const [archivedItems, setArchivedItems] = useState<ArchivedGroceryItem[]>([])
   const [newItem, setNewItem] = useState('')
@@ -58,6 +35,7 @@ export function ShoppingList({
   const { user } = useAuth()
 
   const hasCheckedItems = useMemo(() => items.some(item => item.checked), [items])
+  const checkedCount = useMemo(() => items.filter(item => item.checked).length, [items])
 
   const storeOptions = [
     { value: 'Publix', color: 'green' },
@@ -94,7 +72,7 @@ export function ShoppingList({
         getGroceryItems(),
         getArchivedGroceryItems()
       ])
-      
+
       setItems(groceryItems)
       setArchivedItems(archived)
     } catch (error) {
@@ -131,7 +109,7 @@ export function ShoppingList({
       if (!item) return
 
       const updatedItem = await updateGroceryItem(id, { checked: !item.checked })
-      
+
       setItems(prev => prev.map(item =>
         item.id === id ? updatedItem : item
       ))
@@ -197,324 +175,265 @@ export function ShoppingList({
     }
   }
 
-  const StoreSelector = ({ 
-    value, 
-    onChange, 
-    className,
-  }: { 
-    value: 'Publix' | 'Costco' | 'Aldi', 
-    onChange: (value: 'Publix' | 'Costco' | 'Aldi') => void,
-    className?: string
-  }) => {
-    return (
-      <div className={`relative flex justify-end font-medium rounded-2xl bg-gray-100 ${className}`}>
-        {storeOptions.map((option) => (
-          <button
-            key={option.value}
-            onClick={() => onChange(option.value)}
-            className={`relative z-10 flex-1 px-3 py-1.5 rounded-md text-gray-400 transition-colors ease-in-out hover:text-gray-700 ${
-              value === option.value ? 'bg-gray-200 text-gray-700' : ''
-            }`}
-          >
-            {option.value}
-          </button>
-        ))}
-      </div>
-    )
-  }
-
   const itemVariants = {
     initial: { opacity: 0, y: 20, scale: 0.95 },
     animate: { opacity: 1, y: 0, scale: 1 },
     exit: { opacity: 0, x: -100, scale: 0.95 },
-    tap: {
-      scale: 0.96,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 17
-      }
-    }
   }
 
-  const editControlsVariants = {
-    hidden: { 
-      opacity: 0,
-      scale: 0.8,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 30
-      }
-    },
-    visible: { 
-      opacity: 1,
-      scale: 1,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 30
-      }
-    }
-  }
-
-  const handleMainAreaTap = (item: GroceryItem) => {
-    toggleCheck(item.id)
-  }
+  const orderedStores = STORE_ORDER.filter(store => groupedItems[store]?.length)
 
   return (
     <FeatureErrorBoundary featureName="Shopping List">
-      <div className={`bg-gradient-to-b ${gradientFrom} ${gradientTo} h-full flex flex-col min-h-[100dvh]`}>
-      {/* List Items */}
-      <div className="flex-1 overflow-y-auto px-4 pb-24">
-        <div className="max-w-lg mx-auto space-y-2 pt-4">
-          <h1 className={`opacity-40 text-center ${titleColor} uppercase font-bold`}>{title}</h1>
-          <AnimatePresence mode="popLayout">
-            {Object.entries(groupedItems).map(([store, storeItems]) => (
-              <div key={store} className="space-y-2">
-                {storeItems.map(item => (
-                  <motion.div
-                    key={item.id}
-                    variants={itemVariants}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    whileTap="tap"
-                    layout
-                    className="flex items-center gap-2 p-3 bg-white rounded-2xl shadow-xl border hover:bg-gray-50 cursor-pointer"
-                    style={{ touchAction: 'manipulation' }}
-                  >
-                    <motion.div 
-                      className="flex-1 flex items-center gap-2"
-                      onClick={() => handleMainAreaTap(item)}
-                      style={{ touchAction: 'manipulation' }}
-                    >
-                      <motion.div 
-                        className="p-1 rounded-full"
-                        layout
-                      >
-                        <ShoppingBasket className={`w-5 h-5 transition-all ${item.checked ? iconColor : 'text-gray-400'}`} />
-                      </motion.div>
-
-                      {editingItem?.id === item.id ? (
-                        <div className="flex-1 flex flex-col gap-2">
-                          <input
-                            type="text"
-                            value={editText}
-                            onChange={(e) => setEditText(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                            className={`px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
-                            autoFocus
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                          <div className="flex gap-2 store-selector" onClick={(e) => e.stopPropagation()}>
-                            <AnimatedStoreSelector
-                              value={editStore}
-                              onChange={(newStore) => {
-                                setEditStore(newStore)
-                                // Don't save immediately when store changes, let user finish editing
-                              }}
-                              storeOptions={storeOptions}
-                            />
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                saveEdit()
-                              }}
-                              className={`px-3 py-1 bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity`}
-                            >
-                              Save
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setEditingItem(null)
-                                setEditText('')
-                              }}
-                              className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <motion.div 
+      <div className="mx-auto w-full max-w-md pb-36 md:max-w-2xl">
+        <ComponentErrorBoundary>
+          {loading ? (
+            <div className="space-y-3" role="status" aria-live="polite" aria-label="Loading groceries">
+              {[...Array(2)].map((_, g) => (
+                <div key={g} className="space-y-2">
+                  <div className="h-4 w-20 animate-pulse rounded-full bg-surface-2" />
+                  <div className="card animate-pulse divide-y divide-line-soft overflow-hidden">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 p-4">
+                        <div className="size-6 rounded-full bg-surface-2" />
+                        <div className="h-4 w-2/5 rounded-full bg-surface-2" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : items.length === 0 ? (
+            <div className="flex flex-col items-center gap-4 py-20 text-center">
+              <div className="flex size-16 items-center justify-center rounded-full bg-tint">
+                <ShoppingBasket className="size-7 text-tint-ink" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-display text-lg font-semibold text-ink">All stocked up</p>
+                <p className="text-sm text-ink-soft">Add whatever we&apos;re out of and it shows up here.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {orderedStores.map(store => (
+                <section key={store}>
+                  <h2 className="mb-2 flex items-baseline gap-2 px-1">
+                    <span className="font-display text-sm font-bold uppercase tracking-wider text-hue">{store}</span>
+                    <span className="text-xs tabular-nums text-ink-faint">{groupedItems[store].length}</span>
+                  </h2>
+                  <div className="card divide-y divide-line-soft overflow-hidden">
+                    <AnimatePresence mode="popLayout">
+                      {groupedItems[store].map(item => (
+                        <motion.div
+                          key={item.id}
+                          variants={itemVariants}
+                          initial="initial"
+                          animate="animate"
+                          exit="exit"
                           layout
-                          className="flex-1 flex items-center gap-2"
-                        >
-                          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${item.store === 'Publix' ? 'bg-green-200 text-green-800' :
-                              item.store === 'Costco' ? 'bg-blue-200 text-blue-800' :
-                                'bg-violet-200 text-violet-800'
-                            }`}>
-                            {item.store}
-                          </span>
-                          <span className={`${textColor} ${item.checked ? 'line-through text-gray-500' : ''}`}>
-                            {item.name}
-                          </span>
-                        </motion.div>
-                      )}
-                    </motion.div>
-
-                    {/* Action Area - Edit Controls */}
-                    <div 
-                      className="w-[100px] flex justify-end"
-                      style={{ touchAction: 'manipulation' }}
-                    >
-                      <AnimatePresence>
-                        {(showEditControls === item.id || editingItem?.id === item.id) && (
-                          <motion.div 
-                            variants={editControlsVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="hidden"
-                            className="flex gap-1"
-                            layout
-                          >
-                            <motion.button
-                              whileTap={{ scale: 0.9 }}
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                startEdit(e, item)
-                              }}
-                              className={`p-1 text-gray-600 hover:${accentColor} rounded-full hover:bg-gray-100`}
-                              style={{ touchAction: 'manipulation' }}
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </motion.button>
-                            <motion.button
-                              whileTap={{ scale: 0.9 }}
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                deleteItem(e, item.id)
-                              }}
-                              className="p-1 text-gray-600 hover:text-red-500 rounded-full hover:bg-gray-100"
-                              style={{ touchAction: 'manipulation' }}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </motion.button>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                      {!editingItem && (
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setShowEditControls(showEditControls === item.id ? null : item.id)
-                          }}
-                          className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                          className="flex items-center gap-1 pr-2"
                           style={{ touchAction: 'manipulation' }}
                         >
-                          <MoreVertical className="w-4 h-4" />
-                        </motion.button>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            ))}
-          </AnimatePresence>
-        </div>
-      </div>
+                          {editingItem?.id === item.id ? (
+                            <div className="flex flex-1 flex-col gap-2 p-3" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="text"
+                                value={editText}
+                                onChange={(e) => setEditText(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
+                                className="field"
+                                autoFocus
+                              />
+                              <AnimatedStoreSelector
+                                value={editStore}
+                                onChange={setEditStore}
+                                storeOptions={storeOptions}
+                              />
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingItem(null)
+                                    setEditText('')
+                                  }}
+                                  className="btn-quiet px-4 py-2 text-sm"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={saveEdit}
+                                  className="btn-primary px-4 py-2 text-sm"
+                                >
+                                  Save
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => toggleCheck(item.id)}
+                                className="flex min-h-[52px] flex-1 items-center gap-3 px-4 py-2 text-left"
+                                style={{ touchAction: 'manipulation' }}
+                                aria-pressed={item.checked}
+                              >
+                                <motion.span
+                                  animate={item.checked ? { scale: [1, 1.25, 1] } : { scale: 1 }}
+                                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                                  className={`flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-150 ${
+                                    item.checked
+                                      ? 'border-hue-strong bg-hue-strong'
+                                      : 'border-line bg-transparent'
+                                  }`}
+                                >
+                                  {item.checked && <Check className="size-4 text-on-hue" strokeWidth={3} />}
+                                </motion.span>
+                                <span
+                                  className={`text-[15px] transition-colors duration-150 ${
+                                    item.checked ? 'text-ink-faint line-through' : 'font-medium text-ink'
+                                  }`}
+                                >
+                                  {item.name}
+                                </span>
+                              </button>
 
-      {/* Floating Add Button */}
-      <div className="bg-white fixed bottom-0 left-0 mx-auto max-w-md py-1 right-0 rounded-t-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)]">
-        <div className="grid grid-cols-3 gap-8 px-4 items-center justify-items-center">
-          <div className="justify-self-end">
-            <AppDrawer />
-          </div>
-          <div>
+                              <AnimatePresence>
+                                {showEditControls === item.id && (
+                                  <motion.div
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.8 }}
+                                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                    className="flex gap-1"
+                                  >
+                                    <motion.button
+                                      whileTap={{ scale: 0.9 }}
+                                      onClick={(e) => startEdit(e, item)}
+                                      aria-label={`Edit ${item.name}`}
+                                      className="flex size-10 items-center justify-center rounded-full text-ink-faint hover:bg-surface-2 hover:text-ink"
+                                      style={{ touchAction: 'manipulation' }}
+                                    >
+                                      <Edit2 className="size-4" />
+                                    </motion.button>
+                                    <motion.button
+                                      whileTap={{ scale: 0.9 }}
+                                      onClick={(e) => deleteItem(e, item.id)}
+                                      aria-label={`Delete ${item.name}`}
+                                      className="flex size-10 items-center justify-center rounded-full text-ink-faint hover:bg-surface-2 hover:text-red-600"
+                                      style={{ touchAction: 'manipulation' }}
+                                    >
+                                      <Trash2 className="size-4" />
+                                    </motion.button>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                              <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setShowEditControls(showEditControls === item.id ? null : item.id)
+                                }}
+                                aria-label={`More options for ${item.name}`}
+                                className="flex size-10 items-center justify-center rounded-full text-ink-faint hover:bg-surface-2 hover:text-ink"
+                                style={{ touchAction: 'manipulation' }}
+                              >
+                                <MoreVertical className="size-4" />
+                              </motion.button>
+                            </>
+                          )}
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
+        </ComponentErrorBoundary>
+
+        {/* Clear checked pill */}
+        <AnimatePresence>
+          {hasCheckedItems && (
             <motion.button
-              onClick={() => setIsModalOpen(true)}
-              whileTap={{ y: 4 }}
-              className={`w-20 h-20 bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} border-8 border-white -mt-12 text-white rounded-full shadow-[0_-4px_20px_rgba(0,0,0,0.15)] active:${buttonGradientTo} active:${buttonGradientFrom} active:-translate-y-2 focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor} flex items-center justify-center`}
-            >
-              <Plus className="w-8 h-8" />
-            </motion.button>
-          </div>
-          <div className='justify-self-start'>
-            <motion.button
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 16 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
               onClick={archiveChecked}
-              animate={{
-                scale: hasCheckedItems ? [0.75, 1.2, 1] : 0.75
-              }}
-              transition={{
-                duration: 0.3,
-                times: [0, 0.6, 1],
-                ease: "easeOut"
-              }}
-              className={`bg-gradient-to-b ease-out h-10 rounded-full flex items-center justify-center gap-2 relative rounded-full shadow-2xl shadow-inner shadow-black/10 transition-all w-10 ${
-                hasCheckedItems
-                  ? `${buttonGradientFrom} ${buttonGradientTo} opacity-80 focus:ring-2 focus:ring-${buttonAccentColor} cursor-pointer`
-                  : 'from-gray-100 to-gray-300 opacity-100 text-gray-400 cursor-not-allowed'
-              }`}
+              className="btn-primary fixed bottom-24 left-1/2 z-30 -translate-x-1/2 md:bottom-8"
             >
-              <BadgeDollarSign className="ease-out h-6 text-white transition-all w-6" />
+              <Check className="size-4" strokeWidth={3} />
+              Got {checkedCount === 1 ? 'it' : `${checkedCount} things`}
             </motion.button>
-          </div>
-        </div>
-      </div>
+          )}
+        </AnimatePresence>
 
-      {/* Add Item Modal */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsModalOpen(false)}
-              className="fixed inset-0 bg-black bg-opacity-50 z-40"
-            />
-            
-            {/* Modal */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              className="fixed left-4 right-4 top-1/4 bg-white rounded-2xl shadow-xl p-4 z-50 max-w-md mx-auto max-h-[80vh] overflow-y-auto"
-            >
-              <form onSubmit={addItem} className="flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newItem}
-                    onChange={(e) => setNewItem(e.target.value)}
-                    placeholder="Add a new item..."
-                    className={`flex-1 px-4 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-${accentColor}`}
-                    autoFocus
-                  />
-                  <button
-                    type="submit"
-                    className={`bg-gradient-to-b ${buttonGradientFrom} ${buttonGradientTo} px-4 py-2 text-white rounded-2xl active:${buttonGradientTo} active:${buttonGradientFrom} focus:outline-none focus:ring-2 focus:ring-${buttonAccentColor}`}
-                  >
-                    Add
-                  </button>
-                </div>
-                <div className="flex gap-2 justify-between" onClick={(e) => e.stopPropagation()}>
-                  <AnimatedStoreSelector
-                    className="grow"
-                    value={selectedStore}
-                    onChange={setSelectedStore}
-                    storeOptions={storeOptions}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-5 py-2 text-gray-600 shrink-0 hover:text-gray-800 focus:outline-none"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+        {/* Add button */}
+        <motion.button
+          onClick={() => setIsModalOpen(true)}
+          whileTap={{ scale: 0.92 }}
+          className="fixed bottom-24 right-4 z-30 flex size-14 items-center justify-center rounded-full bg-hue-strong text-on-hue shadow-pop md:bottom-8 md:right-8"
+          aria-label="Add grocery item"
+        >
+          <Plus className="size-6" />
+        </motion.button>
+
+        {/* Add Item Modal */}
+        <AnimatePresence>
+          {isModalOpen && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsModalOpen(false)}
+                className="fixed inset-0 z-40 bg-black/50"
+              />
+
+              {/* Modal */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -20 }}
+                className="fixed left-4 right-4 top-1/4 z-50 mx-auto max-h-[80vh] max-w-md overflow-y-auto rounded-3xl bg-surface p-4 shadow-pop"
+              >
+                <form onSubmit={addItem} className="flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newItem}
+                      onChange={(e) => setNewItem(e.target.value)}
+                      placeholder="What are we out of?"
+                      className="field flex-1"
+                      autoFocus
+                    />
+                    <button type="submit" className="btn-primary shrink-0">
+                      Add
+                    </button>
+                  </div>
+                  <div className="flex justify-between gap-2" onClick={(e) => e.stopPropagation()}>
+                    <AnimatedStoreSelector
+                      className="grow"
+                      value={selectedStore}
+                      onChange={setSelectedStore}
+                      storeOptions={storeOptions}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIsModalOpen(false)}
+                      aria-label="Close"
+                      className="flex size-11 shrink-0 items-center justify-center rounded-full text-ink-faint hover:bg-surface-2 hover:text-ink"
+                    >
+                      <X className="size-5" />
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
     </FeatureErrorBoundary>
   )
-} 
+}

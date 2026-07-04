@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
+import AuthShell from '@/components/AuthShell'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -27,84 +28,56 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-2xl shadow">
-          <div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              Check your email
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              We&apos;ve sent a password reset link to <strong>{email}</strong>
-            </p>
-            <p className="mt-4 text-center text-sm text-gray-600">
-              Click the link in the email to reset your password.
-            </p>
-          </div>
-          <div>
-            <Link
-              href="/login"
-              className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Back to sign in
-            </Link>
-          </div>
-        </div>
-      </div>
+      <AuthShell
+        title="Check your email"
+        subtitle={
+          <>
+            We&apos;ve sent a password reset link to <strong className="text-ink">{email}</strong>.
+            Click the link in the email to reset your password.
+          </>
+        }
+      >
+        <Link href="/login" className="btn-quiet w-full">
+          Back to sign in
+        </Link>
+      </AuthShell>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-2xl shadow">
+    <AuthShell
+      title="Reset your password"
+      subtitle="Enter your email address and we'll send you a link to reset your password."
+    >
+      <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Reset your password
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your email address and we&apos;ll send you a link to reset your password.
-          </p>
+          <label htmlFor="email" className="field-label">
+            Email
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            className="field"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="email" className="sr-only">
-              Email address
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="Email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
 
-          {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
-          )}
+        {error && <p className="text-sm font-medium text-rose-600">{error}</p>}
 
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Sending...' : 'Send reset link'}
-            </button>
-          </div>
+        <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-50">
+          {loading ? 'Sending…' : 'Send reset link'}
+        </button>
 
-          <div className="text-center">
-            <Link
-              href="/login"
-              className="font-medium text-indigo-600 hover:text-indigo-500 text-sm"
-            >
-              Back to sign in
-            </Link>
-          </div>
-        </form>
-      </div>
-    </div>
+        <p className="text-center text-sm">
+          <Link href="/login" className="font-medium text-hue hover:underline">
+            Back to sign in
+          </Link>
+        </p>
+      </form>
+    </AuthShell>
   )
 }

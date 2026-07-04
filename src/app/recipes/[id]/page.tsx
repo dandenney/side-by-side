@@ -9,7 +9,6 @@ import {
   ThumbsDown,
   ExternalLink,
   Trash2,
-  UtensilsCrossed,
   Pencil,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -20,6 +19,7 @@ import {
   deleteRecipe,
 } from '@/lib/supabase/recipes'
 import { Recipe, RecipeRating } from '@/types/recipe'
+import { RecipeImage } from '@/components/RecipeImage'
 
 export default function RecipeDetailPage() {
   const { user, loading } = useAuth()
@@ -86,17 +86,17 @@ export default function RecipeDetailPage() {
 
   if (isLoading) {
     return (
-      <main className="bg-purple-50 min-h-dvh">
-        <p className="py-12 text-center text-sm text-gray-400">Loading…</p>
+      <main data-section="recipes" className="min-h-dvh bg-wash">
+        <p className="py-12 text-center text-sm text-ink-faint">Loading…</p>
       </main>
     )
   }
 
   if (!recipe) {
     return (
-      <main className="bg-purple-50 min-h-dvh p-4">
+      <main data-section="recipes" className="min-h-dvh bg-wash p-4">
         <BackLink />
-        <p className="py-12 text-center text-sm text-gray-400">
+        <p className="py-12 text-center text-sm text-ink-faint">
           Recipe not found.
         </p>
       </main>
@@ -104,42 +104,35 @@ export default function RecipeDetailPage() {
   }
 
   return (
-    <main className="antialiased bg-purple-50 min-h-dvh pb-24">
-      <div className="max-w-md mx-auto p-4 space-y-5">
+    <main data-section="recipes" className="min-h-dvh bg-wash pb-32">
+      <div className="mx-auto max-w-md space-y-5 p-4 md:max-w-2xl md:pt-24 lg:max-w-4xl">
         <div className="flex items-center justify-between">
           <BackLink />
           <Link
             href={`/recipes/${recipe.id}/edit`}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-purple-600 hover:underline"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-hue hover:underline"
           >
             <Pencil className="size-4" />
             Edit
           </Link>
         </div>
 
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-950/5">
-          <div className="relative aspect-[4/3] bg-purple-100">
-            {recipe.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={recipe.imageUrl}
-                alt={recipe.title}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-purple-300">
-                <UtensilsCrossed className="size-10" />
-              </div>
-            )}
-          </div>
+        <div className="space-y-5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6 lg:space-y-0">
+        <div className="space-y-5 lg:sticky lg:top-24">
+        <div className="card overflow-hidden">
+          <RecipeImage
+            src={recipe.imageUrl}
+            alt={recipe.title}
+            className="aspect-[4/3]"
+          />
 
           <div className="space-y-4 p-4">
             <div>
-              <h1 className="text-xl font-semibold text-purple-900">
+              <h1 className="font-display text-2xl font-bold text-ink">
                 {recipe.title}
               </h1>
               {recipe.servings && (
-                <p className="mt-1 text-sm text-gray-500">{recipe.servings}</p>
+                <p className="mt-1 text-sm text-ink-soft">{recipe.servings}</p>
               )}
             </div>
 
@@ -148,7 +141,7 @@ export default function RecipeDetailPage() {
                 {recipe.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-600"
+                    className="rounded-full bg-tint px-2.5 py-0.5 text-xs font-medium text-tint-ink"
                   >
                     {tag}
                   </span>
@@ -161,7 +154,7 @@ export default function RecipeDetailPage() {
                 href={recipe.sourceUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-purple-600 hover:underline"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-hue hover:underline"
               >
                 <ExternalLink className="size-4" />
                 View source
@@ -172,14 +165,16 @@ export default function RecipeDetailPage() {
 
         {/* Stage / rating action area */}
         <StageAction recipe={recipe} saving={saving} onMarkTried={handleMarkTried} />
+        </div>
 
+        <div className="space-y-5">
         {/* Ingredients */}
         {recipe.ingredients.length > 0 && (
           <Section title="Ingredients">
             <ul className="space-y-1.5">
               {recipe.ingredients.map((line, i) => (
-                <li key={i} className="flex gap-2 text-sm text-gray-700">
-                  <span className="text-purple-300">•</span>
+                <li key={i} className="flex gap-2 text-[15px] text-ink">
+                  <span className="text-hue/60">•</span>
                   <span>{line}</span>
                 </li>
               ))}
@@ -192,8 +187,8 @@ export default function RecipeDetailPage() {
           <Section title="Instructions">
             <ol className="space-y-3">
               {recipe.instructions.map((step, i) => (
-                <li key={i} className="flex gap-3 text-sm text-gray-700">
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-purple-100 text-xs font-semibold text-purple-700">
+                <li key={i} className="flex gap-3 text-[15px] text-ink">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-tint text-xs font-bold text-tint-ink">
                     {i + 1}
                   </span>
                   <span className="pt-0.5">{step}</span>
@@ -211,17 +206,19 @@ export default function RecipeDetailPage() {
             onBlur={handleSaveNotes}
             placeholder="Add a note…"
             rows={3}
-            className="w-full resize-y rounded-xl border border-gray-950/5 bg-white p-3 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-300"
+            className="field resize-y text-sm"
           />
         </Section>
 
         <button
           onClick={handleDelete}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-rose-500 hover:underline"
+          className="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-medium text-rose-600 hover:underline"
         >
           <Trash2 className="size-4" />
           Delete recipe
         </button>
+        </div>
+        </div>
       </div>
     </main>
   )
@@ -231,7 +228,7 @@ function BackLink() {
   return (
     <Link
       href="/recipes"
-      className="inline-flex items-center gap-1.5 text-sm font-medium text-purple-600 hover:underline"
+      className="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-medium text-hue hover:underline"
     >
       <ArrowLeft className="size-4" />
       All recipes
@@ -247,8 +244,8 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm border border-gray-950/5">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-purple-400">
+    <section className="card p-4">
+      <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-hue">
         {title}
       </h2>
       {children}
@@ -268,15 +265,15 @@ function StageAction({
   if (recipe.status === 'tried') {
     const up = recipe.rating === 'up'
     return (
-      <div className="flex items-center justify-center gap-2 rounded-2xl bg-white p-4 shadow-sm border border-gray-950/5">
+      <div className="card flex items-center justify-center gap-2 p-4">
         <span
           className={`flex size-8 items-center justify-center rounded-full text-white ${
-            up ? 'bg-green-500' : 'bg-rose-500'
+            up ? 'bg-emerald-600' : 'bg-rose-600'
           }`}
         >
           {up ? <ThumbsUp className="size-4" /> : <ThumbsDown className="size-4" />}
         </span>
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-ink-soft">
           Tried
           {recipe.triedAt
             ? ` · ${recipe.triedAt.toLocaleDateString()}`
@@ -287,15 +284,15 @@ function StageAction({
   }
 
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm border border-gray-950/5">
-      <p className="mb-3 text-center text-sm font-medium text-gray-600">
-        Made it? Rate it — this moves it to Tried.
+    <div className="card p-4">
+      <p className="mb-3 text-center text-sm font-medium text-ink-soft">
+        Made it? Rate it and it moves to Tried.
       </p>
       <div className="flex gap-3">
         <button
           disabled={saving}
           onClick={() => onMarkTried('up')}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-green-500 py-2.5 text-sm font-medium text-white hover:bg-green-600 disabled:opacity-50"
+          className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-full bg-emerald-600 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
         >
           <ThumbsUp className="size-4" />
           Thumbs up
@@ -303,7 +300,7 @@ function StageAction({
         <button
           disabled={saving}
           onClick={() => onMarkTried('down')}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-rose-500 py-2.5 text-sm font-medium text-white hover:bg-rose-600 disabled:opacity-50"
+          className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-full bg-rose-600 py-2.5 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
         >
           <ThumbsDown className="size-4" />
           Thumbs down

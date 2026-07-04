@@ -29,13 +29,6 @@ jest.mock('@/contexts/AuthContext', () => ({
   }),
 }))
 
-// Mock the AppDrawer component
-jest.mock('@/components/AppDrawer', () => {
-  return function MockAppDrawer() {
-    return <div data-testid="app-drawer">App Drawer</div>
-  }
-})
-
 const mockUpcomingEvent: UpcomingItem = {
   id: 'test-id-123',
   title: 'Test Event',
@@ -89,7 +82,7 @@ describe('UpcomingList Component', () => {
       render(<UpcomingList />)
 
       await waitFor(() => {
-        expect(screen.getByText('No upcoming events yet')).toBeInTheDocument()
+        expect(screen.getByText('Nothing on the calendar')).toBeInTheDocument()
       })
     })
 
@@ -121,7 +114,7 @@ describe('UpcomingList Component', () => {
       const addButton = screen.getByRole('button', { name: /add new event/i })
       fireEvent.click(addButton)
 
-      expect(screen.getByRole('heading', { name: 'Add Event' })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Add an event' })).toBeInTheDocument()
       expect(screen.getByLabelText('Title *')).toBeInTheDocument()
     })
 
@@ -186,7 +179,7 @@ describe('UpcomingList Component', () => {
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.queryByText('Add Event')).not.toBeInTheDocument()
+        expect(screen.queryByText('Add an event')).not.toBeInTheDocument()
       })
     })
 
@@ -241,7 +234,7 @@ describe('UpcomingList Component', () => {
       fireEvent.click(submitButton)
 
       // Form should not submit and modal should remain open
-      expect(screen.getByRole('heading', { name: 'Add Event' })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Add an event' })).toBeInTheDocument()
       expect(mockServices.createUpcomingEvent).not.toHaveBeenCalled()
     })
   })
@@ -268,7 +261,7 @@ describe('UpcomingList Component', () => {
       fireEvent.click(editButton)
 
       // Should show edit form
-      expect(screen.getByText('Edit Event')).toBeInTheDocument()
+      expect(screen.getByText('Edit event')).toBeInTheDocument()
       expect(screen.getByDisplayValue('Test Event')).toBeInTheDocument()
     })
 
@@ -328,7 +321,7 @@ describe('UpcomingList Component', () => {
       fireEvent.click(updateButton)
 
       await waitFor(() => {
-        expect(screen.queryByText('Edit Event')).not.toBeInTheDocument()
+        expect(screen.queryByText('Edit event')).not.toBeInTheDocument()
       })
     })
   })
@@ -410,7 +403,7 @@ describe('UpcomingList Component', () => {
 
       await waitFor(() => {
         const statusBadge = screen.getByText('Definitely')
-        expect(statusBadge).toHaveClass('bg-blue-50', 'text-blue-700')
+        expect(statusBadge).toHaveClass('bg-tint', 'text-tint-ink')
       })
     })
   })

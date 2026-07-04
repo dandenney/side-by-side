@@ -10,6 +10,7 @@ import {
   getRecipeBySourceUrl,
 } from '@/lib/supabase/recipes'
 import { Recipe, RECIPE_TAGS } from '@/types/recipe'
+import { RecipeImage } from '@/components/RecipeImage'
 
 const linesToText = (lines: string[]) => lines.join('\n')
 const textToLines = (text: string) =>
@@ -122,35 +123,35 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* URL-first prefill (add mode only) */}
       {!isEdit && (
-        <div className="rounded-2xl bg-white p-4 shadow-sm border border-gray-950/5">
-          <label className="mb-2 block text-sm font-medium text-gray-700">
+        <div className="card p-4">
+          <label className="mb-2 block text-sm font-medium text-ink-soft">
             Paste a recipe URL to autofill
           </label>
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Link2 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+              <Link2 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-faint" />
               <input
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://recime.app/p/…"
-                className="w-full rounded-xl border border-gray-950/5 bg-white py-2.5 pl-9 pr-3 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                className="field pl-9 text-sm"
               />
             </div>
             <button
               type="button"
               onClick={handleFetch}
               disabled={fetching || !url.trim()}
-              className="flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+              className="btn-primary shrink-0 px-4 text-sm disabled:opacity-50"
             >
               {fetching && <Loader2 className="size-4 animate-spin" />}
               Autofill
             </button>
           </div>
           {fetchError && (
-            <p className="mt-2 text-sm text-rose-500">{fetchError}</p>
+            <p className="mt-2 text-sm font-medium text-rose-600">{fetchError}</p>
           )}
-          <p className="mt-2 text-xs text-gray-400">
+          <p className="mt-2 text-xs text-ink-faint">
             Or fill the fields in manually below.
           </p>
         </div>
@@ -167,11 +168,8 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
       </Field>
 
       {imageUrl && (
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-950/5">
-          <div className="aspect-[4/3] bg-purple-100">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
-          </div>
+        <div className="card overflow-hidden">
+          <RecipeImage src={imageUrl} alt={title} className="aspect-[4/3]" />
         </div>
       )}
 
@@ -208,10 +206,10 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
                 key={tag}
                 type="button"
                 onClick={() => toggleTag(tag)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                className={`min-h-[36px] rounded-full px-3.5 py-1 text-sm transition-colors duration-150 ${
                   active
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-white text-purple-600 border border-purple-100'
+                    ? 'bg-hue-strong font-semibold text-on-hue'
+                    : 'border border-line bg-surface font-medium text-ink-soft hover:text-ink'
                 }`}
               >
                 {tag}
@@ -241,7 +239,7 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
       </Field>
 
       {duplicate && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+        <div className="rounded-xl border border-tint bg-wash p-3 text-sm text-tint-ink">
           This URL is already saved as{' '}
           <Link
             href={`/recipes/${duplicate.id}`}
@@ -253,13 +251,13 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
         </div>
       )}
 
-      {saveError && <p className="text-sm text-rose-500">{saveError}</p>}
+      {saveError && <p className="text-sm font-medium text-rose-600">{saveError}</p>}
 
       <div className="flex gap-3 pt-1">
         <button
           type="submit"
           disabled={saving || Boolean(duplicate && !isEdit)}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-purple-600 py-2.5 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+          className="btn-primary flex-1 text-sm disabled:opacity-50"
         >
           {saving && <Loader2 className="size-4 animate-spin" />}
           {isEdit ? 'Save changes' : 'Add recipe'}
@@ -267,7 +265,7 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+          className="btn-quiet px-4 text-sm"
         >
           Cancel
         </button>
@@ -276,8 +274,7 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
   )
 }
 
-const inputClass =
-  'w-full rounded-xl border border-gray-950/5 bg-white p-3 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-300'
+const inputClass = 'field text-sm'
 
 function Field({
   label,
@@ -291,8 +288,8 @@ function Field({
   return (
     <label className="block">
       <span className="mb-1.5 flex items-baseline gap-2">
-        <span className="text-sm font-medium text-gray-700">{label}</span>
-        {hint && <span className="text-xs text-gray-400">{hint}</span>}
+        <span className="text-sm font-medium text-ink-soft">{label}</span>
+        {hint && <span className="text-xs text-ink-faint">{hint}</span>}
       </span>
       {children}
     </label>

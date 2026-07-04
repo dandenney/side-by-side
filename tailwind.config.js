@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: ["class"],
+  darkMode: "media",
   content: [
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
@@ -16,7 +16,36 @@ module.exports = {
   		}
   	},
   	extend: {
+  		fontFamily: {
+  			sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+  			display: ['var(--font-display)', 'var(--font-sans)', 'system-ui', 'sans-serif']
+  		},
   		colors: {
+  			paper: 'var(--paper)',
+  			surface: {
+  				DEFAULT: 'var(--surface)',
+  				'2': 'var(--surface-2)'
+  			},
+  			ink: {
+  				DEFAULT: 'var(--ink)',
+  				soft: 'var(--ink-soft)',
+  				faint: 'var(--ink-faint)'
+  			},
+  			line: {
+  				DEFAULT: 'var(--line)',
+  				soft: 'var(--line-soft)'
+  			},
+  			hue: {
+  				DEFAULT: 'var(--hue)',
+  				strong: 'var(--hue-strong)',
+  				deep: 'var(--hue-deep)'
+  			},
+  			'on-hue': 'var(--on-hue)',
+  			wash: 'var(--wash)',
+  			tint: {
+  				DEFAULT: 'var(--tint)',
+  				ink: 'var(--tint-ink)'
+  			},
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
@@ -62,6 +91,14 @@ module.exports = {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
+  		},
+  		boxShadow: {
+  			soft: 'var(--shadow-soft)',
+  			pop: 'var(--shadow-pop)'
+  		},
+  		transitionTimingFunction: {
+  			'out-quart': 'cubic-bezier(0.25, 1, 0.5, 1)',
+  			'out-expo': 'cubic-bezier(0.16, 1, 0.3, 1)'
   		},
   		keyframes: {
   			'accordion-down': {

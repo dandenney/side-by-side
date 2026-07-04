@@ -33,22 +33,22 @@ export default function EditRecipePage() {
   if (loading || !user) return null
 
   return (
-    <main className="antialiased bg-purple-50 min-h-dvh pb-24">
-      <div className="max-w-md mx-auto p-4 space-y-4">
+    <main data-section="recipes" className="min-h-dvh bg-wash pb-32">
+      <div className="mx-auto max-w-md space-y-4 p-4 md:max-w-2xl md:pt-24">
         <Link
           href={`/recipes/${id}`}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-purple-600 hover:underline"
+          className="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-medium text-hue hover:underline"
         >
           <ArrowLeft className="size-4" />
           Back to recipe
         </Link>
-        <h1 className="text-xl font-semibold text-purple-900">Edit recipe</h1>
+        <h1 className="font-display text-2xl font-bold text-ink">Edit recipe</h1>
         {isLoading ? (
-          <p className="py-12 text-center text-sm text-gray-400">Loading…</p>
+          <p className="py-12 text-center text-sm text-ink-faint">Loading…</p>
         ) : recipe ? (
           <RecipeForm recipe={recipe} />
         ) : (
-          <p className="py-12 text-center text-sm text-gray-400">
+          <p className="py-12 text-center text-sm text-ink-faint">
             Recipe not found.
           </p>
         )}
