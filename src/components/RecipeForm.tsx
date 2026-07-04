@@ -135,7 +135,7 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://recime.app/p/…"
-                className="field pl-9 text-sm"
+                className="field pl-9"
               />
             </div>
             <button
@@ -274,7 +274,7 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
   )
 }
 
-const inputClass = 'field text-sm'
+const inputClass = 'field'
 
 function Field({
   label,

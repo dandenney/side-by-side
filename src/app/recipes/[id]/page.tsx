@@ -206,7 +206,7 @@ export default function RecipeDetailPage() {
             onBlur={handleSaveNotes}
             placeholder="Add a note…"
             rows={3}
-            className="field resize-y text-sm"
+            className="field resize-y"
           />
         </Section>
 

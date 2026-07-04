@@ -27,7 +27,11 @@ export function RecipeImage({
             className="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-xl"
           />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt={alt} className="relative h-full w-full object-contain" />
+          <img
+            src={src}
+            alt={alt}
+            className="absolute inset-0 h-full w-full object-contain"
+          />
         </>
       ) : (
         <div className="flex h-full w-full items-center justify-center text-hue/30">

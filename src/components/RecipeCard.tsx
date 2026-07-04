@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { ThumbsUp, ThumbsDown, UtensilsCrossed } from 'lucide-react'
+import { ThumbsUp, ThumbsDown } from 'lucide-react'
 import { Recipe } from '@/types/recipe'
+import { RecipeImage } from '@/components/RecipeImage'
 
 export function RecipeCard({ recipe }: { recipe: Recipe }) {
   return (
@@ -8,19 +9,12 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
       href={`/recipes/${recipe.id}`}
       className="card group flex flex-col overflow-hidden transition-shadow duration-150 hover:shadow-pop"
     >
-      <div className="relative aspect-square bg-surface-2">
-        {recipe.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={recipe.imageUrl}
-            alt={recipe.title}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-hue/30">
-            <UtensilsCrossed className="size-8" />
-          </div>
-        )}
+      <div className="relative aspect-square overflow-hidden">
+        <RecipeImage
+          src={recipe.imageUrl}
+          alt={recipe.title}
+          className="h-full w-full"
+        />
 
         {recipe.status === 'tried' && recipe.rating && (
           <span
