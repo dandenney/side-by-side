@@ -13,6 +13,7 @@ export const RECIPE_TAGS = [
   'snack',
   'drinks',
   'sauces',
+  'seasonings',
 ] as const
 
 export type RecipeTag = (typeof RECIPE_TAGS)[number]
