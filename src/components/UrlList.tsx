@@ -639,19 +639,11 @@ export function UrlList({ listType, listId }: UrlListProps) {
     }
   }
 
-  // Sort items by tag, with untagged items last
+  // Sort items by newest first (most recently added at the top)
   const sortedItems = useMemo(() => {
-    return [...items].sort((a, b) => {
-      // If both items have tags, sort by first tag name
-      if (a.tags?.length && b.tags?.length) {
-        return a.tags[0].name.localeCompare(b.tags[0].name)
-      }
-      // If only one has tags, put the tagged one first
-      if (a.tags?.length) return -1
-      if (b.tags?.length) return 1
-      // If neither has tags, maintain original order
-      return 0
-    })
+    return [...items].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    )
   }, [items])
 
   // Filter items by selected tag
