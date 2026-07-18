@@ -61,7 +61,7 @@ export async function searchMovies(query: string): Promise<MovieSearchResult[]> 
       return []
     }
 
-    return data.Search
+    const results: MovieSearchResult[] = data.Search
       .filter((movie: any) => movie.imdbID && movie.Title)
       .map((movie: any) => ({
         imdbId: movie.imdbID,
@@ -70,6 +70,23 @@ export async function searchMovies(query: string): Promise<MovieSearchResult[]> 
         type: movie.Type,
         poster: movie.Poster !== 'N/A' ? movie.Poster : undefined,
       }))
+
+    // OMDB returns matches in a franchise-heavy order (e.g. "Vacation" surfaces
+    // "Christmas Vacation" above the exact-title 2015 remake). Re-rank so the
+    // movie literally named the query comes first, then title prefix matches,
+    // preserving OMDB's original order within each tier.
+    const q = query.trim().toLowerCase()
+    const rank = (title: string): number => {
+      const t = title.toLowerCase()
+      if (t === q) return 0
+      if (t.startsWith(q)) return 1
+      return 2
+    }
+
+    return results
+      .map((movie, index) => ({ movie, index }))
+      .sort((a, b) => rank(a.movie.title) - rank(b.movie.title) || a.index - b.index)
+      .map(({ movie }) => movie)
   } catch (error) {
     if (error instanceof Error) {
       throw error

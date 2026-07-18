@@ -1060,7 +1060,7 @@ export function UrlList({ listType, listId }: UrlListProps) {
               animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
               exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: -20 }}
               transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
-              className="fixed left-4 right-4 top-1/4 z-50 max-h-[80vh] w-[calc(100%-2rem)] overflow-y-auto rounded-3xl bg-surface p-4 shadow-pop lg:left-1/2 lg:max-w-md lg:-translate-x-1/2"
+              className="fixed left-4 right-4 top-1/4 z-50 max-h-[80vh] w-[calc(100%-2rem)] overflow-visible rounded-3xl bg-surface p-4 shadow-pop lg:left-1/2 lg:max-w-md lg:-translate-x-1/2"
               style={{ maxWidth: '28rem' }}
             >
               <form onSubmit={addItem} className="flex flex-col gap-4 relative">
@@ -1116,7 +1116,7 @@ export function UrlList({ listType, listId }: UrlListProps) {
                       </div>
                     )}
                     {inputType === 'movie' && movieSearchResults.length > 0 && (
-                      <div className="absolute top-full z-[60] mt-1 max-h-60 w-full overflow-y-auto rounded-2xl border border-line bg-surface shadow-soft">
+                      <div className="absolute top-full z-[60] mt-1 max-h-80 w-full overflow-y-auto rounded-2xl border border-line bg-surface shadow-soft">
                         {movieSearchResults.map((movie) => (
                           <button
                             key={movie.imdbId}
