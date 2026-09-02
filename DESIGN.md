@@ -27,8 +27,11 @@ Each section binds the `--hue-*` slot via `data-section` on its `<main>` (and pe
 | Upcoming | Marigold | ~72 |
 | Groceries | Green | ~150 |
 | Local | Teal | ~222 |
+| Golf | Indigo | ~260 |
 | Shares | Violet | ~300 |
 | Recipes | Tomato | ~30 |
+
+Golf takes indigo rather than the thematically obvious green — Groceries already owns ~150, and indigo sits in the widest untaken gap (~38° from both Local and Shares). Golf is the section most likely to be confused with Local at a glance, since both are map-backed places; keep the icon and label distinct, per the "hue is never the only signal" rule.
 
 Slot tokens: `--hue` (text-grade accent), `--hue-strong` (fills: FAB, primary buttons, active filter chips), `--on-hue` (text on strong), `--hue-deep` (page titles), `--wash` (page background tint), `--tint` (chip/selection fill), `--tint-ink` (text on tint).
 

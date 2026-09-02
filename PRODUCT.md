@@ -10,11 +10,11 @@ Two people in one household: Dan and his partner. No other users, ever. Primary 
 
 ## Product Purpose
 
-Side by Side is the shared operating system for a household of two: a running grocery list, things worth sharing with each other (movies, posts, links), local places to visit, upcoming events, and a recipe tracker. Success is frictionless capture and recall — either person can add or find something in seconds — inside an app that feels like *theirs*, not like software.
+Side by Side is the shared operating system for a household of two: a running grocery list, things worth sharing with each other (movies, posts, links), local places to visit, upcoming events, a recipe tracker, and a golf course wishlist and log. Success is frictionless capture and recall — either person can add or find something in seconds — inside an app that feels like *theirs*, not like software.
 
 ## Brand Personality
 
-Playful, vivid, personal. It should feel fun to open even for a grocery run: saturated color, expressive but quick motion, personality in the microcopy and empty states. Three words: vibrant, warm, ours. Each of the five sections (Upcoming, Groceries, Local, Shares, Recipes) owns a hue from one family palette, so you always know where you are by color alone.
+Playful, vivid, personal. It should feel fun to open even for a grocery run: saturated color, expressive but quick motion, personality in the microcopy and empty states. Three words: vibrant, warm, ours. Each of the six sections (Upcoming, Groceries, Local, Shares, Recipes, Golf) owns a hue from one family palette, so you always know where you are by color alone.
 
 ## Anti-references
 
