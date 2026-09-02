@@ -9,6 +9,7 @@ import {
   MapPin,
   Link as LinkIcon,
   ChefHat,
+  Flag,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -18,6 +19,7 @@ const TABS = [
   { section: 'local', label: 'Local', href: '/local', icon: MapPin },
   { section: 'shares', label: 'Shares', href: '/shares', icon: LinkIcon },
   { section: 'recipes', label: 'Recipes', href: '/recipes', icon: ChefHat },
+  { section: 'golf', label: 'Golf', href: '/golf', icon: Flag },
 ] as const
 
 const AUTH_ROUTES = ['/login', '/signup', '/forgot-password', '/reset-password']
