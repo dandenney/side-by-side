@@ -156,16 +156,18 @@ export default function GolfPage() {
           </div>
         ) : isLoading ? (
           <div
-            className="space-y-3"
+            className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4"
             role="status"
             aria-live="polite"
             aria-label="Loading courses"
           >
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="card animate-pulse space-y-2 p-4">
-                <div className="h-4 w-3/5 rounded-full bg-surface-2" />
-                <div className="h-3 w-4/5 rounded-full bg-surface-2" />
-                <div className="h-3 w-2/5 rounded-full bg-surface-2" />
+              <div key={i} className="card animate-pulse overflow-hidden">
+                <div className="w-full bg-surface-2" style={{ aspectRatio: '16/9' }} />
+                <div className="space-y-2 p-3">
+                  <div className="h-4 w-3/5 rounded-full bg-surface-2" />
+                  <div className="h-3 w-4/5 rounded-full bg-surface-2" />
+                </div>
               </div>
             ))}
           </div>
@@ -192,7 +194,7 @@ export default function GolfPage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
             {visible.map((course) => (
               <CourseCard
                 key={course.id}

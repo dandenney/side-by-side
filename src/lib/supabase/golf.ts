@@ -80,6 +80,53 @@ const mapCourse = (row: SupabaseCourse): Course => ({
   updatedAt: new Date(row.updated_at),
 })
 
+// Download a Google Place Photo and re-host it in the course-images bucket,
+// mirroring the recipes flow. Google's photo URLs carry the server API key as a
+// query param, so persisting one would leak that key to every visitor.
+// Returns the public URL, or null if it couldn't be stored.
+async function uploadImageToStorage(imageUrl: string): Promise<string | null> {
+  try {
+    const response = await fetch(
+      `/api/fetch-image?url=${encodeURIComponent(imageUrl)}`
+    )
+    if (!response.ok) return null
+
+    const blob = await response.blob()
+    if (blob.size === 0) return null
+
+    const supabase = createClient()
+    const fileName = `course-image-${Date.now()}.jpg`
+
+    const { error } = await supabase.storage
+      .from('course-images')
+      .upload(fileName, blob, {
+        contentType: blob.type,
+        cacheControl: '3600',
+        upsert: false,
+      })
+    if (error) return null
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('course-images').getPublicUrl(fileName)
+
+    return publicUrl
+  } catch (error) {
+    console.error('Failed to store course image:', error)
+    return null
+  }
+}
+
+// An already-hosted image is left as-is; a Google photo URL is fetched and
+// re-hosted. Returns undefined rather than persisting a URL carrying our key.
+async function resolveImageUrl(
+  imageUrl: string | undefined
+): Promise<string | undefined> {
+  if (!imageUrl) return undefined
+  if (imageUrl.includes('/course-images/')) return imageUrl
+  return (await uploadImageToStorage(imageUrl)) ?? undefined
+}
+
 // Courses always come back with their rounds, because "played" is derived from
 // round count — a course without its rounds can't answer the basic question.
 const COURSE_SELECT = '*, rounds(*)'
@@ -125,6 +172,7 @@ export async function getCoursesByPlaceId(placeId: string): Promise<Course[]> {
 
 export async function createCourse(input: NewCourse): Promise<Course> {
   const supabase = createClient()
+  const imageUrl = await resolveImageUrl(input.imageUrl)
 
   const { data, error } = await supabase
     .from('courses')
@@ -137,7 +185,7 @@ export async function createCourse(input: NewCourse): Promise<Course> {
         lng: input.lng ?? null,
         website: input.website ?? null,
         phone_number: input.phoneNumber ?? null,
-        image_url: input.imageUrl ?? null,
+        image_url: imageUrl ?? null,
         access_type: input.accessType,
         cost_band: input.costBand ?? null,
         holes: input.holes ?? 18,
@@ -167,7 +215,9 @@ export async function updateCourse(
   if (edit.lng !== undefined) updateData.lng = edit.lng
   if (edit.website !== undefined) updateData.website = edit.website
   if (edit.phoneNumber !== undefined) updateData.phone_number = edit.phoneNumber
-  if (edit.imageUrl !== undefined) updateData.image_url = edit.imageUrl
+  if (edit.imageUrl !== undefined) {
+    updateData.image_url = (await resolveImageUrl(edit.imageUrl)) ?? null
+  }
   if (edit.accessType !== undefined) updateData.access_type = edit.accessType
   if (edit.costBand !== undefined) updateData.cost_band = edit.costBand
   if (edit.holes !== undefined) updateData.holes = edit.holes

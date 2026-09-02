@@ -12,6 +12,7 @@ import {
   NewCourse,
 } from '@/types/golf'
 import { createCourse } from '@/lib/supabase/golf'
+import { golfSearchQuery } from '@/lib/golf-search'
 
 interface PlaceResult {
   placeId: string
@@ -41,6 +42,7 @@ export function AddCourseModal({ onClose, onAdded }: AddCourseModalProps) {
   const [details, setDetails] = useState<{
     website?: string
     phoneNumber?: string
+    photoUrl?: string
   }>({})
 
   const [name, setName] = useState('')
@@ -60,8 +62,9 @@ export function AddCourseModal({ onClose, onAdded }: AddCourseModalProps) {
     setIsSearching(true)
     setError(null)
     try {
+      // Places can't filter by golf_course, so the words go in the query.
       const response = await fetch(
-        `/api/places?query=${encodeURIComponent(query)}`
+        `/api/places?query=${encodeURIComponent(golfSearchQuery(query))}`
       )
       if (!response.ok) throw new Error('Failed to search')
       setResults(await response.json())
@@ -85,6 +88,7 @@ export function AddCourseModal({ onClose, onAdded }: AddCourseModalProps) {
       setDetails({
         website: detail.website,
         phoneNumber: detail.phoneNumber,
+        photoUrl: detail.photoUrl,
       })
     } catch {
       // Details are a bonus — a course without them is still perfectly usable.
@@ -121,6 +125,9 @@ export function AddCourseModal({ onClose, onAdded }: AddCourseModalProps) {
               lng: place.lng,
               website: details.website,
               phoneNumber: details.phoneNumber,
+              // Re-hosted into course-images on save; never persisted as the
+              // raw Google URL, which carries our server API key.
+              imageUrl: details.photoUrl,
             }
           : {}),
       }
