@@ -53,6 +53,29 @@ const localToUtcDate = (localDate: string) => {
   return `${localDate}T00:00:00Z`
 }
 
+// Google Place Photo URLs carry GOOGLE_MAPS_API_SERVER_KEY as a query param, so
+// one must never be persisted — it would publish the key to every visitor. An
+// ordinary og:image from an article or product page has no such problem and is
+// fine to keep as-is when re-hosting fails.
+function carriesCredentials(imageUrl: string): boolean {
+  return /[?&]key=/.test(imageUrl) || imageUrl.includes('maps.googleapis.com')
+}
+
+// Re-host an image into the url-images bucket. Already-hosted images pass
+// through. On failure we keep the original URL unless it carries our key, in
+// which case we drop the image rather than leak it.
+async function resolveStoredImageUrl(
+  imageUrl: string | undefined
+): Promise<string | undefined> {
+  if (!imageUrl) return undefined
+  if (imageUrl.includes('/url-images/')) return imageUrl
+
+  const stored = await uploadImageToStorage(imageUrl)
+  if (stored) return stored
+
+  return carriesCredentials(imageUrl) ? undefined : imageUrl
+}
+
 async function uploadImageToStorage(imageUrl: string): Promise<string | null> {
   try {
     const response = await fetch(`/api/fetch-image?url=${encodeURIComponent(imageUrl)}`)
@@ -163,20 +186,21 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
   const supabase = createClient()
   
   // Store image if provided
-  let storedImageUrl = item.imageUrl
-  if (item.imageUrl) {
-    try {
-      storedImageUrl = await uploadImageToStorage(item.imageUrl) || item.imageUrl
-    } catch (error) {
-      console.error('Failed to store image:', error)
-      // Continue with original image URL if storage fails
-    }
+  let storedImageUrl: string | undefined
+  try {
+    storedImageUrl = await resolveStoredImageUrl(item.imageUrl)
+  } catch (error) {
+    console.error('Failed to store image:', error)
+    storedImageUrl =
+      item.imageUrl && !carriesCredentials(item.imageUrl)
+        ? item.imageUrl
+        : undefined
   }
   
   // Transform place data to match Supabase schema
   const insertData = {
     url: item.url,
-    image_url: storedImageUrl,
+    image_url: storedImageUrl ?? null,
     title: item.title,
     description: item.description,
     notes: item.notes,
@@ -267,16 +291,9 @@ export async function createUrlItem(item: Omit<UrlListItem, 'id' | 'createdAt' |
 export async function updateUrlItem(item: UrlListItem) {
   const supabase = createClient()
 
-  // If the image URL has changed, upload the new image
-  let imageUrl = item.imageUrl
-  if (item.imageUrl && !item.imageUrl.startsWith('https://')) {
-    const storedImageUrl = await uploadImageToStorage(item.imageUrl)
-    if (storedImageUrl) {
-      imageUrl = storedImageUrl
-    } else {
-      console.log('⚠️ Failed to upload new image, keeping original URL')
-    }
-  }
+  // Re-host anything not already in our bucket. This previously skipped every
+  // https URL, which meant a Google photo URL (always https) was stored raw.
+  const imageUrl = await resolveStoredImageUrl(item.imageUrl)
   
   const { data, error } = await supabase
     .from('url_items')
@@ -294,7 +311,7 @@ export async function updateUrlItem(item: UrlListItem) {
       place_website: item.place?.website,
       place_phone_number: item.place?.phoneNumber,
       place_opening_hours: item.place?.openingHours,
-      image_url: imageUrl,
+      image_url: imageUrl ?? null,
       title: item.title,
       description: item.description,
       notes: item.notes,
