@@ -62,6 +62,7 @@ export default function UpcomingList() {
   const [formData, setFormData] = useState<UpcomingItemForm>(initialFormState)
   const [isFetchingMeta, setIsFetchingMeta] = useState(false)
   const [metaError, setMetaError] = useState<string | null>(null)
+  const [inferredDateSource, setInferredDateSource] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date())
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
@@ -141,12 +142,32 @@ export default function UpcomingList() {
           description: metaData.description || prev.description,
           imageUrl: metaData.image || prev.imageUrl,
         }))
+        // Only suggest a date when the user hasn't already picked one.
+        if (metaData.startDate && !formData.startDate) {
+          applyInferredDates(metaData.startDate, metaData.endDate, metaData.dateSource)
+        }
       }
       setIsFetchingMeta(false)
     }
   }
 
+  const applyInferredDates = (startDate: string, endDate: string | null, source: string | null) => {
+    const toLocalDate = (value: string) => {
+      const [year, month, day] = value.split('-').map(Number)
+      return new Date(year, month - 1, day)
+    }
+
+    const resolvedEnd = endDate || startDate
+    setDateRange({ from: toLocalDate(startDate), to: toLocalDate(resolvedEnd) })
+    setCalendarMonth(toLocalDate(startDate))
+    setFormData(prev => ({ ...prev, startDate, endDate: resolvedEnd }))
+    setInferredDateSource(source)
+  }
+
   const handleDateSelect = (range: DateRange | undefined) => {
+    // A hand-picked date is no longer a suggestion.
+    setInferredDateSource(null)
+
     const formatDateForDb = (date: Date) => {
       const year = date.getFullYear()
       const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -185,6 +206,7 @@ export default function UpcomingList() {
     setDateRange(undefined) // No default date
     setCalendarMonth(new Date()) // Reset to current month
     setFormData(initialFormState) // Reset form
+    setInferredDateSource(null)
     setEditingItem(null)
     setIsModalOpen(true)
   }
@@ -232,6 +254,7 @@ export default function UpcomingList() {
 
   const handleEdit = (item: UpcomingItem) => {
     setEditingItem(item)
+    setInferredDateSource(null)
     setFormData({
       title: item.title,
       description: item.description || '',
@@ -638,6 +661,14 @@ export default function UpcomingList() {
                       <span className="text-ink-faint">Tap to pick a date</span>
                     )}
                   </button>
+
+                  {inferredDateSource && (
+                    <p className="mt-1 text-sm text-ink-soft">
+                      {inferredDateSource === 'text'
+                        ? 'Guessed from the page text — double-check it.'
+                        : 'Found on the linked page — tap to change.'}
+                    </p>
+                  )}
 
                   {/* Calendar Modal */}
                   {isCalendarOpen && (

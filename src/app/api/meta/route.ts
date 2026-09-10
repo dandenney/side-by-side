@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateSearchParams, apiSchemas, createValidationErrorResponse } from '@/lib/validation'
+import { extractEventDates } from '@/lib/extractDates'
 
 export const runtime = 'edge'
 
@@ -80,10 +81,17 @@ export async function GET(request: NextRequest) {
       image = new URL(image, baseUrl.origin).toString()
     }
 
+    // Infer event dates from structured data, falling back to dates written
+    // out in the title/description.
+    const dates = extractEventDates(html, `${title} ${description}`)
+
     return NextResponse.json({
       title,
       description,
       image,
+      startDate: dates?.startDate || null,
+      endDate: dates?.endDate || null,
+      dateSource: dates?.source || null,
     }, {
       headers: {
         'Access-Control-Allow-Origin': '*',
