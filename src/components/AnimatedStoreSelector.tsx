@@ -2,12 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
+import { Store } from '@/types/grocery'
 
 interface AnimatedStoreSelectorProps {
-  value: 'Publix' | 'Costco' | 'Aldi'
-  onChange: (value: 'Publix' | 'Costco' | 'Aldi') => void
+  value: Store
+  onChange: (value: Store) => void
   className?: string
-  storeOptions?: ReadonlyArray<{ readonly value: 'Publix' | 'Costco' | 'Aldi'; readonly color: string }>
+  storeOptions?: ReadonlyArray<{ readonly value: Store; readonly color: string }>
 }
 
 const AnimatedStoreSelector = ({
@@ -17,7 +18,8 @@ const AnimatedStoreSelector = ({
   storeOptions = [
     { value: 'Publix', color: 'green' },
     { value: 'Costco', color: 'blue' },
-    { value: 'Aldi', color: 'orange' }
+    { value: 'Aldi', color: 'orange' },
+    { value: 'K&S', color: 'red' }
   ]
 }: AnimatedStoreSelectorProps) => {
   // Track position of the active element

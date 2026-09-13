@@ -1,8 +1,11 @@
+export const STORES = ['Publix', 'Costco', 'Aldi', 'K&S'] as const
+export type Store = (typeof STORES)[number]
+
 export interface GroceryItem {
   id: string
   name: string
   checked: boolean
-  store: 'Publix' | 'Costco' | 'Aldi'
+  store: Store
   createdAt: Date
   updatedAt: Date
 }

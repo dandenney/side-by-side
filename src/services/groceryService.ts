@@ -1,18 +1,18 @@
 import { createClient } from '@/lib/supabase/client'
-import { GroceryItem } from '@/types/grocery'
+import { GroceryItem, Store } from '@/types/grocery'
 import { SHARED_LIST_ID } from '@/lib/constants'
 import { logServiceError } from '@/lib/logger'
 
 export interface GroceryItemForm {
   name: string
-  store: 'Publix' | 'Costco' | 'Aldi'
+  store: Store
   checked?: boolean
 }
 
 export interface ArchivedGroceryItem {
   id: string
   name: string
-  store: 'Publix' | 'Costco' | 'Aldi'
+  store: Store
   createdAt: Date
   archivedAt: Date
 }

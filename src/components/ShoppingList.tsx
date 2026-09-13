@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { GroceryItem } from '@/types/grocery'
+import { GroceryItem, Store, STORES } from '@/types/grocery'
 import { Plus, Trash2, Edit2, X, Check, ShoppingBasket, MoreVertical } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
@@ -18,18 +18,16 @@ import {
 } from '@/services/groceryService'
 import { logComponentError } from '@/lib/logger'
 
-const STORE_ORDER = ['Publix', 'Costco', 'Aldi'] as const
-
 export function ShoppingList() {
   const [items, setItems] = useState<GroceryItem[]>([])
   const [archivedItems, setArchivedItems] = useState<ArchivedGroceryItem[]>([])
   const [newItem, setNewItem] = useState('')
   const [editingItem, setEditingItem] = useState<GroceryItem | null>(null)
   const [editText, setEditText] = useState('')
-  const [editStore, setEditStore] = useState<'Publix' | 'Costco' | 'Aldi'>('Publix')
+  const [editStore, setEditStore] = useState<Store>('Publix')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [showEditControls, setShowEditControls] = useState<string | null>(null)
-  const [selectedStore, setSelectedStore] = useState<'Publix' | 'Costco' | 'Aldi'>('Publix')
+  const [selectedStore, setSelectedStore] = useState<Store>('Publix')
   const [loading, setLoading] = useState(true)
 
   const { user } = useAuth()
@@ -40,7 +38,8 @@ export function ShoppingList() {
   const storeOptions = [
     { value: 'Publix', color: 'green' },
     { value: 'Costco', color: 'blue' },
-    { value: 'Aldi', color: 'orange' }
+    { value: 'Aldi', color: 'orange' },
+    { value: 'K&S', color: 'red' }
   ] as const
 
   const groupedItems = useMemo(() => {
@@ -181,7 +180,7 @@ export function ShoppingList() {
     exit: { opacity: 0, x: -100, scale: 0.95 },
   }
 
-  const orderedStores = STORE_ORDER.filter(store => groupedItems[store]?.length)
+  const orderedStores = STORES.filter(store => groupedItems[store]?.length)
 
   return (
     <FeatureErrorBoundary featureName="Shopping List">
