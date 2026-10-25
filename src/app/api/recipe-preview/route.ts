@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { parseRecipeHtml } from '@/lib/recipe-parse'
+import { extractShareUrl, parseRecipeHtml } from '@/lib/recipe-parse'
 
 // Fetch a recipe page server-side (avoids browser CORS) and return the parsed
 // JSON-LD fields for the add form to prefill.
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Missing url parameter' }, { status: 400 })
   }
 
-  let target = raw
+  let target = extractShareUrl(raw)
   if (!/^https?:\/\//.test(target)) target = `https://${target}`
   try {
     new URL(target)

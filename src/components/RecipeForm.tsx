@@ -11,6 +11,7 @@ import {
 } from '@/lib/supabase/recipes'
 import { Recipe, RECIPE_TAGS } from '@/types/recipe'
 import { RecipeImage } from '@/components/RecipeImage'
+import { extractShareUrl } from '@/lib/recipe-parse'
 
 const linesToText = (lines: string[]) => lines.join('\n')
 const textToLines = (text: string) =>
@@ -125,15 +126,18 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
       {!isEdit && (
         <div className="card p-4">
           <label className="mb-2 block text-sm font-medium text-ink-soft">
-            Paste a recipe URL to autofill
+            Paste a recipe URL or ReciMe share to autofill
           </label>
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Link2 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-faint" />
               <input
-                type="url"
+                type="text"
+                inputMode="url"
+                autoCapitalize="off"
+                autoCorrect="off"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={(e) => setUrl(extractShareUrl(e.target.value))}
                 placeholder="https://recime.app/p/…"
                 className="field pl-9"
               />

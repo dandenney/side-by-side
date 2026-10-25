@@ -16,7 +16,9 @@ import { createClient } from '@supabase/supabase-js'
 
 const args = process.argv.slice(2)
 const dryRun = args.includes('--dry-run')
-const url = args.find((a) => !a.startsWith('--'))
+// Accept a bare URL or pasted ReciMe share text ("Check out … on ReciMe 🙌. https://…").
+const rawArg = args.filter((a) => !a.startsWith('--')).join(' ')
+const url = rawArg.match(/https?:\/\/\S+/i)?.[0] ?? (rawArg.trim() || undefined)
 
 if (!url) {
   console.error('Usage: node --env-file=.env.local scripts/import-recipe.mjs <recime-url> [--dry-run]')

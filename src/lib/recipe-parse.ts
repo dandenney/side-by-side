@@ -2,6 +2,14 @@
 // the /api/recipe-preview route (URL-first add form). The import script
 // (scripts/import-recipe.mjs) uses an equivalent copy in plain JS.
 
+// Pull the URL out of pasted share text, e.g. ReciMe's iOS share sheet:
+// "Check out @chef's Beef Stroganoff on ReciMe 🙌. https://recime.app/p/…".
+// Input without an http(s) URL is returned trimmed, unchanged.
+export function extractShareUrl(input: string): string {
+  const match = input.match(/https?:\/\/\S+/i)
+  return match ? match[0] : input.trim()
+}
+
 export interface ParsedRecipe {
   title: string
   ingredients: string[]
