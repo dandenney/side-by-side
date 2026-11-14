@@ -4,6 +4,10 @@ A shared web app for a household of two — upcoming events, groceries, local pl
 
 Everything is household-shared by design: no table carries a `user_id`, and RLS grants any authenticated user full access. See [PRODUCT.md](PRODUCT.md) for who this is for and why.
 
+[![Side by Side in 22 seconds](docs/media/side-by-side.jpg)](docs/media/side-by-side.mp4)
+
+A 22-second tour (sample data, click to play).
+
 ## Documentation
 
 Read these before adding or changing a feature:
